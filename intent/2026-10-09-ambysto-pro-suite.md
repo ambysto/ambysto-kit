@@ -55,3 +55,13 @@ Ambysto's choice: **separate native apps that share one license and one kit**, l
 3. **Steady has no license yet**, so it is not migrated now; it adopts the shared key format when its Pro tier is defined.
 4. **macOS first for every utility**, then Windows. This applies to Space and to all future apps.
 5. Next: run the `bto-researchmarket` playbook on suite and bundle vendors (CleanMyMac, MacPaw, IObit, Parallels Toolbox first), including a **value × functionality** positioning chart.
+6. **Suite lineup and order** (owner, after the APS-3 research): **Space → DevBox → Power → Tune → Guard**, joining Optimer and Steady.
+   - Guard waits for Developer ID (AO-6), because it needs Network Extension.
+   - **Dropped:** malware scanning and app/driver updaters. They fall outside the suite's DNA, and updaters are what Defender flags and users distrust.
+   - **Deferred:** Clip, because macOS Tahoe's clipboard history makes it likely Apple ships the same feature.
+   - With all seven apps, suite functionality reaches about 11.5 of 15, above CleanMyMac's 10.5.
+7. **One repository per app:** `ambysto/ambysto-<app>`, with `macos/` first and `windows/` later in the same repo, sharing `docs/spec/`.
+   - Each app gets its own Plane project.
+   - A repo and its Plane project are created only when work on that app starts.
+   - Apps depend on **Ambysto Kit by semver tag** (SwiftPM `from:`). Cross-app contracts (license format, merged mini bar protocol) live in the Kit's spec and change only with a Kit version bump.
+
