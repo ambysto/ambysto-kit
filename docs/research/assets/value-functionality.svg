@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 820" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1040" height="820" fill="#ffffff"/>
+<text x="90" y="34" font-size="20" font-weight="600" fill="#1C1A33">Value × functionality: utility suites (read 2026-10-09)</text>
+<text x="90" y="54" font-size="12" fill="#5b5f6a">X: categories covered of 15 (✓=1, partial=0.5) · Y: functionality points per $10 of effective yearly price (one-time ÷ 3 yrs)</text>
+<line x1="90.0" y1="70" x2="90.0" y2="730" stroke="#eceef2"/>
+<text x="90.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">0</text>
+<line x1="274.0" y1="70" x2="274.0" y2="730" stroke="#eceef2"/>
+<text x="274.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">3</text>
+<line x1="458.0" y1="70" x2="458.0" y2="730" stroke="#eceef2"/>
+<text x="458.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">6</text>
+<line x1="642.0" y1="70" x2="642.0" y2="730" stroke="#eceef2"/>
+<text x="642.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">9</text>
+<line x1="826.0" y1="70" x2="826.0" y2="730" stroke="#eceef2"/>
+<text x="826.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">12</text>
+<line x1="1010.0" y1="70" x2="1010.0" y2="730" stroke="#eceef2"/>
+<text x="1010.0" y="750" font-size="12" text-anchor="middle" fill="#5b5f6a">15</text>
+<line x1="90" y1="730.0" x2="1010" y2="730.0" stroke="#eceef2"/>
+<text x="80" y="734.0" font-size="12" text-anchor="end" fill="#5b5f6a">0</text>
+<line x1="90" y1="670.0" x2="1010" y2="670.0" stroke="#eceef2"/>
+<text x="80" y="674.0" font-size="12" text-anchor="end" fill="#5b5f6a">1</text>
+<line x1="90" y1="610.0" x2="1010" y2="610.0" stroke="#eceef2"/>
+<text x="80" y="614.0" font-size="12" text-anchor="end" fill="#5b5f6a">2</text>
+<line x1="90" y1="550.0" x2="1010" y2="550.0" stroke="#eceef2"/>
+<text x="80" y="554.0" font-size="12" text-anchor="end" fill="#5b5f6a">3</text>
+<line x1="90" y1="490.0" x2="1010" y2="490.0" stroke="#eceef2"/>
+<text x="80" y="494.0" font-size="12" text-anchor="end" fill="#5b5f6a">4</text>
+<line x1="90" y1="430.0" x2="1010" y2="430.0" stroke="#eceef2"/>
+<text x="80" y="434.0" font-size="12" text-anchor="end" fill="#5b5f6a">5</text>
+<line x1="90" y1="370.0" x2="1010" y2="370.0" stroke="#eceef2"/>
+<text x="80" y="374.0" font-size="12" text-anchor="end" fill="#5b5f6a">6</text>
+<line x1="90" y1="310.0" x2="1010" y2="310.0" stroke="#eceef2"/>
+<text x="80" y="314.0" font-size="12" text-anchor="end" fill="#5b5f6a">7</text>
+<line x1="90" y1="250.0" x2="1010" y2="250.0" stroke="#eceef2"/>
+<text x="80" y="254.0" font-size="12" text-anchor="end" fill="#5b5f6a">8</text>
+<line x1="90" y1="190.0" x2="1010" y2="190.0" stroke="#eceef2"/>
+<text x="80" y="194.0" font-size="12" text-anchor="end" fill="#5b5f6a">9</text>
+<line x1="90" y1="130.0" x2="1010" y2="130.0" stroke="#eceef2"/>
+<text x="80" y="134.0" font-size="12" text-anchor="end" fill="#5b5f6a">10</text>
+<line x1="90" y1="70.0" x2="1010" y2="70.0" stroke="#eceef2"/>
+<text x="80" y="74.0" font-size="12" text-anchor="end" fill="#5b5f6a">11</text>
+<text x="550.0" y="780" font-size="13" text-anchor="middle" fill="#1C1A33">Functionality →</text>
+<text transform="translate(28 400.0) rotate(-90)" font-size="13" text-anchor="middle" fill="#1C1A33">Value for money →</text>
+<rect x="519.3333333333333" y="70.0" width="490.66666666666674" height="480.0" fill="#ED708F" opacity="0.06"/>
+<text x="997.7333333333333" y="88.0" font-size="12" text-anchor="end" fill="#B8476A">broad + good value: open space for a suite</text>
+<circle cx="734.0" cy="572.5" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="744.0" y="564.5" font-size="11.5" fill="#1C1A33" text-anchor="start">CleanMyMac</text>
+<circle cx="580.7" cy="537.9" r="6" fill="#8A6FD1" opacity="0.9"/>
+<text x="590.7" y="529.9" font-size="11.5" fill="#1C1A33" text-anchor="start">Parallels Toolbox</text>
+<circle cx="550.0" cy="617.4" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="540.0" y="635.4" font-size="11.5" fill="#1C1A33" text-anchor="end">Nektony MacCleaner Pro</text>
+<circle cx="335.3" cy="129.5" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="343.3" y="133.5" font-size="11.5" fill="#1C1A33" text-anchor="start">iStat Menus</text>
+<circle cx="182.0" cy="459.7" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="190.0" y="463.7" font-size="11.5" fill="#1C1A33" text-anchor="start">DaisyDisk</text>
+<circle cx="550.0" cy="479.9" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="560.0" y="471.9" font-size="11.5" fill="#1C1A33" text-anchor="start">BuhoCleaner</text>
+<circle cx="550.0" cy="667.0" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="560.0" y="685.0" font-size="11.5" fill="#1C1A33" text-anchor="start">MacKeeper</text>
+<circle cx="887.3" cy="657.7" r="6" fill="#8A8F98" opacity="0.9"/>
+<text x="877.3" y="647.7" font-size="11.5" fill="#1C1A33" text-anchor="end">Setapp (catalog)</text>
+<circle cx="243.3" cy="659.4" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="251.3" y="663.4" font-size="11.5" fill="#1C1A33" text-anchor="start">Little Snitch</text>
+<circle cx="151.3" cy="700.0" r="6" fill="#6B5CE8" opacity="0.9"/>
+<text x="159.3" y="704.0" font-size="11.5" fill="#1C1A33" text-anchor="start">Gemini 2</text>
+<circle cx="519.3" cy="479.6" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="509.3" y="483.6" font-size="11.5" fill="#1C1A33" text-anchor="end">IObit ASC Pro</text>
+<circle cx="611.3" cy="559.9" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="621.3" y="553.9" font-size="11.5" fill="#1C1A33" text-anchor="start">IObit 3-in-1</text>
+<circle cx="550.0" cy="660.7" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="560.0" y="664.7" font-size="11.5" fill="#1C1A33" text-anchor="start">CCleaner Pro Plus</text>
+<circle cx="764.7" cy="670.0" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="774.7" y="674.0" font-size="11.5" fill="#1C1A33" text-anchor="start">Avast Ultimate</text>
+<circle cx="642.0" cy="648.2" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="652.0" y="652.2" font-size="11.5" fill="#1C1A33" text-anchor="start">AVG TuneUp</text>
+<circle cx="550.0" cy="190.0" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="558.0" y="194.0" font-size="11.5" fill="#1C1A33" text-anchor="start">Ashampoo WinOptimizer</text>
+<circle cx="672.7" cy="587.3" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="682.7" y="603.3" font-size="11.5" fill="#1C1A33" text-anchor="start">Glary Utilities Pro</text>
+<circle cx="550.0" cy="663.8" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="540.0" y="681.8" font-size="11.5" fill="#1C1A33" text-anchor="end">iolo Ultimate Defense</text>
+<circle cx="458.0" cy="609.8" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="448.0" y="613.8" font-size="11.5" fill="#1C1A33" text-anchor="end">Wise Care 365 Pro</text>
+<circle cx="519.3" cy="655.8" r="6" fill="#2F7BD6" opacity="0.9"/>
+<text x="509.3" y="647.8" font-size="11.5" fill="#1C1A33" text-anchor="end">Auslogics BoostSpeed</text>
+<path d="M550.0,606.6 L558.0,614.6 L550.0,622.6 L542.0,614.6 Z" fill="#ffffff" stroke="#ED708F" stroke-width="2.5"/>
+<text x="562.0" y="618.6" font-size="11.5" font-weight="600" fill="#B8476A">Ambysto Suite $39/yr</text>
+<path d="M550.0,493.2 L558.0,501.2 L550.0,509.2 L542.0,501.2 Z" fill="#ffffff" stroke="#ED708F" stroke-width="2.5"/>
+<text x="562.0" y="505.2" font-size="11.5" font-weight="600" fill="#B8476A">Ambysto Suite $59 one-time</text>
+<path d="M550.0,375.8 L558.0,383.8 L550.0,391.8 L542.0,383.8 Z" fill="#ffffff" stroke="#ED708F" stroke-width="2.5"/>
+<text x="562.0" y="387.8" font-size="11.5" font-weight="600" fill="#B8476A">Ambysto Suite $39 one-time</text>
+<polyline points="550.0,614.6 550.0,501.2 550.0,383.8" fill="none" stroke="#ED708F" stroke-dasharray="4 4"/>
+<rect x="102" y="208.0" width="236" height="96" rx="8" fill="#ffffff" stroke="#eceef2"/>
+<circle cx="114" cy="226.0" r="5" fill="#6B5CE8"/><text x="126" y="230.0" font-size="11.5" fill="#1C1A33">Mac vendor</text>
+<circle cx="114" cy="244.0" r="5" fill="#2F7BD6"/><text x="126" y="248.0" font-size="11.5" fill="#1C1A33">Windows vendor</text>
+<circle cx="114" cy="262.0" r="5" fill="#8A6FD1"/><text x="126" y="266.0" font-size="11.5" fill="#1C1A33">Mac + Windows</text>
+<circle cx="114" cy="280.0" r="5" fill="#8A8F98"/><text x="126" y="284.0" font-size="11.5" fill="#1C1A33">Subscription catalog</text>
+<path d="M114,292.0 L120,298.0 L114,304.0 L108,298.0 Z" fill="#fff" stroke="#ED708F" stroke-width="2"/><text x="126" y="302.0" font-size="11.5" fill="#B8476A">Ambysto suite, candidate prices</text>
+</svg>
