@@ -1,10 +1,11 @@
 # Ambysto Pro Suite: market research on utility-suite vendors, bundle pricing and sales model
 
-**Ticket:** APS-3 (`ambysto/ambysto-kit#2`). **Read on:** 2026-10-09. **Method:** the `bto-researchmarket` playbook, with four parallel research agents:
+**Ticket:** APS-3 (`ambysto/ambysto-kit#2`). **Read on:** 2026-10-09. **Method:** the `bto-researchmarket` playbook, with five research agents:
 - Mac vendors;
 - Windows vendors;
 - paying-user complaints;
-- market size and money flows.
+- market size and money flows;
+- company profiles (founding, ownership, funding, valuation).
 
 The main session wrote the synthesis and did every computation.
 
@@ -229,7 +230,7 @@ Active Macs (2026)    ≈ 100M (Apple, 2018 — secondary quote of Tim Cook) × 
                       ≈ 127M → use 125M (range 110–140M)
 
 Paying Mac utility buyers:
-  CleanMyMac revenue  ≈ $90M (MacPaw 2024, secondary: Forbes Ukraine) × 80% (CleanMyMac share, secondary) = $72M
+  CleanMyMac revenue  ≈ $90.2M (MacPaw 2024, confirmed: UK group accounts) × 80% (CleanMyMac share, vendor-claimed via press) = $72M
   ÷ $40 per paying user per year (assumption ≈ App Store yearly $39.99) ≈ 1.8M paying CleanMyMac users
   ÷ 40% (assumed CleanMyMac share of paid Mac utility spend) ≈ 4.5M paying buyers ≈ 3.6% of 125M
 
@@ -272,7 +273,7 @@ Two caveats:
 - Gen's growth money went into fintech: MoneyLion, acquired 2025-04-17, lifted Trust-Based Solutions from $759M to $1,661M (confirmed, 10-K FY26).
 - Gen reports about 500M users and about 79M paid (15.8%) across its whole portfolio (vendor-claimed, 10-K).
 - MacPaw:
-  - revenue was about $90M in 2024 (secondary);
+  - revenue was $90.2M in 2024 (confirmed: UK group accounts; see §7b);
   - it is pivoting "AI-first" (secondary);
   - it closed Setapp Mobile (secondary);
   - it opened single-app sales on Setapp: developers get 85% of subscriptions and 75% of one-time sales (confirmed, docs).
@@ -285,6 +286,38 @@ Two caveats:
 - FTC: Restoro and Reimage paid $26M over fake "repair" pop-ups (confirmed, 2024). Defender's PUA criteria flag alarming health claims (confirmed).
 
 ---
+
+## 7b. Company profiles
+
+Gathered by a fifth agent using filings and the companies' own pages. MacPaw files audited group accounts in the UK (**MacPaw Family Ltd**, Companies House 11596716), so its numbers below come from a filing rather than from interviews.
+
+| Company | Founded | HQ | Ownership | Funding, deals, valuation | Scale disclosed | Label |
+|---|---|---|---|---|---|---|
+| MacPaw (CleanMyMac, Setapp) | 2008 | Kyiv; London holding, Cyprus operating company | **Bootstrapped**; founder ≥ 75% | No rounds. Bought The Unarchiver (2017, undisclosed) | **Revenue $90.2M (2024, +6.2%)**; net loss −$13.15M after an $11.3M building impairment; SaaS line $13.15M ≈ Setapp (inferred) | confirmed (filing) |
+| Gen Digital (Norton, Avast, AVG, CCleaner) | Symantec lineage | Tempe, AZ and Prague | Public, Nasdaq: GEN | Avast at $8.1–8.6B **equity** value (closed 2022); MoneyLion ~$1B (2025); market cap ≈ $13.6B (598.6M shares × $22.75 close on 8 Oct 2026) | Revenue $5.0B (FY26); ~79M paid of ~500M users; ~3,900 staff | confirmed; share price secondary |
+| Avast | 1988 | Prague | Gen subsidiary | CVC 2014 at $1B; LSE IPO 2018 at $3.23B; bought AVG ~$1.3B (2016) and Piriform (2017, undisclosed) | Revenue $941M (2021, last standalone) | confirmed |
+| AVG | 1991 | Amsterdam (registered) | Gen subsidiary | NYSE IPO 2012 at $16/share; acquired ~$1.3B | Revenue $428M (2015) | confirmed |
+| Piriform (CCleaner) | 2004 | London | Gen subsidiary | Avast 2017, undisclosed; UK entity in solvent liquidation since 2024 (intra-group, by our reading) | "2.5B downloads" | confirmed / vendor-claimed |
+| Parallels | 1999 | Schaffhausen, CH (legal seat) | PE: KKR funds | Corel bought it (2018), KKR bought Corel (2019), Corel split (2026): all undisclosed | "1M+ customers" | confirmed; founding year secondary |
+| IObit | 2004 | Not published (Hong Kong law) | Private (Both Talent International Ltd) | None disclosed | "100M+" and "500M+ users" on one page | confirmed / vendor-claimed |
+| Ashampoo | 1999 | Rastede, Germany | Private, founders | None | "Team of just 55" | confirmed / vendor-claimed |
+| Clario Tech (MacKeeper) | 2009 (ZeoBIT) | Dubai | Private | ZeoBIT → Kromtech (2013) → Clario (2019), undisclosed | "65M+ downloads" | owner confirmed; history secondary |
+| iolo technologies | 1998 | Los Angeles | RealDefense brand | Phoenix Technologies (2013); RealDefense (~2020, unconfirmed) | — | partly confirmed |
+| Raycast | 2020 | Remote; UK company | VC-backed | Seed $2.7M (Accel), A $15M (Accel, Coatue), B $30M (Atomico, Sep 2024) ≈ $47.7M | "40 folks" | confirmed |
+| Nektony | 2011 | Odesa | Independent | None | "11.8M+ installations" | confirmed / vendor-claimed |
+| Rogue Amoeba | 2002 | Boston | Privately held | None | 12 people profiled | confirmed |
+| Objective Development | 2004 (predecessor 2003) | Vienna | Private GmbH | None | — | confirmed |
+| Bjango | 2005 | Australia | Self-funded | None | — | confirmed |
+| Software Ambience (DaisyDisk) | 2008 | Kyiv | Independent | None | — | confirmed |
+| Dr.Buho | 2020 | Chengdu | Not stated | None | "1,000,000+ users" | confirmed / vendor-claimed |
+| Auslogics | 2008 | Sydney | Private | None | "50M+ downloads" | confirmed / vendor-claimed |
+| BundleHunt | 2010 | Delaware LLC, remote | Self-funded | None | "2,450+ deals" | confirmed / vendor-claimed |
+| StackCommerce | ~2011 | California | PE: TPG majority (2021) | $800K seed (2012) | ~$80M revenue (2020, press) | mostly secondary |
+
+**What it means for Ambysto.**
+- **The big money came from consolidation into security companies.** Avast, AVG and CCleaner all ended up inside Gen.
+- **The Mac utility makers that last are small, self-funded and profitable on one-time licences.**
+- **MacPaw is the bootstrapped outlier** at about $90M. Even so, it posted a loss in 2024 while investing in AI products.
 
 ## 8. Recommendation (hypotheses to validate, not decisions)
 
@@ -323,7 +356,12 @@ Two caveats:
 | CCleaner 5.33 infected "2.27M" users | Not in Cisco Talos's post (Cisco says "could affect millions"). Secondary sources also give 2.5M. |
 | CCleaner "2.5B downloads" | Affiliate sites only. The last sourced milestone is 2B (2016 PR), and downloads are not users. |
 | IObit "100M+ / 200M+ / 500M+ users" | Three conflicting figures on IObit's own site. |
-| MacPaw revenue $34.8M (Latka) / $138.6M (StartupHub) | Model estimates that contradict the ~$90M MacPaw itself reported. |
+| MacPaw revenue $34.8M (Latka) / $138.6M (StartupHub) | Model estimates that contradict the $90.2M in MacPaw's UK group accounts. |
+| MacPaw "$2B valuation" | An IPO target the founder named in interviews. No round, deal or market price is behind it. |
+| MacPaw "loss over $10M / 2023 profit $3.1M" (press) | Those are total-comprehensive-income lines. The filing's loss and profit for the year are −$13.15M and +$7.53M. |
+| MacPaw "gross margin 28.5%" | The filing's own narrative says this, but its P&L gives 73.9%. |
+| KKR–Corel "over $1B", Piriform "~$50M", Avast "$8.6B enterprise value" | No release discloses these figures. Avast's $8.1–8.6B is equity value. |
+| CCleaner revenue "$19.8M", Glarysoft "$3M", any Latka/Growjo/Owler figure | Model estimates. Untraceable by definition. |
 | Setapp "1M users (2019)", current subscriber count | No MacPaw source. The last disclosed figure is 15,000 subscribers (2018). |
 | "CleanMyMac 20M+ downloads", "Parallels $100M+ revenue" | No original source. |
 | Setapp survey: "83% of Mac users paid for software last month", "$139/yr" | Self-selected vendor survey, partly Setapp users. Setapp itself warns spending may be overstated. **Not used as a conversion rate.** |
