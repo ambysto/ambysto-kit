@@ -1,0 +1,695 @@
+[
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "valid single app",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "108602d061ceddb80ef4f2ac419929a299dbd75929b925b8430038793e1407ebe859146f9723d2b377baba917dd7ba9d6957383f019d929420db2dd56fe2ec74",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0H11G-2T1GW-XQDR1-VTF5B-21K4M-T56EV-TXCJK-E95Q1-1G0E3-S7RA0-FTZ8B-4A6Z5-S3TAS-QFENT-J5YXF-EMXD5-BKGFR-1KP99-886V5-QAPZR-QCEG",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "optimer",
+        "space",
+        "steady"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000070c4e677579656e2056616e2041",
+    "name" : "valid suite",
+    "payloadHex" : "01000102030405060708011a000003000000070c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "c90562ab084113c125dcc03c4dce90c13c027ac6d480f4a0f651071ac4266cbadcdd2c083613df0e060e60cba19d5142b00301745ebaa6bdaac3a2bbfefa703e",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-RC9SK-QAYB5-DRG5C-RBE41-0WJ1B-2NC44-24Y14-QEC0F-2DST8-C2F02-FB3D9-07MM3-V521R-TRGK6-SEPWV-MP0GD-GKVW7-0C3K0-SEGST-MA2P0-1G2X2-YQAKB-VAP3M-AXZXY-KG7R",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 647,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a028703000000040c4e677579656e2056616e2041",
+    "name" : "valid with updates until",
+    "payloadHex" : "01000102030405060708011a028703000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "dc2ce2ac0d89b70954673274cc6f16332059e91e804d4a8fb1312a09830c255b595d77b0e021523abd9230a0828d2e1b7e1b67ec957dd42a3ce780415a5f5b67",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-51R30-00001-0C9SK-QAYB5-DRG5C-RBE41-0XRB7-2NG6R-KDR9A-HKK4X-6CDWB-3682S-X4F80-KAAHY-RK2AG-9GC62-APTSB-NVV1R-11A8X-BV4HG-M218T-BGVFR-DPFV4-NFQA2-MF77G-10NMQ-TVCW",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyễn Văn Ánh",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a00000300000004124e677579e1bb856e2056c4836e20c3816e68",
+    "name" : "valid Vietnamese licensee",
+    "payloadHex" : "01000102030405060708011a00000300000004124e677579e1bb856e2056c4836e20c3816e68",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "b4fbff42c3c86a3f9241912eaf6f350fef657b74ad42adbde8566020be478e25ed14b75eef9881741d174fb3655392b05dfdf8d6231f065529f3942bd7dbfeb6",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0J9SK-QAYF1-QE2PW-82PRJ-1PW86-3G5Q6-HD7VZ-X1C7J-3A7Y9-4349E-NXQKA-3ZFCN-XQ9BA-2NPYY-GNK04-2Z4F3-H5XMA-BEQQF-K20Q8-78Q9Y-SPAMW-JP1EZ-VY6P4-CFGCN-99YEA-2QNYV-ZTV0",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "lowercase, spaces and line breaks",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "amb 04002 0g30g 2gc1r 804d0 00030 00001 0c9sk qayb5 drg5c rbe41 0zpw6 ksxrg w0amt 917v0 zp8ce \r\n  gxswz t7258 z4na7 1epkx 3m4e6 71jq6 ffyf1 03qvh p68d9 6s3nv 15nmc 7wn1b 26nhs rhas7 4t970 szbc",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "no AMB prefix",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "leading spaces before a lowercase prefix",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "  amb-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "O, I and L read as 0 and 1",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-O4002-0G30G-2GClR-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0909090909090909",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000909090909090909011a000003000000040c4e677579656e2056616e2041",
+    "name" : "signature r starts with 0x00",
+    "payloadHex" : "01000909090909090909011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "00c594e3f5821713b020c303a27972ccf3e1b313ef3432872546f3b363e722422c6ee3fb72bb8061dcc0be7162bc12839dd0acb44a782df8ddec8ce651b82276",
+    "text" : "AMB-0400J-28914-4GJ28-904D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0G1HC-MWFTR-45RKP-0GC60-X2F5S-CSWZ1-PC9YY-D1JGW-JMDWX-KCFKJ-4GHCD-VHZPW-NVG1G-XSG5Y-E5HBR-4M3KQ-8ASD2-AF0PZ-HQFCH-KK53E-12ER",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0707070707070707",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000707070707070707011a000003000000040c4e677579656e2056616e2041",
+    "name" : "high-S signature",
+    "payloadHex" : "01000707070707070707011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "490f695a1ba6ba14a4fb2abe82293d53f13805eaa1346d91a421bbe2627f4979cb4e865e11e9f4168eb2349d9ae558b3101f128ce8c3c84ec5635ba009cd905f",
+    "text" : "AMB-0400E-1R70W-3GE1R-704D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0MJ3V-9B8DT-DEGMM-KXJNF-M254Y-N7W9R-0QNA2-D3DJ6-J23EZ-2C9ZM-JYEB9-T35W4-F9YGB-8XCHM-KPDEA-P5K20-FH537-8RF44-XHB3B-EG0KK-CGBW",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003001000040c4e677579656e2056616e2041",
+    "name" : "unknown product bit 20 is ignored",
+    "payloadHex" : "01000102030405060708011a000003001000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "eb5051dd28f55bd65a383977b9c762b4c303eee344df10019bb1f5bb1cbcfbc5e5f1454694a436c7e769a5357d67770f1f62eb08f433a9c9f34342bcbd6dddf0",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-08001-0C9SK-QAYB5-DRG5C-RBE41-0YPM2-HVMMF-APYPB-8W3JX-XSRXH-B9GR3-XVHM9-QRG06-DV3XD-V3JYF-QHF5Y-52MD5-546V3-YETD5-6NYPE-XRF3X-HEP27-M6EMW-KWT38-AYBTV-EXY0",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 100,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a006403000000040c4e677579656e2056616e2041",
+    "name" : "updates until before issued (issuer rule only)",
+    "payloadHex" : "01000102030405060708011a006403000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "c45ed4380f5bd7ee6c408dd0da15c6527a3b9a0d232f455698889ae3acc26bb19716f4b4d7d0cd16f2168dc0915110584b94b62ad7e3d5bab74ac2e9d4cf639a",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-0S030-00001-0C9SK-QAYB5-DRG5C-RBE41-0W8QP-M707N-QNZED-H08VM-6T2Q3-54YHV-K86J6-BT5AT-C8H6Q-3NK16-QCCQ2-VTB9N-YGSMB-F45MD-R28N2-42R9E-ABCAP-QWFAV-NDTAR-BMX9K-V3K8",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000000c4e677579656e2056616e2041",
+    "name" : "empty product mask (issuer rule only)",
+    "payloadHex" : "01000102030405060708011a000003000000000c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "7d9dece161758f6caad36b42d61aef7de99a680cc7f93410b0e279dba1892c16eed02301a04a7c542879cfb0f914e85c2b051acc9b0fccb4cd5f2ca87bf13aac",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00000-0C9SK-QAYB5-DRG5C-RBE41-0QV7F-CW5GQ-B3VCN-B9PPG-PP3BQ-QVTCT-D06CF-Y9M22-RE4YE-VM64J-R5QET-0HG38-2AFHA-2GYEF-P3WH9-T2W5C-2HNK4-V1Z6B-9KAZ5-JM7QW-9TNG",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "Nguyen Van A",
+      "products" : [
+        "space"
+      ],
+      "seats" : 0,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000000000000040c4e677579656e2056616e2041",
+    "name" : "zero seats (issuer rule only)",
+    "payloadHex" : "01000102030405060708011a000000000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "ffab5cc193100c7e27ac4555b0f3f398e676b9ecfa4f24475e09eaf01b00ff9d9d3c4c8abfb442d91b1ce754bdab964237c68c5e4ffd37efcc340d10b0f40caf",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00000-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZZAT-WR69H-033Y4-YP4AN-DGYFS-SHSKP-Q7PFM-KS48X-F0KTQ-G3C0F-Z7CX7-H68NF-XM8BC-HP777-AJYTQ-5J26Z-38RQJ-FZMVY-ZK1M1-M8B1X-0CNW",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "issuedDay" : 282,
+      "keyID" : "0102030405060708",
+      "licensee" : "A\u0000B",
+      "products" : [
+        "space"
+      ],
+      "seats" : 3,
+      "updatesUntilDay" : 0,
+      "valid" : true
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a0000030000000403410042",
+    "name" : "NUL in licensee (issuer rule only)",
+    "payloadHex" : "01000102030405060708011a0000030000000403410042",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "f865adc347f7b24bdb79e9ed8c5c70fad01ad2a76bb6761933f0812bd706bc54cd23ffa1af6112464f63f800f4cb0ec4b7500e9bf9982f1375687a8c912526bb",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-03840-45Y35-NQ1MF-XXJ9F-DQKTF-DHHE7-1YPG3-B9AET-XPERC-K7W41-5FBGD-F2MSM-HZZ8D-FC494-CKV3Z-00F9J-RERJV-N03MV-Z6C2Y-4VND1-X8S49-54TXG",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "badSignature",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000002000000040c4e677579656e2056616e2041",
+    "name" : "tampered payload byte",
+    "payloadHex" : "01000102030405060708011a000002000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00020-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "badSignature",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "tampered signature byte",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5a",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZB8",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "badSignature",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000002000000040c4e677579656e2056616e2041",
+    "name" : "tampered and revoked: the signature is checked first",
+    "payloadHex" : "01000102030405060708011a000002000000040c4e677579656e2056616e2041",
+    "revoked" : [
+      "0102030405060708"
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00020-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "unknownSigningKey",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101090102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "unknown signing key id",
+    "payloadHex" : "01090102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "5722f90aa48c2b382babeeb5295f5f11631041213e0fc9418f5b4efd5ae34d53981da12279367acfa93dd40240154b598c4bf656abba5b2dd5734d4794002499",
+    "text" : "AMB-044G2-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0NE8Q-S1AJ8-RASR5-ENYXD-99BXF-H2RRG-84GKW-3Y986-7NPKQ-XBBHM-TMWR3-PGJ4Y-9PFB7-TJFEM-0901A-JTSHH-5ZCNN-BQ9DJ-VNBK9-N3S80-14K4",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "revoked",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "revoked key id",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+      "0102030405060708"
+    ],
+    "signatureHex" : "94e488c1ec74647403fa421d9db6fa40f591f29396cb2192d9c5cbd75af43933e27d4dba89f38b6636dc997e2f907cd68f0dea33c238a1bade29f4719e22625e",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0S9S4-8R7P7-8S3M0-FX447-CXPVX-41XCH-YA9SD-JS1JB-CWBJY-QBBT3-JCZ2F-N6VN2-FKHDK-3DQ4S-FRQS0-Z6PHW-6YMCY-272GV-NQH9Y-HRSW8-K2BR",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "unsupportedVersion",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3102000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "version 2",
+    "payloadHex" : "02000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "7fe0f0e0291af0a869ba9f4d5ff1a82f5ea2f738b0bee1005080f096910ca33c9f8747ec88bf0b43079fd75e8eded3c70bb5892e5516ed9f6355a644c31ed418",
+    "text" : "AMB-08002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0QZR7-GW0MH-NW58D-6X9YK-AZY6M-2YQN2-YWWB1-FQ101-881W4-PJ46A-6F4ZG-X3YS2-5Z1D1-GF7YQ-BT7DX-MY71E-TRJBJ-N2VPS-YRTNM-S2C67-PM30",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "unsupportedVersion",
+      "valid" : false
+    },
+    "name" : "version 2 with a short length: version is checked first",
+    "revoked" : [
+
+    ],
+    "text" : "AMB-08002-0G3",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041fb",
+    "name" : "wrong length",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041fb",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b00",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC0-0",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040d4e677579656e2056616e2041",
+    "name" : "licensee length byte does not match the total",
+    "payloadHex" : "01000102030405060708011a000003000000040d4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0D9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "name" : "licensee length 0",
+    "revoked" : [
+
+    ],
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-00SJN-S7K07-3DAVR-TABWC-Q2T3E-NKEWJ-HB8M8-6D6MG-GGQ1T-60AFW-W7SHZ-KATX8-1W3TA-TE2VG-HZM1H-N0SZJ-J2372-XDDHY-9R41W-CV3DB-222M8",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a00000300000004414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141",
+    "name" : "licensee length 65",
+    "payloadHex" : "01000102030405060708011a00000300000004414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "109af9a0cba7564db680f495d9f10a5dd7f6916385b59e92534460777e09514fde192674eb8ffa2f90fbe51acbe5ab9d18eda503472eaec19cde497abadfd702",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-21850-M2GA1-850M2-GA185-0M2GA-1850M-2GA18-50M2G-A1850-M2GA1-850M2-GA185-0M2GA-1850M-2GA18-50M2G-A1850-M2GA1-850M2-GA185-0M2GA-122DF-K86BM-XB4VD-M0YJA-XKW8A-BQBZD-4B3GP-TSX4J-K8HG7-EZG9A-57XW6-96EKN-RZYHF-J3XYA-6PBWP-NST67-DMM1M-EBNER-6EDWJ-BTQBF-XE0G",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a0000030000000402c328",
+    "name" : "invalid UTF-8 licensee",
+    "payloadHex" : "01000102030405060708011a0000030000000402c328",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "21d1bf38476dfabb7e02f1640db9e4e7e3b8c49a6be762b427b1fed9ae7558331f7d8680d259eb34416320c724541bc15cb6a410baf14a128da9a7c6274addca",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-02RCM-23MDZ-713PV-YNVFR-1F2S0-DQ7JE-FRXRR-JD6QS-V2PGK-V3ZPS-NSTNG-CRZFP-381MJ-SXCT4-2RS0R-WJ586-Y1BJV-A845T-Y5515-3D9MZ-32EJP-XS8",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "non-zero trailing bits",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBD",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "symbol count with remainder 1 modulo 8",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-040020G30G2GC1R804D000030000010C9SKQAYB5DRG5CRBE410ZPW6KSXRGW0AMT917V0ZP8CEGXSWZT7258Z4NA71EPKX3M4E671JQ6FFYF103QVHP68D96S3NV15NMC7WN1B26NHSRHAS7",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "symbol count with remainder 3 modulo 8",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-040020G30G2GC1R804D000030000010C9SKQAYB5DRG5CRBE410ZPW6KSXRGW0AMT917V0ZP8CEGXSWZT7258Z4NA71EPKX3M4E671JQ6FFYF103QVHP68D96S3NV15NMC7WN1B26NHSRHAS74T",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "symbol count with remainder 6 modulo 8",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-040020G30G2GC1R804D000030000010C9SKQAYB5DRG5CRBE410ZPW6KSXRGW0AMT917V0ZP8CEGXSWZT7258Z4NA71EPKX3M4E671JQ6FFYF103QVHP68D96S3NV15NMC7WN1B26NHSRHAS74T970",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "letter U",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBCU",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "character # in the text",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC#",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "messageHex" : "414d425953544f2d4c4943454e53452d3101000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "name" : "non-ASCII digit in the text",
+    "payloadHex" : "01000102030405060708011a000003000000040c4e677579656e2056616e2041",
+    "revoked" : [
+
+    ],
+    "signatureHex" : "fb70d3cf710e0154d2427d83f6431d0ee79fd1c4547c9551c2eb4fa3a11c63865733dfe78403bee36321a936475d84b5a30fca856235639c4559393493833f5b",
+    "text" : "AMB-１04002-0G30G-2GC1R-804D0-00030-00001-0C9SK-QAYB5-DRG5C-RBE41-0ZPW6-KSXRG-W0AMT-917V0-ZP8CE-GXSWZ-T7258-Z4NA7-1EPKX-3M4E6-71JQ6-FFYF1-03QVH-P68D9-6S3NV-15NMC-7WN1B-26NHS-RHAS7-4T970-SZBC",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  },
+  {
+    "expect" : {
+      "error" : "malformed",
+      "valid" : false
+    },
+    "name" : "empty",
+    "revoked" : [
+
+    ],
+    "text" : "",
+    "trustedKeys" : {
+      "0" : "3ccd24def13196dc0f90a3f2b94f180276d17fc24a5fa5388ecfa9508c87e5830aa31040704d5454ffd188c08994a46d0e41235cc249b181199492882ae479be"
+    }
+  }
+]
