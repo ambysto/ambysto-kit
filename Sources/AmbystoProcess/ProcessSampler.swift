@@ -16,6 +16,19 @@ public struct ProcessUsage: Sendable, Equatable {
     public var diskWritePerSecond: Double?
 
     public var pid: pid_t { identity.pid }
+
+    public init(identity: ProcessIdentity, ppid: pid_t, uid: uid_t, name: String, path: String?, footprint: UInt64,
+                cpuPercent: Double? = nil, diskReadPerSecond: Double? = nil, diskWritePerSecond: Double? = nil) {
+        self.identity = identity
+        self.ppid = ppid
+        self.uid = uid
+        self.name = name
+        self.path = path
+        self.footprint = footprint
+        self.cpuPercent = cpuPercent
+        self.diskReadPerSecond = diskReadPerSecond
+        self.diskWritePerSecond = diskWritePerSecond
+    }
 }
 
 /// Where the sampler reads from. Injectable so tests can feed reused pids and decreasing counters.

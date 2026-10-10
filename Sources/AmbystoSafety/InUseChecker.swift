@@ -20,6 +20,11 @@ public struct InUseReport: Sendable, Equatable {
 
     public var isInUse: Bool { !users.isEmpty }
 
+    public init(users: [ProcessUse], uncheckedProcesses: Int) {
+        self.users = users
+        self.uncheckedProcesses = uncheckedProcesses
+    }
+
     public var reason: String {
         let names = users.prefix(3).map { "\($0.name) (pid \($0.pid))" }.joined(separator: ", ")
         return "In use by \(names)" + (users.count > 3 ? " and \(users.count - 3) more" : "")

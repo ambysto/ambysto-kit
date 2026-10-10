@@ -13,6 +13,14 @@ public enum ProcessReader {
         /// `SZOMB` (5) for a process that has exited but not been collected yet.
         public var status: UInt32
         public var isZombie: Bool { status == UInt32(SZOMB) }
+
+        public init(ppid: pid_t, uid: uid_t, startTime: UInt64, name: String, status: UInt32) {
+            self.ppid = ppid
+            self.uid = uid
+            self.startTime = startTime
+            self.name = name
+            self.status = status
+        }
     }
 
     public struct Usage: Sendable, Equatable {
@@ -20,12 +28,24 @@ public enum ProcessReader {
         public var cpuTicks: UInt64
         public var diskRead: UInt64
         public var diskWritten: UInt64
+
+        public init(footprint: UInt64, cpuTicks: UInt64, diskRead: UInt64, diskWritten: UInt64) {
+            self.footprint = footprint
+            self.cpuTicks = cpuTicks
+            self.diskRead = diskRead
+            self.diskWritten = diskWritten
+        }
     }
 
     /// A file a process has open or mapped: its path as the kernel reports it, and its identity.
     public struct VnodeRef: Sendable, Equatable {
         public var path: String
         public var identity: FileIdentity
+
+        public init(path: String, identity: FileIdentity) {
+            self.path = path
+            self.identity = identity
+        }
     }
 
     public static func allPIDs() -> [pid_t] {
