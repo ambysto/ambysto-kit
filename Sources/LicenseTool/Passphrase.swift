@@ -16,8 +16,14 @@ enum Passphrase {
     static func readNew() throws -> [UInt8] {
         let first = try read("Backup passphrase (at least \(minimumLength) characters): ")
         guard first.count >= minimumLength else { throw ToolError("The passphrase is shorter than \(minimumLength) characters.") }
-        let second = try read("Repeat the passphrase: ")
+        var second = try read("Repeat the passphrase: ")
+        defer { second.resetBytes() }
         guard first == second else { throw ToolError("The passphrases differ; nothing was created.") }
         return first
     }
+}
+
+extension Array where Element == UInt8 {
+    /// Overwrites the bytes before the array is released (Swift cannot wipe copies made elsewhere).
+    mutating func resetBytes() { for i in indices { self[i] = 0 } }
 }

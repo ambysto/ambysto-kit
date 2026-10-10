@@ -36,6 +36,7 @@ struct VectorTests {
                 #expect(license.keyID == vector.expect.keyID, "\(vector.name)")
                 #expect(license.seats == vector.expect.seats, "\(vector.name)")
                 #expect(Int(license.updatesUntilDay) == vector.expect.updatesUntilDay, "\(vector.name)")
+                #expect(LicensePayload.day(of: license.issued) == vector.expect.issuedDay, "\(vector.name)")
             case .failure(let error):
                 #expect(!vector.expect.valid, "\(vector.name): refused with \(error) but should verify")
                 #expect(error.rawValue == vector.expect.error, "\(vector.name): \(error)")
@@ -72,7 +73,7 @@ struct TextTests {
         let text = issue().replacingOccurrences(of: "-", with: "").dropFirst(3)
         for cut in 1 ... 8 {
             let shorter = String(text.dropLast(cut))
-            #expect(testVerifier.verify(shorter).isFailure, "cut \(cut)")
+            #expect(testVerifier.verify(shorter) == .failure(.malformed), "cut \(cut)")
         }
     }
 }
@@ -93,6 +94,11 @@ struct LicenseBehaviourTests {
         let forLife = try testVerifier.verify(issue()).get()
         #expect(forLife.updatesUntil == nil)
         #expect(forLife.allowsUpdates(builtOn: Date(timeIntervalSince1970: 6_000_000_000)))
+    }
+
+    @Test func productionHoldsExactlyTheReleasedKeys() {
+        // 0.1.0 before release: none. Update this list in the same commit that adds a production key.
+        #expect(TrustedKeys.production.ids == [])
     }
 
     @Test func productionDoesNotTrustTheTestKey() {
@@ -123,6 +129,14 @@ struct LicenseBehaviourTests {
         #expect(Array(license.licensee.utf8) == Array(decomposed.precomposedStringWithCanonicalMapping.utf8))
     }
 
+    @Test func extremeDatesNeverTrap() throws {
+        let license = try testVerifier.verify(issue(until: Date(timeIntervalSince1970: 1_767_225_600 + 500 * 86_400))).get()
+        #expect(!license.allowsUpdates(builtOn: Date(timeIntervalSinceReferenceDate: 1e300)))
+        #expect(license.allowsUpdates(builtOn: Date(timeIntervalSinceReferenceDate: -1e300)))
+        #expect(!license.allowsUpdates(builtOn: Date(timeIntervalSinceReferenceDate: .nan)))
+        #expect(!license.allowsUpdates(builtOn: Date(timeIntervalSinceReferenceDate: .infinity)))
+    }
+
     @Test func verificationIsFast() {
         let text = issue()
         let start = Date()
@@ -137,6 +151,9 @@ struct LicenseBehaviourTests {
         let good = folder.appending(path: "a.ambystokey")
         try Data((issue() + "\n").utf8).write(to: good)
         #expect((try? testVerifier.verify(fileAt: good).get()) != nil)
+        let bom = folder.appending(path: "bom.ambystokey")
+        try (Data([0xEF, 0xBB, 0xBF]) + Data(issue().utf8)).write(to: bom)
+        #expect((try? testVerifier.verify(fileAt: bom).get()) != nil)
         let big = folder.appending(path: "b.ambystokey")
         try Data(repeating: 0x41, count: 5_000).write(to: big)
         #expect(testVerifier.verify(fileAt: big) == .failure(.malformed))
@@ -192,10 +209,67 @@ struct ToolTests {
         #expect(FileManager.default.fileExists(atPath: folder.appending(path: "\(license.keyID).ambystokey").path))
     }
 
+    @Test func scanFindsTheKeyInStashesMergesPEMAndFailsLoudlyOutsideARepo() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "kit-scan-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let keyFile = folder.appending(path: "test.key")
+        try Hex.decode(TestKey.privateHex)!.write(to: keyFile)
+        let key = try P256.Signing.PrivateKey(rawRepresentation: Hex.decode(TestKey.privateHex)!)
+
+        func git(_ repo: URL, _ args: String...) throws {
+            let r = try Spawn.run(["/usr/bin/git", "-C", repo.path, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"] + args)
+            #expect(r.status == 0, "git \(args)")
+        }
+        func repo(_ name: String) throws -> URL {
+            let url = folder.appending(path: name)
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            try git(url, "init", "-q", "-b", "main")
+            try Data("x".utf8).write(to: url.appending(path: "a.txt"))
+            try git(url, "add", "."); try git(url, "commit", "-q", "-m", "init")
+            return url
+        }
+        func scan(_ path: String) throws -> String {
+            let printed = Box()
+            var commands = Commands(store: FileStore(url: keyFile), ledger: Ledger(url: folder.appending(path: "l.csv")))
+            commands.out = { printed.lines.append($0) }
+            try commands.run("scan-for-key", Arguments([path, "--id", "0"]))
+            return printed.lines.joined()
+        }
+
+        let clean = try repo("clean")
+        #expect(try scan(clean.path) == "not found")
+
+        let stashed = try repo("stash")
+        try Data(TestKey.privateHex.utf8).write(to: stashed.appending(path: "a.txt"))
+        try git(stashed, "stash", "-q")
+        #expect(try scan(stashed.path) == "found")
+
+        let merged = try repo("merge")
+        try git(merged, "checkout", "-q", "-b", "side")
+        try Data("side".utf8).write(to: merged.appending(path: "b.txt")); try git(merged, "add", "."); try git(merged, "commit", "-q", "-m", "side")
+        try git(merged, "checkout", "-q", "main")
+        try Data("main".utf8).write(to: merged.appending(path: "c.txt")); try git(merged, "add", "."); try git(merged, "commit", "-q", "-m", "main")
+        try git(merged, "merge", "-q", "--no-commit", "side")
+        try Data(key.rawRepresentation.base64EncodedString().utf8).write(to: merged.appending(path: "d.txt"))
+        try git(merged, "add", "."); try git(merged, "commit", "-q", "-m", "merge")
+        try FileManager.default.removeItem(at: merged.appending(path: "d.txt")); try git(merged, "commit", "-q", "-am", "remove")
+        #expect(try scan(merged.path) == "found")
+
+        let pem = try repo("pem")
+        try Data(key.pemRepresentation.utf8).write(to: pem.appending(path: "key.pem"))
+        #expect(try scan(pem.path) == "found")
+
+        let notRepo = folder.appending(path: "plain")
+        try FileManager.default.createDirectory(at: notRepo, withIntermediateDirectories: true)
+        #expect(throws: ToolError.self) { _ = try scan(notRepo.path) }
+    }
+
     @Test func theFileStoreRefusesProductionKeyIDs() throws {
         let store = FileStore(url: FileManager.default.temporaryDirectory.appending(path: "nope-\(UUID().uuidString)"))
         #expect(throws: ToolError.self) { try store.store(Data(repeating: 1, count: 32), id: 1) }
         #expect(throws: ToolError.self) { try store.read(id: 1) }
+        #expect(!store.exists(id: 1))
     }
 
     @Test func theBackupMustGoToAnExternalDriveOutsideAGitTree() {

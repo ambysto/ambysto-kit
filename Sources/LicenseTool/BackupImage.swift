@@ -6,8 +6,8 @@ enum BackupImage {
     static let hdiutil = "/usr/bin/hdiutil"
     static let keyFileName = "ambysto-signing-key.txt"
 
-    /// The backup must be written to an external drive: under /Volumes, on a different device than the Mac's
-    /// own volumes, and not inside a git work tree.
+    /// The backup must be written to a local external drive: under /Volumes, on a different device than the Mac's
+    /// own volumes, local (not a network or cloud mount), not internal, and not inside a git work tree.
     static func checkBackupPath(_ path: String) throws {
         let url = URL(filePath: path).standardizedFileURL
         guard url.path.hasPrefix("/Volumes/"), url.pathExtension == "dmg" else {
@@ -20,6 +20,10 @@ enum BackupImage {
         stat("/System/Volumes/Data", &dataInfo)
         guard parentInfo.st_dev != rootInfo.st_dev, parentInfo.st_dev != dataInfo.st_dev else {
             throw ToolError("\(parent) is on this Mac's own disk; use an external drive.")
+        }
+        let volume = try? URL(filePath: parent).resourceValues(forKeys: [.volumeIsLocalKey, .volumeIsInternalKey])
+        guard volume?.volumeIsLocal == true, volume?.volumeIsInternal == false else {
+            throw ToolError("\(parent) is not a local external drive (network, cloud and internal volumes are refused).")
         }
         var current = URL(filePath: parent)
         while current.path != "/" {
@@ -46,12 +50,15 @@ enum BackupImage {
         let folder = URL(filePath: String(cString: created))
         let mountpoint = folder.appending(path: "mount")
         mkdir(mountpoint.path, 0o700)
-        let previous = signal(SIGINT, SIG_IGN)
+        let signals = [SIGINT, SIGTERM, SIGHUP]
+        let previous = signals.map { signal($0, SIG_IGN) }
         defer {
-            _ = try? run([hdiutil, "detach", "-quiet", "-force", mountpoint.path], stdin: nil)
+            if (try? run([hdiutil, "detach", "-quiet", "-force", mountpoint.path], stdin: nil)) == nil {
+                note("Could not detach the backup at \(mountpoint.path). Eject it in Finder now.")
+            }
             rmdir(mountpoint.path)
             rmdir(folder.path)
-            signal(SIGINT, previous)
+            for (sig, handler) in zip(signals, previous) { signal(sig, handler) }
         }
         var arguments = [hdiutil, "attach", "-quiet", "-stdinpass", "-nobrowse", "-owners", "on", "-mountpoint", mountpoint.path]
         if readOnly { arguments.append("-readonly") }
@@ -69,26 +76,13 @@ enum BackupImage {
         guard fd >= 0 else { throw ToolError("Could not write \(url.lastPathComponent) in the backup.") }
         defer { close(fd) }
         let written = data.withUnsafeBytes { write(fd, $0.baseAddress, data.count) }
-        guard written == data.count, fsync(fd) == 0 else { throw ToolError("Could not write \(url.lastPathComponent) in the backup.") }
+        guard written == data.count, fcntl(fd, F_FULLFSYNC) == 0 else { throw ToolError("Could not write \(url.lastPathComponent) in the backup.") }
     }
 
-    /// Runs a system tool by absolute path; stdin bytes are written exactly (no terminator). Output is discarded.
     @discardableResult
     static func run(_ arguments: [String], stdin: [UInt8]?) throws -> Int32 {
-        let process = Process()
-        process.executableURL = URL(filePath: arguments[0])
-        process.arguments = Array(arguments.dropFirst())
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        let pipe = Pipe()
-        process.standardInput = stdin == nil ? FileHandle.nullDevice : pipe
-        try process.run()
-        if let stdin {
-            pipe.fileHandleForWriting.write(Data(stdin))
-            try? pipe.fileHandleForWriting.close()
-        }
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { throw ToolError("\((arguments[0] as NSString).lastPathComponent) failed (\(process.terminationStatus)).") }
-        return process.terminationStatus
+        let result = try Spawn.run(arguments, stdin: stdin)
+        guard result.status == 0 else { throw ToolError("\((arguments[0] as NSString).lastPathComponent) failed (\(result.status)).") }
+        return result.status
     }
 }

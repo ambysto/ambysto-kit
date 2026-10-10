@@ -35,8 +35,11 @@ struct LicensePayload: Equatable, Sendable {
     /// The message that is signed: the domain string, then the payload.
     var signedMessage: Data { Self.domain + bytes }
 
+    /// Whole UTC days since the epoch, clamped so extreme or non-finite dates never trap.
     static func day(of date: Date) -> Int {
-        Int((date.timeIntervalSince(epoch) / 86_400).rounded(.down))
+        let days = (date.timeIntervalSince(epoch) / 86_400).rounded(.down)
+        guard days.isFinite else { return days > 0 ? Int.max : Int.min }
+        return Int(max(min(days, 1e15), -1e15))
     }
 
     static func date(ofDay day: UInt16) -> Date {

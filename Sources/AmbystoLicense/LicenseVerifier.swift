@@ -31,7 +31,8 @@ public struct LicenseVerifier: Sendable {
     /// Reads an `.ambystokey` file (at most 4 KB, UTF-8 text).
     public func verify(fileAt url: URL) -> Result<License, LicenseError> {
         guard let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize, size <= Self.maxFileBytes,
-              let data = try? Data(contentsOf: url), LicensePayload.isValidUTF8([UInt8](data)) else { return .failure(.malformed) }
-        return verify(String(decoding: data, as: UTF8.self))
+              var bytes = (try? Data(contentsOf: url)).map([UInt8].init), LicensePayload.isValidUTF8(bytes) else { return .failure(.malformed) }
+        if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { bytes.removeFirst(3) }   // a UTF-8 byte order mark is ignored
+        return verify(String(decoding: bytes, as: UTF8.self))
     }
 }

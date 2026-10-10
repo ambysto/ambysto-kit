@@ -8,7 +8,10 @@ public struct TrustedKeys: Sendable {
     package init(rawHex: [UInt8: String]) {
         var keys: [UInt8: P256.Signing.PublicKey] = [:]
         for (id, hex) in rawHex {
-            if let bytes = Hex.decode(hex), let key = try? P256.Signing.PublicKey(rawRepresentation: bytes) { keys[id] = key }
+            guard let bytes = Hex.decode(hex), let key = try? P256.Signing.PublicKey(rawRepresentation: bytes) else {
+                preconditionFailure("Trusted signing key \(id) is not a valid P-256 public key")
+            }
+            keys[id] = key
         }
         self.keys = keys
     }

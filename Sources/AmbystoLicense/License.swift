@@ -30,6 +30,8 @@ public struct License: Sendable, Equatable {
     /// Whether a build made on `date` (UTC day) is within the license's updates. Inclusive.
     public func allowsUpdates(builtOn date: Date) -> Bool {
         guard updatesUntilDay != 0 else { return true }
+        let interval = date.timeIntervalSince(LicensePayload.epoch)
+        guard interval.isFinite else { return false }
         return LicensePayload.day(of: date) <= Int(updatesUntilDay)
     }
 }

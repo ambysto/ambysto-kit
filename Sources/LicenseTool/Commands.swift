@@ -74,13 +74,23 @@ struct Commands {
 
     func newSigningKey(id: UInt8, backup: String?) throws {
         guard let backup else { throw ToolError("new-signing-key needs --backup /Volumes/<drive>/ambysto-signing-key.dmg") }
-        guard !store.exists(id: id) else { throw ToolError("A signing key with id \(id) already exists; nothing was changed.") }
+        guard !TrustedKeys.production.ids.contains(Int(id)) else {
+            throw ToolError("Signing key \(id) is already released; restore it with import-signing-key instead of creating a new one.")
+        }
+        guard try !store.exists(id: id) else { throw ToolError("A signing key with id \(id) already exists; nothing was changed.") }
         try BackupImage.checkBackupPath(backup)
         let key = P256.Signing.PrivateKey()
-        let passphrase = try Passphrase.readNew()
+        var passphrase = try Passphrase.readNew()
+        defer { passphrase.resetBytes() }
         let keyFile = Data("id \(id)\n\(Hex.encode(key.rawRepresentation))\n".utf8)
         try BackupImage.create(at: backup, passphrase: passphrase, contents: [BackupImage.keyFileName: keyFile])
-        try store.store(key.rawRepresentation, id: id)
+        do {
+            try store.store(key.rawRepresentation, id: id)
+        } catch {
+            // Never leave a backup whose key is not in the Keychain.
+            try? FileManager.default.removeItem(atPath: backup)
+            throw error
+        }
         note("Backup written to \(backup). Keep that drive apart from this Mac.")
         note("Public key for TrustedKeys.production (id \(id)):")
         out(Hex.encode(key.publicKey.rawRepresentation))
@@ -88,7 +98,8 @@ struct Commands {
 
     func importSigningKey(id: UInt8, image: String?) throws {
         guard let image else { throw ToolError("import-signing-key needs the backup .dmg path.") }
-        let passphrase = try Passphrase.read("Backup passphrase: ")
+        var passphrase = try Passphrase.read("Backup passphrase: ")
+        defer { passphrase.resetBytes() }
         let text = try BackupImage.withMounted(image, passphrase: passphrase, readOnly: true) { mount in
             try String(contentsOf: mount.appending(path: BackupImage.keyFileName), encoding: .utf8)
         }
@@ -128,11 +139,20 @@ struct Commands {
         case .failure(let error): throw ToolError(error.description)
         case .success(let value): result = value
         }
-        let trusted = TrustedKeys(rawHex: [id: Hex.encode(signer.publicKeyRaw)])
-        guard case .success = LicenseVerifier(trusted: trusted, revoked: []).verify(result.text) else {
-            throw ToolError("The new key did not verify; nothing was recorded.")
+        // Release builds check the key exactly as apps will: against the released keys.
+        #if DEBUG
+        let verifier = id == TestKey.id ? LicenseVerifier(trusted: .test, revoked: []) : LicenseVerifier()
+        #else
+        let verifier = LicenseVerifier()
+        #endif
+        switch verifier.verify(result.text) {
+        case .success: break
+        case .failure(.unknownSigningKey):
+            throw ToolError("This build does not trust signing key \(id). Build the tool from the Kit release that includes it; nothing was recorded.")
+        case .failure:
+            throw ToolError("The new key did not verify against the released keys (is this the right signing key?); nothing was recorded.")
         }
-        try ledger.append(keyID: result.keyID, issued: issued, licensee: licensee, products: products.map(\.rawValue).sorted(),
+        try ledger.append(keyID: result.keyID, issued: issued, licensee: licensee.precomposedStringWithCanonicalMapping, products: products.map(\.rawValue).sorted(),
                           seats: seats, updatesUntil: until, signingKeyID: id)
         let file = ledger.url.deletingLastPathComponent().appending(path: "\(result.keyID).ambystokey")
         try Data((result.text + "\n").utf8).write(to: file, options: .atomic)
@@ -143,37 +163,54 @@ struct Commands {
     func backupLedger(image: String?) throws {
         guard let image else { throw ToolError("backup-ledger needs the backup .dmg path.") }
         let data = try Data(contentsOf: ledger.url)
-        let passphrase = try Passphrase.read("Backup passphrase: ")
+        var passphrase = try Passphrase.read("Backup passphrase: ")
+        defer { passphrase.resetBytes() }
         try BackupImage.withMounted(image, passphrase: passphrase, readOnly: false) { mount in
             try BackupImage.writePrivate(data, to: mount.appending(path: "ledger.csv"))
         }
         note("Ledger copied into the backup.")
     }
 
-    /// Prints only "found" or "not found": the key's hex, base64 and raw forms in the work tree and the full history.
+    /// Prints only "found" or "not found". Searches the work tree and **every git object** (all branches, stashes,
+    /// merges, packed and unreachable objects) for the key as raw bytes, hex, base64, base64url, DER and PEM.
+    /// Any failure is an error, never "not found".
     func scan(id: UInt8, path: String?) throws {
         guard let path else { throw ToolError("scan-for-key needs a repository path.") }
-        let raw = try privateKey(id).rawRepresentation
-        let needles = [Data(Hex.encode(raw).utf8), Data(Hex.encode(raw).uppercased().utf8), Data(raw.base64EncodedString().utf8), raw]
+        let key = try privateKey(id)
+        let raw = key.rawRepresentation
+        let der = key.derRepresentation
+        func base64url(_ data: Data) -> String {
+            data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+                .replacingOccurrences(of: "=", with: "")
+        }
+        let textNeedles = [Hex.encode(raw), Hex.encode(raw).uppercased(), raw.base64EncodedString(), base64url(raw),
+                           der.base64EncodedString(), base64url(der), Hex.encode(der)].map { Data($0.utf8) }
+        let binaryNeedles = [raw, der]
+        func contains(_ data: Data) -> Bool {
+            if binaryNeedles.contains(where: { data.range(of: $0) != nil }) { return true }
+            if textNeedles.contains(where: { data.range(of: $0) != nil }) { return true }
+            // PEM and wrapped base64: search again with whitespace removed.
+            let compact = Data(data.filter { $0 != 10 && $0 != 13 && $0 != 32 && $0 != 9 })
+            return textNeedles.contains { compact.range(of: $0) != nil }
+        }
         var found = false
-        if let enumerator = FileManager.default.enumerator(at: URL(filePath: path), includingPropertiesForKeys: [.isRegularFileKey]) {
-            for case let url as URL in enumerator where !found {
-                guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
-                      let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { continue }
-                found = needles.contains { data.range(of: $0) != nil }
+        guard let enumerator = FileManager.default.enumerator(at: URL(filePath: path), includingPropertiesForKeys: [.isRegularFileKey]) else {
+            throw ToolError("Could not read \(path).")
+        }
+        for case let url as URL in enumerator where !found {
+            guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { continue }
+            guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else {
+                throw ToolError("Could not read \(url.path).")
             }
+            found = contains(data)
         }
         if !found {
-            let git = Process()
-            git.executableURL = URL(filePath: "/usr/bin/git")
-            git.arguments = ["-C", path, "log", "--all", "-p", "--text", "--no-color"]
-            let pipe = Pipe()
-            git.standardOutput = pipe
-            git.standardError = FileHandle.nullDevice
-            try git.run()
-            let history = pipe.fileHandleForReading.readDataToEndOfFile()
-            git.waitUntilExit()
-            found = needles.contains { history.range(of: $0) != nil }
+            let objects = try Spawn.run(["/usr/bin/git", "-C", path, "cat-file", "--batch-all-objects", "--batch", "--unordered"],
+                                        captureOutput: true)
+            guard objects.status == 0, !objects.output.isEmpty else {
+                throw ToolError("git could not read every object in \(path) (status \(objects.status)); the scan is incomplete.")
+            }
+            found = contains(objects.output)
         }
         out(found ? "found" : "not found")
     }

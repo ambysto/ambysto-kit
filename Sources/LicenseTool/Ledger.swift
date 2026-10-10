@@ -11,7 +11,7 @@ struct Ledger {
 
     let url: URL
 
-    /// Appends and fsyncs before the caller prints anything.
+    /// Appends and flushes to the disk (`F_FULLFSYNC`) before the caller prints anything.
     func append(keyID: String, issued: Date, licensee: String, products: [String], seats: Int, updatesUntil: Date?, signingKeyID: UInt8) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
                                                 attributes: [.posixPermissions: 0o700])
@@ -26,7 +26,7 @@ struct Ledger {
                       updatesUntil.map(day.string(from:)) ?? "for life", String(signingKeyID)]
         let line = (isNew ? Self.header : "") + fields.map(Self.csvField).joined(separator: ",") + "\n"
         let bytes = Array(line.utf8)
-        guard write(fd, bytes, bytes.count) == bytes.count, fsync(fd) == 0 else { throw ToolError("Could not write the ledger.") }
+        guard write(fd, bytes, bytes.count) == bytes.count, fcntl(fd, F_FULLFSYNC) == 0 else { throw ToolError("Could not write the ledger.") }
     }
 
     /// Quoted, with spreadsheet formula characters neutralised.

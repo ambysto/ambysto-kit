@@ -4,7 +4,7 @@ import Security
 
 /// The one place a signing key is stored or read (intent §3: switching to a password manager later changes only this).
 protocol SigningKeyStore {
-    func exists(id: UInt8) -> Bool
+    func exists(id: UInt8) throws -> Bool
     func store(_ key: Data, id: UInt8) throws
     func read(id: UInt8) throws -> Data
 }
@@ -22,15 +22,19 @@ struct KeychainStore: SigningKeyStore {
 
     private func account(_ id: UInt8) -> CFString { "signing-key-\(id)" as CFString }
 
-    func exists(id: UInt8) -> Bool {
-        // Attributes only: no secret is read, so no prompt.
+    func exists(id: UInt8) throws -> Bool {
+        // Attributes only: no secret is read, so no prompt. Only "not found" means absent.
         let query: [CFString: Any] = [kSecClass: kSecClassGenericPassword, kSecAttrService: service,
                                       kSecAttrAccount: account(id), kSecReturnAttributes: true, kSecMatchLimit: kSecMatchLimitOne]
-        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+        switch SecItemCopyMatching(query as CFDictionary, nil) {
+        case errSecSuccess: return true
+        case errSecItemNotFound: return false
+        case let status: throw ToolError("Could not check the Keychain (\(Self.message(status))).")
+        }
     }
 
     func store(_ key: Data, id: UInt8) throws {
-        guard !exists(id: id) else { throw ToolError("A signing key with id \(id) already exists in the Keychain; nothing was changed.") }
+        guard try !exists(id: id) else { throw ToolError("A signing key with id \(id) already exists in the Keychain; nothing was changed.") }
         let status = ambysto_add_untrusted_generic_password(service, account(id), key as CFData)
         guard status == errSecSuccess else { throw ToolError("The Keychain refused the key (\(Self.message(status))).") }
     }
@@ -65,7 +69,7 @@ struct KeychainStore: SigningKeyStore {
 struct FileStore: SigningKeyStore {
     let url: URL
 
-    func exists(id: UInt8) -> Bool { FileManager.default.fileExists(atPath: url.path) }
+    func exists(id: UInt8) -> Bool { id == 0 && FileManager.default.fileExists(atPath: url.path) }
 
     func store(_ key: Data, id: UInt8) throws {
         guard id == 0 else { throw ToolError("The file store holds only the published test key (id 0).") }
