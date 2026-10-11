@@ -3,7 +3,7 @@
 //   SuiteBarDemo --folder <path> --app <id> --metric "Label=value[unit]" [--metric ...] [--level ok|notice|alert]
 //
 // Publishes every 2 s, hosts when elected, and prints one JSON line to stdout per transition. Commands on stdin:
-// `quit` (clean shutdown, then exit) and `freeze` (stop publishing, heartbeats included).
+// `quit` (NSApp.terminate, which runs the participant's clean-quit path, then exit) and `freeze` (stop publishing, heartbeats included).
 import AmbystoSuite
 import AmbystoUI
 import AppKit
@@ -58,11 +58,33 @@ guard let appID, let app = SuiteApp(rawValue: appID) else { fail("--app is one o
 guard metricTexts.count <= GlanceRecord.maxMetrics else { fail("at most 4 metrics") }
 let metrics = metricTexts.enumerated().map { parseMetric($0.element, index: $0.offset) }
 
-// Never the real suite folder, nor anything inside it.
-let folderURL = URL(fileURLWithPath: (folderPath as NSString).expandingTildeInPath).standardizedFileURL.resolvingSymlinksInPath()
-let realFolder = SuiteFolder.plain().url.resolvingSymlinksInPath().path
-if folderURL.path == realFolder || folderURL.path.hasPrefix(realFolder + "/") {
-    fail("refusing the real suite folder \(realFolder)")
+// Never the real suite folder, nor anything inside it. Compared by device + inode of the given folder and of each
+// of its ancestors that exists (a link or a bind cannot get round it), and by case-insensitive path as well (the
+// default volume ignores case). The real folder is compared only while it exists.
+func deviceAndInode(_ path: String) -> String? {
+    var info = stat()
+    return stat(path, &info) == 0 ? "\(info.st_dev):\(info.st_ino)" : nil
+}
+
+func isRealSuiteFolderOrInside(_ url: URL) -> Bool {
+    let real = SuiteFolder.plain().url
+    let realPath = real.resolvingSymlinksInPath().path.lowercased()
+    for candidate in [url.path.lowercased(), url.resolvingSymlinksInPath().path.lowercased()] {
+        if candidate == realPath || candidate.hasPrefix(realPath + "/") { return true }
+    }
+    guard let realIdentity = deviceAndInode(real.path) else { return false }
+    var current = url
+    while true {
+        if deviceAndInode(current.path) == realIdentity { return true }
+        let parent = current.deletingLastPathComponent()
+        if parent.path == current.path { return false }
+        current = parent
+    }
+}
+
+let folderURL = URL(fileURLWithPath: (folderPath as NSString).expandingTildeInPath).standardizedFileURL
+if isRealSuiteFolderOrInside(folderURL) {
+    fail("refusing the real suite folder \(SuiteFolder.plain().url.path)")
 }
 
 @MainActor
@@ -107,10 +129,11 @@ final class Demo {
         emit("frozen", app: app)
     }
 
-    func quit() -> Never {
-        suite.shutdown()
+    /// Quits the way a real app does: `terminate` posts `willTerminateNotification`, which runs the participant's
+    /// clean-quit path (item removed, `stopped` published, lock released). `terminate` is allowed here, not in the libraries.
+    func quit() {
         emit("quit", app: app)
-        exit(0)
+        NSApp.terminate(nil)
     }
 
     private func track() {

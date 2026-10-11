@@ -38,7 +38,7 @@ public final class SuiteHost {
         if settings.floatingVisible {
             let panel = panel ?? makePanel(topLeft: settings.floatingTopLeft)
             panel.setExpanded(settings.floatingExpanded)
-            panel.show()
+            if !panel.isVisible { panel.show() }   // no per-tick re-ordering of windows
         } else {
             panel?.hide()
         }

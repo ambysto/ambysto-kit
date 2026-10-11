@@ -8,22 +8,35 @@ import Carbon.HIToolbox
 public final class GlobalHotKey {
     private var hotKey: EventHotKeyRef?
     private var handler: EventHandlerRef?
-    /// Carbon calls back through a C function pointer, which cannot capture context.
-    nonisolated(unsafe) private static var action: (@MainActor () -> Void)?
-    nonisolated(unsafe) private static var owner: ObjectIdentifier?
+    private let id: UInt32
+    /// Carbon calls back through a C function pointer, which cannot capture context: the actions live here by hot-key id.
+    nonisolated(unsafe) private static var actions: [UInt32: @MainActor () -> Void] = [:]
+    nonisolated(unsafe) private static var nextID: UInt32 = 1
+    nonisolated static let signature = OSType(0x4153_5549)   // 'ASUI'
 
     public static let displayName = "⌃⌥M"
 
     public init(keyCode: Int = kVK_ANSI_M, modifiers: Int = controlKey | optionKey, action: @escaping @MainActor () -> Void) {
-        Self.action = action
-        Self.owner = ObjectIdentifier(self)
+        id = Self.nextID
+        Self.nextID += 1
+        Self.actions[id] = action
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in
-            DispatchQueue.main.async { MainActor.assumeIsolated { GlobalHotKey.action?() } }
+        // The id travels as the handler's user data. Any key that is not ours (the app's own Carbon hot keys) is
+        // answered `eventNotHandledErr`, so it goes on to its owner.
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, userData in
+            var pressed = EventHotKeyID()
+            let status = GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                                           nil, MemoryLayout<EventHotKeyID>.size, nil, &pressed)
+            guard status == noErr, pressed.signature == GlobalHotKey.signature,
+                  let userData, pressed.id == UInt32(UInt(bitPattern: userData)) else {
+                return OSStatus(eventNotHandledErr)
+            }
+            let id = pressed.id
+            DispatchQueue.main.async { MainActor.assumeIsolated { GlobalHotKey.actions[id]?() } }
             return noErr
-        }, 1, &spec, nil, &handler)
-        let id = EventHotKeyID(signature: OSType(0x4153_5549), id: 1)   // 'ASUI'
-        RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), id, GetApplicationEventTarget(), 0, &hotKey)
+        }, 1, &spec, UnsafeMutableRawPointer(bitPattern: UInt(id)), &handler)
+        RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), EventHotKeyID(signature: Self.signature, id: id),
+                            GetApplicationEventTarget(), 0, &hotKey)
     }
 
     /// Unregisters the shortcut and its handler. Safe to call twice.
@@ -32,9 +45,6 @@ public final class GlobalHotKey {
         if let handler { RemoveEventHandler(handler) }
         hotKey = nil
         handler = nil
-        if Self.owner == ObjectIdentifier(self) {
-            Self.action = nil
-            Self.owner = nil
-        }
+        Self.actions[id] = nil
     }
 }

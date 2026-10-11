@@ -5,11 +5,23 @@ import Testing
 
 @MainActor
 final class FakeStatusItem: SuiteStatusItem {
-    var isVisible = true
+    var isVisible: Bool
     var withdrawn = false
     var lastWorst: GlanceLevel = .ok
+    /// Runs inside `withdraw()`, to look at the world at that moment.
+    var onWithdraw: (() -> Void)?
+    init(visible: Bool = true) { isVisible = visible }
     func update(values: [(MetricRef, GlanceMetric)], worst: GlanceLevel) { lastWorst = worst }
-    func withdraw() { withdrawn = true }
+    func withdraw() {
+        withdrawn = true
+        onWithdraw?()
+    }
+}
+
+/// Every fake item a factory made, in order.
+@MainActor
+final class ItemLog {
+    var items: [FakeStatusItem] = []
 }
 
 /// One participant on a temp folder, with its own defaults domain and a fake status item.
@@ -17,12 +29,19 @@ final class FakeStatusItem: SuiteStatusItem {
 struct Rig {
     let participant: SuiteParticipant
     let defaultsName: String
+    let log = ItemLog()
 
-    init(_ app: SuiteApp, folder: SuiteFolder, clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 }) {
+    init(_ app: SuiteApp, folder: SuiteFolder, folders: [SuiteFolder]? = nil, visible: Bool = true,
+         clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 }) {
         defaultsName = "ambysto-ui-test-\(UUID().uuidString)"
+        let log = log
         participant = SuiteParticipant(
-            app: app, folders: [folder], defaults: UserDefaults(suiteName: defaultsName)!,
-            statusItems: SuiteStatusItemFactory { _ in FakeStatusItem() }, clock: clock, observeSystem: false, onOpen: {})
+            app: app, folders: folders ?? [folder], defaults: UserDefaults(suiteName: defaultsName)!,
+            statusItems: SuiteStatusItemFactory { _ in
+                let item = FakeStatusItem(visible: visible)
+                log.items.append(item)
+                return item
+            }, clock: clock, observeSystem: false, onOpen: {})
         participant.publish(metrics: [GlanceMetric(id: "m", label: app.shortName, value: 1)])
     }
 

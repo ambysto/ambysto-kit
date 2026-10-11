@@ -13,7 +13,7 @@ Dependents: DevBox (pinned by revision, `72ab89a`, until `v0.2.0` exists); Space
 Cost of a bug: a wrong gate deletes user data in every app of the suite; a wrong verifier locks out paying users or lets forged keys through; a mishandled signing key cannot be taken back. The bar: spec vectors, an independent review of every safety change, and no key material within an agent's reach.
 
 ## Verify
-- `swift build -c release` (0 warnings) and `swift test` (123 tests: 36 Safety, 15 Process, 22 License, 34 Suite, 16 UI; two tests, in the `SafetyGate` and `PathCanonicalizer` suites, read the real home folder, read-only; the tests start their own helper processes and delete only their temp files).
+- `swift build -c release` (0 warnings) and `swift test` (135 tests: 36 Safety, 15 Process, 22 License, 38 Suite, 24 UI; two tests, in the `SafetyGate` and `PathCanonicalizer` suites, read the real home folder, read-only; the tests start their own helper processes and delete only their temp files).
 - `scripts/check-vectors.py` (the spec's test vectors against OpenSSL), `scripts/compare-sockets.sh` (listening sockets equal `lsof`, three runs), `scripts/compare-cpu.sh` (CPU within 5 points of `top`). `ProcessProbe` is the proof helper executable; no app depends on it.
 - Suite bar (owner-run, GUI session with Accessibility permission for the terminal): `scripts/suite-bar-takeover.sh` (one suite item at a time across quit, `kill -9` and a frozen publisher, three runs; it counts items through `AXExtrasMenuBar` because on macOS 26 every menu bar window belongs to Control Center) and `scripts/suite-bar-cpu.sh` (host below 0.5 %).
 - Specs (`docs/spec/`) name no Swift types outside their macOS notes (proof 6 of both plans): Windows builds from them.

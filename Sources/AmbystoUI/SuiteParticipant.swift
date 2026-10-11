@@ -36,21 +36,31 @@ public final class SuiteParticipant {
     @ObservationIgnored private var machine = SuiteStateMachine()
     @ObservationIgnored private var schedule = PublishSchedule()
     @ObservationIgnored private var last: (level: GlanceLevel, metrics: [GlanceMetric], ttl: Int)?
-    @ObservationIgnored private var locks: [HostLock] = []
+    @ObservationIgnored private(set) var lock: HostLock?
     @ObservationIgnored private var host: SuiteHost?
     @ObservationIgnored private var watchers: [DispatchSourceFileSystemObject] = []
-    @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored private(set) var timer: Timer?
+    @ObservationIgnored private var timerTTL = SuiteParticipant.defaultTTL
     @ObservationIgnored private var tokens: [(NotificationCenter, NSObjectProtocol)] = []
     @ObservationIgnored private var openObserver: SuiteOpenObserver?
     @ObservationIgnored private var persistTask: Task<Void, Never>?
+    @ObservationIgnored private var hostingRecheck: Task<Void, Never>?
+    @ObservationIgnored private var hostingRechecksLeft = 0
     @ObservationIgnored private var loggedProblems = Set<String>()
     @ObservationIgnored private var didShutdown = false
     @ObservationIgnored private var publishingSuspended = false
 
     nonisolated static let showOwnIconKey = "AmbystoSuite.showOwnIcon"
     nonisolated static let openNotification = Notification.Name("com.ambysto.suite.open")
-    private static let tick: TimeInterval = 5
+    private static let defaultTTL = 10
     private static let log = Logger(subsystem: "com.ambysto.suite", category: "participant")
+
+    /// The periodic tick for a record with this `ttl`: every 5 s at most, and often enough that a heartbeat is never
+    /// later than `ttl / 2` (spec "Freshness") for any allowed ttl (3...60), given the timer's tolerance.
+    nonisolated static func tickInterval(ttl: Int) -> TimeInterval {
+        max(0.5, min(5, Double(ttl) / 2 - 0.5))   // the floor only guards a ttl the contract refuses
+    }
+    nonisolated static func tickTolerance(ttl: Int) -> TimeInterval { tickInterval(ttl: ttl) * 0.1 }
 
     /// Reads the suite folders synchronously, so `showsOwnIcon` is right before the app builds its first scene.
     public init(app: SuiteApp,
@@ -76,7 +86,7 @@ public final class SuiteParticipant {
 
         startLocks()
         startWatching()
-        startTimer()
+        startTimer(ttl: Self.defaultTTL)
         startOpenObserver()
         if observeSystem { startSystemObservers() }
     }
@@ -86,7 +96,11 @@ public final class SuiteParticipant {
     /// Remembers the metrics and writes the record when it changed or the heartbeat is due. A record that breaks
     /// the contract is logged once per reason and never written. Keeps publishing on its own until `shutdown()`.
     public func publish(level: GlanceLevel = .ok, metrics: [GlanceMetric], ttl: Int = 10) {
+        let first = last == nil
         last = (level, metrics, ttl)
+        if ttl != timerTTL { startTimer(ttl: ttl) }
+        // The first publish counts this app as running before its file lands, so a second app never flashes its icon.
+        if first { evaluate() }
         writeIfDue(margin: 0)
     }
 
@@ -103,7 +117,7 @@ public final class SuiteParticipant {
             logOnce("invalid:\(problem)", "glance record not written: \(problem)")
             return
         }
-        // `margin` looks ahead one tick, so a heartbeat is never later than the record's own `ttl / 2`.
+        // `margin` looks ahead one tick (with its tolerance), so a heartbeat is never later than the record's own `ttl / 2`.
         guard schedule.isDue(record, now: now + margin) else { return }
         if write(record) { schedule.didWrite(record) }
     }
@@ -200,12 +214,12 @@ public final class SuiteParticipant {
         guard !didShutdown else { return }
         evaluate()
         syncStatusItemPosition()
-        writeIfDue(margin: tick ? Self.tick + 1 : 0)
+        writeIfDue(margin: tick ? Self.tickInterval(ttl: timerTTL) * 1.1 : 0)
     }
 
     private func evaluate() {
         let now = clock()
-        machine.update(records: readRecords(), now: now)
+        machine.update(records: recordsWithSelf(now: now), now: now)
         assignIfChanged(\.isActive, machine.isActive)
         assignIfChanged(\.rows, machine.rows)
         assignIfChanged(\.worstLevel, machine.worstLevel)
@@ -235,11 +249,21 @@ public final class SuiteParticipant {
         return merged
     }
 
+    /// This app is running, so it counts itself as fresh (`hosting: false`, at `now`) until its own file says so:
+    /// without it a second app starts with an empty folder and shows its icon for a moment before its first write.
+    private func recordsWithSelf(now: Double) -> [SuiteApp: GlanceRecord] {
+        var records = readRecords()
+        guard app.participates, !publishingSuspended, !didShutdown else { return records }
+        if let own = records[app], own.isFresh(now: now) { return records }
+        records[app] = GlanceRecord(app: app, hosting: false, at: now, ttl: last?.ttl ?? Self.defaultTTL, level: .ok, metrics: [])
+        return records
+    }
+
     // MARK: Host
 
-    /// Holds the lock in every suite folder this app publishes to.
+    /// Holds the lock in every suite folder this app publishes to (one `HostLock` takes them in sorted order).
     private var isHostElect: Bool {
-        app.canHost && !locks.isEmpty && locks.allSatisfy(\.isHeld)
+        app.canHost && lock?.isHeld == true
     }
 
     private func reconcileHost() {
@@ -247,6 +271,7 @@ public final class SuiteParticipant {
         let wanted = isHostElect && machine.isActive
         if wanted, host == nil {
             if let stored = folders.first.map(SuiteSettings.read(from:)) { settingsStorage = stored }
+            hostingRechecksLeft = 12
             host = SuiteHost(participant: self, factory: statusItems, registersHotKey: observesSystem)
         } else if !wanted, let current = host {
             current.tearDown()
@@ -257,9 +282,20 @@ public final class SuiteParticipant {
         updateHostingFlag()
     }
 
-    /// `hosting` follows the item's real visibility; a change is published at once.
+    /// `hosting` follows the item's real visibility; a change is published at once. A new status item is not on
+    /// screen yet when it is created, so for its first 3 s the check is repeated every 0.25 s instead of waiting
+    /// for the next tick (otherwise the other apps would show their icons for the gap).
     private func updateHostingFlag() {
         let hosting = host?.isVisible ?? false
+        if host != nil, !hosting, hostingRecheck == nil, hostingRechecksLeft > 0 {
+            hostingRechecksLeft -= 1
+            hostingRecheck = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled, let self else { return }
+                hostingRecheck = nil
+                updateHostingFlag()
+            }
+        }
         guard hosting != isHost else { return }
         isHost = hosting
         writeIfDue(margin: 0)
@@ -272,13 +308,11 @@ public final class SuiteParticipant {
     }
 
     private func startLocks() {
-        guard app.canHost else { return }
-        for folder in folders {
-            let lock = HostLock(url: folder.lockURL)
-            locks.append(lock)
-            lock.start { [weak self] in
-                Task { @MainActor in self?.refresh() }
-            }
+        guard app.canHost, !folders.isEmpty else { return }
+        let lock = HostLock(urls: folders.map(\.lockURL))
+        self.lock = lock
+        lock.start { [weak self] in
+            Task { @MainActor in self?.refresh() }
         }
     }
 
@@ -298,11 +332,14 @@ public final class SuiteParticipant {
         }
     }
 
-    private func startTimer() {
-        let timer = Timer(timeInterval: Self.tick, repeats: true) { [weak self] _ in
+    /// (Re)arms the periodic tick for `ttl`; `publish` calls it again when the ttl changes.
+    private func startTimer(ttl: Int) {
+        timer?.invalidate()
+        timerTTL = ttl
+        let timer = Timer(timeInterval: Self.tickInterval(ttl: ttl), repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refresh(tick: true) }
         }
-        timer.tolerance = 1
+        timer.tolerance = Self.tickTolerance(ttl: ttl)
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
@@ -358,13 +395,15 @@ public final class SuiteParticipant {
         if let openObserver { DistributedNotificationCenter.default().removeObserver(openObserver) }
         openObserver = nil
 
+        hostingRecheck?.cancel()
+        hostingRecheck = nil
         host?.tearDown()
         host = nil
         isHost = false
         if persistTask != nil { persistSettings() }   // a pending settings write belongs to this host
         let stopped = GlanceRecord(app: app, hosting: false, state: .stopped, at: clock(), ttl: last?.ttl ?? 10)
         write(stopped)
-        locks.forEach { $0.release() }
+        lock?.release()
     }
 }
 
