@@ -169,3 +169,50 @@ struct HostLockTests {
         #expect(HostLock.openLockFile(folder.lockURL.path) < 0)
     }
 }
+
+@Suite("Host lock, several folders", .serialized)
+struct HostLockFoldersTests {
+    @Test func locksAreTakenInOneOrderSoNobodyDeadlocks() async throws {
+        let a = try temporarySuiteFolder()
+        let b = try temporarySuiteFolder()
+        defer {
+            try? FileManager.default.removeItem(at: a.url)
+            try? FileManager.default.removeItem(at: b.url)
+        }
+        // Given in opposite orders: both sort to the same order, so one holds both and the other waits.
+        let first = HostLock(urls: [a.lockURL, b.lockURL])
+        let second = HostLock(urls: [b.lockURL, a.lockURL])
+        #expect(first.urls == second.urls)
+        first.start {}
+        second.start {}
+        #expect(await waitUntil { first.isHeld || second.isHeld })
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(first.isHeld != second.isHeld)
+        let (holder, waiter) = first.isHeld ? (first, second) : (second, first)
+        holder.release()
+        #expect(await waitUntil(seconds: 2) { waiter.isHeld })
+        waiter.release()
+    }
+
+    @Test func anUnopenableLockFileIsRetriedNotAbandoned() async throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        try FileManager.default.createSymbolicLink(at: folder.lockURL, withDestinationURL: folder.url.appendingPathComponent("x"))
+        let lock = HostLock(url: folder.lockURL)
+        lock.start {}
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!lock.isHeld)
+        lock.release()
+    }
+}
+
+@Suite("Glance numbers")
+struct GlanceNumberTests {
+    @Test func valuesAreWrittenRoundedToTwoDecimals() throws {
+        for (value, written) in [(0.1 + 0.2, "0.3"), (0.07, "0.07"), (12.25, "12.25"), (61.5, "61.5")] {
+            let record = GlanceRecord(app: .optimer, at: 1, metrics: [GlanceMetric(id: "v", label: "V", value: value)])
+            let text = String(decoding: try GlanceCodec.encode(record), as: UTF8.self)
+            #expect(text.contains(#""value":\#(written)}"#), "\(text)")
+        }
+    }
+}

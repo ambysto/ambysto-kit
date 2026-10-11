@@ -143,3 +143,15 @@ struct SuiteSettingsTests {
         #expect(SuiteSettings.decode(Data(text.utf8)).menuBarValues?.count == 2)
     }
 }
+
+@Suite("Suite settings, kept values")
+struct SuiteSettingsKeptTests {
+    @Test func aKnownKeyOfTheWrongTypeAndLargeIntegersAreKept() throws {
+        let text = #"{"floatingVisible":"yes","big":9007199254740993}"#
+        let settings = SuiteSettings.decode(Data(text.utf8))
+        #expect(!settings.floatingVisible)
+        let out = String(decoding: try settings.encode(), as: UTF8.self)
+        #expect(out.contains(#""big":9007199254740993"#))
+        #expect(out.contains(#""floatingVisible":false"#) || out.contains(#""floatingVisible":"yes""#))
+    }
+}

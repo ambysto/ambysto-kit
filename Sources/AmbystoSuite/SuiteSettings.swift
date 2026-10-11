@@ -32,20 +32,32 @@ public struct SuiteSettings: Sendable, Equatable {
     public static func decode(_ data: Data) -> SuiteSettings {
         guard case .object(var object)? = try? JSONDecoder().decode(JSONValue.self, from: data) else { return SuiteSettings() }
         var settings = SuiteSettings()
-        if case .array(let refs)? = object.removeValue(forKey: "menuBarValues") {
+        // A known key is taken only when its type is right; otherwise it stays, untouched, with the unknown keys.
+        if case .array(let refs)? = object["menuBarValues"] {
+            object["menuBarValues"] = nil
             settings.menuBarValues = refs.compactMap { ref -> MetricRef? in
                 guard case .object(let fields) = ref, case .string(let app)? = fields["app"],
                       let suiteApp = SuiteApp(rawValue: app), case .string(let metric)? = fields["metric"] else { return nil }
                 return MetricRef(app: suiteApp, metric: metric)
             }.prefix(maxMenuBarValues).map { $0 }
         }
-        if case .bool(let value)? = object.removeValue(forKey: "floatingVisible") { settings.floatingVisible = value }
-        if case .bool(let value)? = object.removeValue(forKey: "floatingExpanded") { settings.floatingExpanded = value }
-        if case .array(let point)? = object.removeValue(forKey: "floatingTopLeft"), point.count == 2,
-           case .number(let x) = point[0], case .number(let y) = point[1] {
+        if case .bool(let value)? = object["floatingVisible"] {
+            object["floatingVisible"] = nil
+            settings.floatingVisible = value
+        }
+        if case .bool(let value)? = object["floatingExpanded"] {
+            object["floatingExpanded"] = nil
+            settings.floatingExpanded = value
+        }
+        if case .array(let point)? = object["floatingTopLeft"], point.count == 2,
+           let x = point[0].doubleValue, let y = point[1].doubleValue {
+            object["floatingTopLeft"] = nil
             settings.floatingTopLeft = CGPoint(x: x, y: y)
         }
-        if case .number(let value)? = object.removeValue(forKey: "statusItemPosition") { settings.statusItemPosition = value }
+        if let value = object["statusItemPosition"]?.doubleValue {
+            object["statusItemPosition"] = nil
+            settings.statusItemPosition = value
+        }
         settings.unknown = object
         return settings
     }
@@ -85,6 +97,8 @@ public struct SuiteSettings: Sendable, Equatable {
 enum JSONValue: Sendable, Equatable, Codable {
     case null
     case bool(Bool)
+    /// Integers stay exact (a `Double` would round large ones).
+    case integer(Int64)
     case number(Double)
     case string(String)
     case array([JSONValue])
@@ -94,10 +108,19 @@ enum JSONValue: Sendable, Equatable, Codable {
         let container = try decoder.singleValueContainer()
         if container.decodeNil() { self = .null }
         else if let value = try? container.decode(Bool.self) { self = .bool(value) }
+        else if let value = try? container.decode(Int64.self) { self = .integer(value) }
         else if let value = try? container.decode(Double.self) { self = .number(value) }
         else if let value = try? container.decode(String.self) { self = .string(value) }
         else if let value = try? container.decode([JSONValue].self) { self = .array(value) }
         else { self = .object(try container.decode([String: JSONValue].self)) }
+    }
+
+    var doubleValue: Double? {
+        switch self {
+        case .integer(let value): Double(value)
+        case .number(let value): value
+        default: nil
+        }
     }
 
     func encode(to encoder: Encoder) throws {
@@ -105,6 +128,7 @@ enum JSONValue: Sendable, Equatable, Codable {
         switch self {
         case .null: try container.encodeNil()
         case .bool(let value): try container.encode(value)
+        case .integer(let value): try container.encode(value)
         case .number(let value): try container.encode(value)
         case .string(let value): try container.encode(value)
         case .array(let value): try container.encode(value)

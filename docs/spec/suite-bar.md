@@ -64,7 +64,7 @@ A metric:
 
 A record that breaks any rule is **invalid**: the host skips it, and a publisher refuses to write it (and logs that once).
 
-**Numbers and states only.** A glance never carries a path, an app or process name, a host name, a port owner, an account or anything else a user would consider private: every local process of the user can read the folder. The closed state-word list and the character rules limit what fits, but no validator can recognise a name inside a label, so labels are fixed strings in each app's code, in the app's language, and every app's adoption is reviewed against this rule. The host formats numbers in the user's locale (decimal separator, grouping); the publisher sends raw numbers and a unit.
+**Numbers and states only.** A glance never carries a path, an app or process name, a host name, a port owner, an account or anything else a user would consider private: every local process of the user can read the folder. The closed state-word list and the character rules limit what fits, but no validator can recognise a name inside a label, so labels are fixed strings in each app's code, in the app's language, and every app's adoption is reviewed against this rule. The host formats numbers in the user's locale (decimal separator, grouping); the publisher sends raw numbers, rounded to 2 decimals before they are written (so `0.1 + 0.2` is written `0.3`), and a unit.
 
 ## Reading the folder safely
 
@@ -87,7 +87,7 @@ The readout is **active** when at least **two participants** have a fresh `runni
 
 ## The host
 
-- Every participant that can host waits for the exclusive lock on `host.lock` for as long as it runs (one blocking wait, no polling). The lock file is opened without following links, created with owner-only permissions, and never inherited by child processes.
+- Every participant that can host waits for the exclusive lock on `host.lock` of every suite folder it can reach, **one folder after the other in sorted path order** (so two apps can never each hold one lock and wait for the other), for as long as it runs (one blocking wait, no polling). If a lock file cannot be opened, it tries again every 5 s. The lock file is opened without following links, created with owner-only permissions, and never inherited by child processes.
 - After getting the lock, the app checks that the file it locked is still the file at that path (same device and file number); if it was replaced it lets go and waits again.
 - The lock holder is the **host-elect**. It shows the readout only while the readout is active, and publishes `"hosting": true` only while its menu bar item is actually shown.
 - The operating system releases the lock when the holder quits or crashes, so the next app takes over at once.
@@ -109,7 +109,7 @@ While the readout is active, every app hides **its own floating bar** and releas
 - **Menu bar item:** the Ambysto mark plus up to two values the user picks. Default: Optimer's first metric when Optimer runs, else the first metric of the first participant in catalog order, else the mark alone. Tinted by the worst level among fresh records; `notice` and `alert` also add a glyph, so colour is never the only signal.
 - **Popover:** one row per participant in catalog order (fresh rows with their metrics; "not running" rows without numbers), an **Open** button per running app, the choice of the two values, "Show floating bar", and the "Ambysto apps" list (installed apps can be opened; others appear there only when a link exists, and never in the readout).
 - **Merged floating bar:** the same rows, compact (one line per app) or expanded; off by default. The suite shortcut **Control-Option-M** toggles it; only the host registers it.
-- **settings.json** keeps the two chosen values, whether the floating bar is shown and expanded, its top-left position, and the menu bar item's position. Unknown keys are kept when the file is rewritten.
+- **settings.json** keeps the two chosen values, whether the floating bar is shown and expanded, its top-left position, and the menu bar item's position. Unknown keys, and known keys whose value has an unexpected type, are kept unchanged (integers exactly) when the file is rewritten.
 
 ## Open
 

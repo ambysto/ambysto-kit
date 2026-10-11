@@ -155,24 +155,22 @@ public enum GlanceCodec {
     /// Validates, then encodes. Throws instead of writing a record that breaks the contract.
     public static func encode(_ record: GlanceRecord) throws -> Data {
         if let problem = problem(in: record) { throw GlanceValidationError(reason: problem) }
-        let object: [String: Any] = [
-            "contract": record.contract,
-            "app": record.app.rawValue,
-            "hosting": record.hosting,
-            "state": record.state.rawValue,
-            "at": record.at,
-            "ttl": record.ttl,
-            "level": record.level.rawValue,
-            "metrics": record.metrics.map { metric -> [String: Any] in
-                let value: Any = switch metric.value {
-                case .number(let number): number
-                case .state(let word): word.rawValue
+        let wire = WireRecord(
+            contract: record.contract, app: record.app.rawValue, hosting: record.hosting, state: record.state.rawValue,
+            at: record.at, ttl: record.ttl, level: record.level.rawValue,
+            metrics: record.metrics.map { metric in
+                let value: WireValue = switch metric.value {
+                case .number(let number): .number((number * 100).rounded() / 100)   // 0.1 + 0.2 is written as 0.3
+                case .state(let word): .word(word.rawValue)
                 }
-                return ["id": metric.id, "label": metric.label, "value": value, "unit": metric.unit,
-                        "level": metric.level.rawValue]
-            },
-        ]
-        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
+                return WireMetric(id: metric.id, label: metric.label, value: value, unit: metric.unit,
+                                  level: metric.level.rawValue)
+            })
+        // JSONEncoder writes the shortest form of a number (0.07, not 0.070000000000000007), so a reader that checks
+        // the text sees at most 2 decimals.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let data = try encoder.encode(wire)
         guard data.count <= GlanceRecord.maxBytes else { throw GlanceValidationError(reason: "size: at most 2,048 bytes") }
         return data
     }
@@ -252,5 +250,37 @@ public enum GlanceCodec {
     static func boolean(_ any: Any?) -> Bool? {
         guard let number = any as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() else { return nil }
         return number.boolValue
+    }
+}
+
+private struct WireRecord: Encodable {
+    let contract: Int
+    let app: String
+    let hosting: Bool
+    let state: String
+    let at: Double
+    let ttl: Int
+    let level: String
+    let metrics: [WireMetric]
+}
+
+private struct WireMetric: Encodable {
+    let id: String
+    let label: String
+    let value: WireValue
+    let unit: String
+    let level: String
+}
+
+private enum WireValue: Encodable {
+    case number(Double)
+    case word(String)
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .number(let value): try container.encode(value)
+        case .word(let value): try container.encode(value)
+        }
     }
 }
