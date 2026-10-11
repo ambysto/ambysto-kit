@@ -99,7 +99,7 @@ Published on purpose so other implementations can test against the vectors. **Re
 
 ## Test vectors
 
-`license-test-vectors.json`: each vector has the text, the payload, the signed message and the signature in hex, the trusted keys and revoked ids to use, and the expected result (the license fields, or the reason). ECDSA signatures are randomised, so regenerating the file produces different signatures for the same cases; implementations compare results, never signatures. `scripts/check-vectors-openssl.py` checks every valid vector with OpenSSL.
+`license-test-vectors.json`: each vector has the text, the payload, the signed message and the signature in hex, the trusted keys and revoked ids to use, and the expected result (the license fields, or the reason). ECDSA signatures are randomised, so regenerating the file produces different signatures for the same cases; implementations compare results, never signatures. `scripts/check-vectors.py` checks every valid vector with OpenSSL.
 
 ## Windows note
 

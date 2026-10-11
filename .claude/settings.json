@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh auth status)",
+      "Bash(git branch --show-current)",
+      "Bash(gh api user --jq .login)"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(kill -9:*)",
+      "Bash(kill -KILL:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(rm -rf $HOME:*)",
+      "Bash(rm -rf /Users:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(gh auth switch:*)",
+      "Bash(docker system prune:*)",
+      "Bash(docker volume prune:*)",
+      "Bash(colima delete:*)",
+      "Bash(launchctl bootout:*)",
+      "Bash(launchctl unload:*)",
+      "Bash(launchctl remove:*)",
+      "Bash(tmutil delete:*)",
+      "Bash(diskutil erase:*)",
+      "Bash(csrutil:*)",
+      "Bash(swift run:*)",
+      "Bash(ambysto-license:*)",
+      "Bash(.build/release/ambysto-license:*)",
+      "Bash(.build/debug/ambysto-license:*)",
+      "Bash(tccutil:*)",
+      "Bash(security:*)",
+      "Bash(hdiutil:*)"
+    ]
+  }
+}
