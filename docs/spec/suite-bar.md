@@ -100,7 +100,7 @@ An app shows **its own menu bar icon** when:
 - the user turned on "Show my own menu bar icon" in that app; or
 - the readout is active but no fresh record has said `"hosting": true` for 5 s (something that is not a participant holds the lock, or the host's item cannot be shown).
 
-The host's own icon follows the same rule. When the user removes an app's own icon from the menu bar by hand, that counts as turning "Show my own menu bar icon" off.
+The host's own icon follows the same rule. When the user removes an app's own icon from the menu bar by hand, that counts as turning "Show my own menu bar icon" off, and the icon stays away until the app is started again (the app is not put back against the user's hand, even while the readout is not active).
 
 While the readout is active, every app hides **its own floating bar** and releases its own floating-bar shortcut; the merged floating bar and the suite shortcut replace them.
 
