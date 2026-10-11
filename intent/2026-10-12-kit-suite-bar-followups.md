@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: approved   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: suite bar follow-ups — stale data, reopen, the shortcut's status
 
@@ -41,7 +41,11 @@ Ticket: APS-15 (`ambysto/ambysto-kit#26`, Plane APS-15), part of APS-2. Found by
 - Removing DevBox's own watchdog and adding Optimer's retry (each app's own follow-up PR).
 - Windows.
 
-## Open questions (owner decisions needed before approval)
+## Decisions (owner, 2026-10-12)
 
-1. **Default `staleAfter`.** Recommended: 3 × ttl (catches a stall in 30 s for Optimer's ttl 10; apps with slower refreshes set their own). Alternative: no default (off unless an app opts in).
-2. **The popover note for a taken shortcut.** Recommended: a one-line note next to "Show floating bar". Alternative: log only.
+1. **Default `staleAfter` = 3 × ttl** (raised to ttl if set lower); an app with a slow refresh sets its own.
+2. **A taken shortcut shows a one-line note** next to "Show floating bar" in the suite popover, besides the log line.
+
+## Open questions
+
+_None: the owner approved the recommendations on 2026-10-12._

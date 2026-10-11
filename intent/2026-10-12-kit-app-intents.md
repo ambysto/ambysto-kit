@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: approved   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: App Intents for the suite (Shortcuts, Spotlight, Raycast)
 
@@ -41,8 +41,12 @@ Every Ambysto app measures something people want to ask about without opening a 
 - Siri voice phrases beyond the default App Shortcuts phrases.
 - Windows.
 
-## Open questions (owner decisions needed before approval)
+## Decisions (owner, 2026-10-12)
 
-1. **Raycast.** Recommended: rely on Raycast's Shortcuts integration, no extension (one less codebase; criterion 3 checks it). Alternative: a Raycast extension per suite.
-2. **First adopter.** Recommended: Optimer (the clearest read answers and one guarded action). Alternative: Power (keep awake is the most "Raycast-like" action) or DevBox (port lookups are developer favourites).
-3. **"What uses the most memory" returns app names.** That answer stays on the Mac (it goes to Shortcuts or Spotlight on the same machine, never to the shared suite folder). Recommended: allowed. Alternative: numbers only, as in the suite readout.
+1. **Raycast through Shortcuts**, no extension (criterion 3 checks it).
+2. **First adopter: Optimer.**
+3. **A local-only answer may name apps** ("What uses the most memory"): it goes to Shortcuts or Spotlight on the same Mac, never to the shared suite folder.
+
+## Open questions
+
+_None: the owner approved the recommendations on 2026-10-12._
