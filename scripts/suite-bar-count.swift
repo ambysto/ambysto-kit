@@ -2,8 +2,11 @@
 // Center, so CGWindowList cannot say which app owns an item; the Accessibility attribute AXExtrasMenuBar of an
 // app does (its children are the app's items). Needs Accessibility permission for the terminal that runs it.
 //
-//   swift scripts/suite-bar-count.swift <pid>...              one line per pid: "<pid> <count>"
-//   suite-bar-count --watch <ms> <pid>...                     (compiled) a line per sample: "<epoch> <total> <count>..."
+//   swift scripts/suite-bar-count.swift <pid>...              one line per pid: "<pid> <items> <suite items>"
+//   suite-bar-count --watch <ms> <pid>...                     (compiled) a line per sample: "<epoch> <total> <suite> <own>"
+//
+// A suite item is told from an app's own icon by its accessibility description, which starts with "Ambysto suite"
+// (set by AmbystoUI's status item); every other item of these pids counts as an own icon.
 //
 // Prints 0 for a pid without the attribute (error -25212, "no value") or one that is gone.
 // Exits 2 when this process is not trusted for Accessibility.
@@ -17,16 +20,23 @@ func fail(_ message: String) -> Never {
     exit(2)
 }
 
-func itemCount(pid: pid_t) -> Int {
+/// (all items, suite items) of a process.
+func itemCounts(pid: pid_t) -> (all: Int, suite: Int) {
     let app = AXUIElementCreateApplication(pid)
     var bar: CFTypeRef?
     let error = AXUIElementCopyAttributeValue(app, "AXExtrasMenuBar" as CFString, &bar)
     if error == .apiDisabled { fail("Accessibility is not allowed for this terminal (System Settings > Privacy & Security > Accessibility)") }
-    guard error == .success, let bar else { return 0 }   // -25212 = no value: the app has no items
+    guard error == .success, let bar else { return (0, 0) }   // -25212 = no value: the app has no items
     var children: CFTypeRef?
     guard AXUIElementCopyAttributeValue(bar as! AXUIElement, kAXChildrenAttribute as CFString, &children) == .success,
-          let list = children as? [AXUIElement] else { return 0 }
-    return list.count
+          let list = children as? [AXUIElement] else { return (0, 0) }
+    let suite = list.filter { item in
+        var description: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(item, kAXDescriptionAttribute as CFString, &description) == .success,
+              let text = description as? String else { return false }
+        return text.hasPrefix("Ambysto suite")
+    }.count
+    return (list.count, suite)
 }
 
 var arguments = Array(CommandLine.arguments.dropFirst())
@@ -40,13 +50,18 @@ if arguments.first == "--watch" {
     }
     let pids = arguments.dropFirst(2).compactMap { pid_t($0) }
     while true {
-        let counts = pids.map { itemCount(pid: $0) }
+        let counts = pids.map { itemCounts(pid: $0) }
+        let all = counts.map(\.all).reduce(0, +)
+        let suite = counts.map(\.suite).reduce(0, +)
         let epoch = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("\(epoch) \(counts.reduce(0, +)) \(counts.map(String.init).joined(separator: " "))")
+        print("\(epoch) \(all) \(suite) \(all - suite)")
         Thread.sleep(forTimeInterval: milliseconds / 1000)
     }
 }
 
 let pids = arguments.compactMap { pid_t($0) }
 guard !pids.isEmpty, pids.count == arguments.count else { fail("usage: suite-bar-count <pid>...") }
-for pid in pids { print("\(pid) \(itemCount(pid: pid))") }
+for pid in pids {
+    let counts = itemCounts(pid: pid)
+    print("\(pid) \(counts.all) \(counts.suite)")
+}

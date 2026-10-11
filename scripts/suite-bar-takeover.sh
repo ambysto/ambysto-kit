@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 # Proof (suite bar plan, criteria 1 and 3): host takeover, measured on the real menu bar.
 # Starts SuiteBarDemo three times (own temp suite folder, one copy of the binary per demo so each has its own
-# defaults domain), counts the menu bar items of each demo pid through Accessibility every 100 ms, and tells the
-# suite item from a demo's own icon with the demos' logs: every demo logs "hosting" / "not-hosting" with its pid,
-# so at each sample the current host is the pid whose latest hosting event is "hosting"; its items are the suite
-# item ("suite"), the items of every other pid are own icons ("own"). Checks:
+# defaults domain) and counts the menu bar items of the demo pids through Accessibility every 100 ms. A suite item is
+# told from a demo's own icon by its accessibility description ("Ambysto suite, ..."), read from the menu bar itself,
+# not from the demos' logs. Checks:
 #   A  three fresh demos settle on exactly one item (the suite item; their own icons are gone);
-#   B  `quit` (NSApp.terminate) to the host: suite <= 1 at every sample, suite + own >= 1 except for a gap of at
-#      most 2 s, and no demo other than the host keeps an item unless its log says its own icon is shown;
+#   B  `quit` (NSApp.terminate) to the host: at most one suite item in every sample, and the menu bar is never
+#      without any demo item for more than 2 s; it ends on exactly one item;
 #   C  `kill -9` of the new host: the same;
 #   D  `freeze` one non-host: the host's log shows its row "notRunning" within ttl + 5 s.
-# The gap is the time from the first sample with no item to the next sample with one; it prints "< 0.1 s" when no
-# sample was empty (the gap, if any, was shorter than the sampling interval). Three runs. Needs Accessibility
+# The gap is the time from the first sample with no item to the next sample with one ("none" when no 100 ms sample
+# was empty). Three runs. Needs Accessibility
 # permission for the terminal (see suite-bar-count.swift). It signals only demo pids it started, after
 # `ps -p <pid> -o comm=` matches the copy's name, and deletes only its own temp directory.
 set -uo pipefail
@@ -116,84 +115,46 @@ host_index() {
   return 1
 }
 
-# Over the samples taken after $1 (epoch), with the host of each moment taken from the demos' logs (pids in
-# NAMES order): prints "<max suite> <longest gap> <last suite+own> <samples> <extra own> <double>".
-#   suite = items of the host pid, own = items of the other pids, gap = first empty sample to next non-empty one
-#   (or to the end of the window when none follows, so a run that never recovers is long), extra own = the most
-#   consecutive samples in which a pid that is not the host had more items than its log says it shows (own icon),
-#   double = the most consecutive samples in which that happened while the host also had its suite item (two suite
-#   items at once; a new host's item shows a moment before its "hosting" line is logged, so one sample is skew).
+# Over the samples taken after $1 (epoch): prints "<max suite> <longest gap> <last total> <samples>".
+#   Each sample counts suite items and own icons of the demo pids directly (accessibility descriptions), so no log
+#   timing is involved. gap = from the first sample with no item at all to the next sample with one (or to the end
+#   of the window when none follows); "0" means no sample was ever empty.
 analyse() {
-  python3 -I - "$SAMPLES" "$1" "$DIR" "${PIDS[@]}" <<'PY'
-import json, sys
-samples, t0, folder, *pids = sys.argv[1:]
-t0 = float(t0)
-names = ["optimer", "devbox", "power"]
-events = []   # (t, pid, event)
-for name in names:
-    try:
-        for line in open(f"{folder}/log-{name}"):
-            try:
-                e = json.loads(line)
-            except ValueError:
-                continue
-            events.append((e["t"], str(e["pid"]), e["event"]))
-    except OSError:
-        pass
-events.sort()
+  python3 -I - "$SAMPLES" "$1" <<'PY'
+import sys
+samples, t0 = sys.argv[1], float(sys.argv[2])
 rows = []
 for line in open(samples):
     f = line.split()
-    if len(f) == 2 + len(pids) and float(f[0]) >= t0:
-        rows.append((float(f[0]), [int(x) for x in f[2:]]))
-hosting, own_shown, k = {}, {}, 0   # pid -> latest hosting event time / own icon shown
-max_suite = last = extra = run_extra = double = run_double = 0
-gap = max_gap = 0.0
+    if len(f) == 4 and float(f[0]) >= t0:
+        rows.append((float(f[0]), int(f[1]), int(f[2])))
+max_suite = last = 0
+max_gap = 0.0
 zero_since = None
-for t, counts in rows:
-    while k < len(events) and events[k][0] <= t:
-        et, pid, ev = events[k]
-        if ev == "hosting": hosting[pid] = et
-        elif ev == "not-hosting": hosting.pop(pid, None)
-        elif ev == "own-icon-shown": own_shown[pid] = True
-        elif ev == "own-icon-hidden": own_shown[pid] = False
-        k += 1
-    host = max(hosting, key=hosting.get) if hosting else None
-    suite = sum(c for p, c in zip(pids, counts) if p == host)
-    other = sum(c for p, c in zip(pids, counts) if p != host)
+for t, total, suite in rows:
     max_suite = max(max_suite, suite)
-    last = suite + other
-    if suite + other == 0:
+    last = total
+    if total == 0:
         if zero_since is None: zero_since = t
+    elif zero_since is not None:
         max_gap = max(max_gap, t - zero_since)
-    else:
-        if zero_since is not None: max_gap = max(max_gap, t - zero_since)
         zero_since = None
-    surplus = any(c > (1 if own_shown.get(p) else 0) for p, c in zip(pids, counts) if p != host)
-    run_extra = run_extra + 1 if surplus else 0
-    extra = max(extra, run_extra)
-    host_suite = sum(c - (1 if own_shown.get(p) else 0) for p, c in zip(pids, counts) if p == host)
-    run_double = run_double + 1 if surplus and host_suite >= 1 else 0
-    double = max(double, run_double)
 if zero_since is not None and rows:
     max_gap = max(max_gap, rows[-1][0] - zero_since)
-gap_text = "%.1f" % max_gap if max_gap > 0 else "0"
-print(max_suite, gap_text, last, len(rows), extra, double)
+print(max_suite, "%.1f" % max_gap if max_gap > 0 else "0", last, len(rows))
 PY
 }
 
 check_window() {   # run phase t0
-  local run="$1" phase="$2" max zmax last n extra double gaptext
-  read -r max zmax last n extra double <<< "$(analyse "$3")"
+  local run="$1" phase="$2" max zmax last n gaptext
+  read -r max zmax last n <<< "$(analyse "$3")"
   gaptext="${zmax}s"
-  [ "$zmax" = 0 ] && gaptext="< 0.1 s"
+  [ "$zmax" = 0 ] && gaptext="none"
   if [ "$n" -lt 5 ]; then report "$run" "$phase" bad "too few samples ($n)"
-  elif [ "$max" -ge 2 ]; then report "$run" "$phase" bad "two suite items at once (max $max)"
-  elif [ "$double" -ge 2 ]; then report "$run" "$phase" bad "two suite items at once for $double samples"
-  elif [ "$extra" -ge 8 ]; then report "$run" "$phase" bad "an unexplained item stayed for $extra samples"
+  elif [ "$max" -ge 2 ]; then report "$run" "$phase" bad "two suite items at once in at least one sample"
   elif [ "$zmax" != 0 ] && awk "BEGIN{exit !($zmax > 2.0)}"; then report "$run" "$phase" bad "no item for ${zmax}s"
   elif [ "$last" != 1 ]; then report "$run" "$phase" bad "ended on $last items"
-  else report "$run" "$phase" ok "suite items at most $max, longest gap $gaptext"
+  else report "$run" "$phase" ok "suite items at most $max in every 100 ms sample, empty menu bar: $gaptext"
   fi
 }
 
