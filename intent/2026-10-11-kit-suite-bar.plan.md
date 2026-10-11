@@ -1,6 +1,6 @@
 # Plan — Ambysto Kit: the merged suite bar (APS-13)
 
-Intent: [`2026-10-11-kit-suite-bar.md`](2026-10-11-kit-suite-bar.md) (approved 2026-10-11 with five owner decisions). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (1 blocker, 7 major, 4 minor — all folded in; log at the end). Not yet accepted by the owner.
+Intent: [`2026-10-11-kit-suite-bar.md`](2026-10-11-kit-suite-bar.md) (approved 2026-10-11 with five owner decisions). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (1 blocker, 7 major, 4 minor — all folded in; log at the end). Plan accepted by the owner on 2026-10-11 ("merge PR #20 and carry every task through to the end").
 
 **Sources** (copied, then generalised here):
 - Optimer `ambysto/ambysto-optimer@549da79` `macos/Sources/`: `OptimerCore/Floating/FloatingLayout.swift` (placement, edge-aware resize, clamping) with `Tests/OptimerCoreTests/FloatingAndDockTests.swift`; `AmbystoOptimer/Floating/FloatingMonitorController.swift` (non-activating `NSPanel`, all Spaces, position by top-left, hide drops the content); `AmbystoOptimer/Floating/FloatingSettings.swift` (`FloatingLook` idle alpha); `AmbystoOptimer/Floating/GlobalHotKey.swift` (24-line Carbon `RegisterEventHotKey` wrapper); `AmbystoOptimer/Views/Theme.swift` (violet, coral, ink, rating colours, card metrics).
