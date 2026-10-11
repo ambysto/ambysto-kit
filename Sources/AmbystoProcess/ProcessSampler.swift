@@ -127,7 +127,10 @@ public struct ProcessSampler: Sendable {
         var hidden = 0
 
         for pid in source.allPIDs() {
-            guard let usage = source.usage(pid), let bsd = source.bsdInfo(pid) else {
+            // Start time, counters, start time again: if the pid was reused in between, the counters could belong
+            // to another process, so it is skipped for this sample (spec "Sampling").
+            guard let bsd = source.bsdInfo(pid), let usage = source.usage(pid),
+                  let check = source.bsdInfo(pid), check.startTime == bsd.startTime else {
                 hidden += 1
                 continue
             }

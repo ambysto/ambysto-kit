@@ -369,3 +369,27 @@ final class FakeUsageSource: ProcessSource, @unchecked Sendable {
     func usage(_ pid: pid_t) -> ProcessReader.Usage? { processes[pid]?.usage }
     func executablePath(_ pid: pid_t) -> String? { "/bin/p\(pid)" }
 }
+
+/// A pid reused between the two reads of one sample: the counters may belong to another process.
+final class ReusedBetweenReadsSource: ProcessSource, @unchecked Sendable {
+    var start: UInt64 = 100
+    func allPIDs() -> [pid_t] { [42] }
+    func bsdInfo(_ pid: pid_t) -> ProcessReader.BSDInfo? {
+        ProcessReader.BSDInfo(ppid: 1, uid: 501, startTime: start, name: "p", status: UInt32(SRUN))
+    }
+    func usage(_ pid: pid_t) -> ProcessReader.Usage? {
+        start += 1   // the id now names a new process
+        return ProcessReader.Usage(footprint: 1, cpuTicks: 10, diskRead: 0, diskWritten: 0)
+    }
+    func executablePath(_ pid: pid_t) -> String? { "/bin/p" }
+}
+
+@Suite("ProcessSampler, reads that belong together")
+struct ProcessSamplerReadOrderTests {
+    @Test func aPidReusedBetweenReadsIsSkipped() {
+        var sampler = ProcessSampler(source: ReusedBetweenReadsSource())
+        let (processes, hidden) = sampler.sample()
+        #expect(processes.isEmpty)
+        #expect(hidden == 1)
+    }
+}

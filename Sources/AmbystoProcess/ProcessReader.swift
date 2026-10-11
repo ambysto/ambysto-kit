@@ -92,6 +92,8 @@ public enum ProcessReader {
                          idleWakeups: v6.ri_pkg_idle_wkups, interruptWakeups: v6.ri_interrupt_wkups,
                          energy: v6.ri_energy_nj)
         }
+        // V6 exists on every macOS this package supports (14+), so this fallback is defensive and has no test:
+        // a kernel that refuses the flavor answers EINVAL; any other error means the process is unreadable.
         guard errno == EINVAL else { return nil }
         var v4 = rusage_info_v4()
         let fallback = withUnsafeMutablePointer(to: &v4) { pointer in

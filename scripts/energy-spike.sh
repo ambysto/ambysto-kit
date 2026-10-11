@@ -23,13 +23,16 @@ for run in (1, 2, 3):
           f"{r['readableProcesses']} readable ({r['processesWithDeltas']} with deltas, {r['processesWithEnergy']} with energy > 0), "
           f"energy sum {r['energyDeltaSum']} nJ, idle wakeups {r['idleWakeupsDeltaSum']}, interrupt wakeups {r['interruptWakeupsDeltaSum']}, "
           f"own busy-loop energy {own} nJ, counters down {r['countersWentDown']}")
+    if down > 0:   # criterion 3 holds on every machine
+        ok = False
+        print(f"  run {run}: FAIL (a counter went down)")
     if r["architecture"] == "apple-silicon":
-        passed = own is not None and own > 0 and r["energyDeltaSum"] > 0 and down == 0
+        passed = own is not None and own > 0 and r["energyDeltaSum"] > 0
         ok = ok and passed
         if not passed:
             print(f"  run {run}: FAIL")
 if r["architecture"] != "apple-silicon":
-    print("Intel: values recorded, no pass or fail")
+    print(("PASS" if ok else "FAIL") + "  (Intel: energy values recorded; only decreasing counters fail)")
 else:
     print(("PASS" if ok else "FAIL") + "  (three runs on Apple Silicon)")
 sys.exit(0 if ok else 1)
