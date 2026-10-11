@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: approved   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: the merged suite bar (one readout for the whole suite)
 
@@ -74,10 +74,14 @@ One Ambysto readout for the whole machine, fed by every running Ambysto app, sho
 - Shared Settings sections beyond the suite bar's own.
 - Showing apps that are not installed anywhere in the readout.
 
-## Open questions (owner decisions needed before approval)
+## Decisions (owner, 2026-10-11)
 
-1. **Surface.** The suite intent promised a merged *floating* bar. Recommended: ship **both** views of one readout, the menu bar item (it fixes the clutter, and most users never open a floating bar: both existing ones are off by default) and the merged floating bar. Alternative: floating bar only, as first promised; the four icons stay.
-2. **Before the Developer ID.** Recommended: ship on a shared folder in the user's Application Support now, for the six apps signed outside the Mac App Store; Steady joins when the team id gives it an App Group. Alternative: wait for AO-6 and ship all seven at once.
-3. **Free or Pro.** Recommended: the merged readout works for **any two installed apps, Free or Pro**: the clutter is ours to fix, and owning two apps is already the perk the suite intent describes. Alternative: Pro (or suite key) only.
-4. **Default for the other apps' icons** while the suite readout is shown. Recommended: hidden, with "Show my own menu bar icon" per app (decision 8: each app's icon is opt-in). Alternative: visible until the user hides them.
-5. **Guard's icon.** A firewall's shield is a trust signal. Recommended: Guard follows rule 4 like the others, and its blocking prompts keep working without an icon; Guard's adoption ticket may ask to keep its icon on by default.
+1. **Surface: both views** of one readout, the menu bar item and the merged floating bar.
+2. **Build now, before the Developer ID,** on a shared folder in the user's Application Support, for the six apps signed outside the Mac App Store. Steady joins when the team id gives it an App Group; the contract does not change then, only the folder.
+3. **Free:** the merged readout works for any two installed Ambysto apps, Free or Pro.
+4. **The other apps' icons are hidden by default** while the suite readout is shown; each app offers "Show my own menu bar icon".
+5. **Guard follows the suite rule** like every other app; its blocking prompts keep working without an icon.
+
+## Open questions
+
+_None: the owner decided all five on 2026-10-11._
