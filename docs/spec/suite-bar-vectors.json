@@ -1,0 +1,280 @@
+{
+ "contract": 1,
+ "note": "Each `text` is the exact file content (UTF-8). `outcome`: valid, invalid or skipped (a higher contract major). Freshness applies to `running` records only.",
+ "records": [
+  {
+   "name": "no metrics",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}"
+  },
+  {
+   "name": "four metrics, a state word and an empty unit",
+   "file": "power.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"power\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"notice\",\"metrics\":[{\"id\":\"battery\",\"label\":\"Battery\",\"value\":81,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"keep-awake\",\"label\":\"Keep awake\",\"value\":\"active\",\"unit\":\"\",\"level\":\"notice\"},{\"id\":\"temp\",\"label\":\"CPU temp\",\"value\":61.5,\"unit\":\"°C\",\"level\":\"ok\"},{\"id\":\"watts\",\"label\":\"Draw\",\"value\":12.25,\"unit\":\"W\",\"level\":\"ok\"}]}"
+  },
+  {
+   "name": "hosting and stopped",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":true,\"state\":\"stopped\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}"
+  },
+  {
+   "name": "unknown field from a later minor is ignored",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[],\"future\":{\"x\":1}}"
+  },
+  {
+   "name": "ttl at both bounds",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":3,\"level\":\"ok\",\"metrics\":[]}"
+  },
+  {
+   "name": "ttl 60",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":60,\"level\":\"ok\",\"metrics\":[]}"
+  },
+  {
+   "name": "label of 16 scalars",
+   "file": "optimer.json",
+   "outcome": "valid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Bộ nhớ đã dùng 1\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}"
+  },
+  {
+   "name": "contract 2 is skipped",
+   "file": "optimer.json",
+   "outcome": "skipped",
+   "text": "{\"contract\":2,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}"
+  },
+  {
+   "name": "path in a label",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"/Users/me\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "label: no / or \\"
+  },
+  {
+   "name": "backslash in a label",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"C:\\\\x\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "label: no / or \\"
+  },
+  {
+   "name": "label of 17 scalars",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory used now 1\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "label: 1-16 scalars"
+  },
+  {
+   "name": "empty label",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "label: 1-16 scalars"
+  },
+  {
+   "name": "five metrics",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"m0\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"m1\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"m2\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"m3\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"m4\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "metrics: 0-4"
+  },
+  {
+   "name": "duplicate metric ids",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"},{\"id\":\"mem\",\"label\":\"CPU\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "metric ids unique"
+  },
+  {
+   "name": "metric id with upper case",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"Mem\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "metric id charset"
+  },
+  {
+   "name": "metric id of 25 characters",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"aaaaaaaaaaaaaaaaaaaaaaaaa\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "metric id length"
+  },
+  {
+   "name": "free state word",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":\"Xcode\",\"unit\":\"\",\"level\":\"ok\"}]}",
+   "rule": "value: closed state-word list"
+  },
+  {
+   "name": "value with 3 decimals",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":1.125,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "value: at most 2 decimals"
+  },
+  {
+   "name": "NaN value",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":NaN,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "value: finite number"
+  },
+  {
+   "name": "unit of 7 scalars",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":62,\"unit\":\"percent\",\"level\":\"ok\"}]}",
+   "rule": "unit: 0-6 scalars"
+  },
+  {
+   "name": "bidi override in a label",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Mem‮ory\",\"value\":62,\"unit\":\"%\",\"level\":\"ok\"}]}",
+   "rule": "label: no bidi formatting"
+  },
+  {
+   "name": "control character in a unit",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":62,\"unit\":\"%\\u0007\",\"level\":\"ok\"}]}",
+   "rule": "unit: no control characters"
+  },
+  {
+   "name": "ttl 0",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":0,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "ttl: 3-60"
+  },
+  {
+   "name": "ttl 61",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":61,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "ttl: 3-60"
+  },
+  {
+   "name": "ttl not an integer",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":5.5,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "ttl: integer"
+  },
+  {
+   "name": "unknown app",
+   "file": "clip.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"clip\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "app: catalog id"
+  },
+  {
+   "name": "app not matching the file name",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"devbox\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "app equals file name"
+  },
+  {
+   "name": "unknown level",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"critical\",\"metrics\":[]}",
+   "rule": "level"
+  },
+  {
+   "name": "unknown state",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"paused\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "state"
+  },
+  {
+   "name": "hosting not a boolean",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":\"yes\",\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "hosting: boolean"
+  },
+  {
+   "name": "missing at",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "at: required number"
+  },
+  {
+   "name": "contract 0",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":0,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[]}",
+   "rule": "contract: integer >= 1"
+  },
+  {
+   "name": "not an object",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "[1,2,3]",
+   "rule": "an object"
+  },
+  {
+   "name": "not JSON",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,",
+   "rule": "JSON"
+  },
+  {
+   "name": "over 2,048 bytes",
+   "file": "optimer.json",
+   "outcome": "invalid",
+   "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[],\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "rule": "size: at most 2,048 bytes"
+  }
+ ],
+ "freshness": [
+  {
+   "name": "just written",
+   "at": 1000,
+   "ttl": 10,
+   "now": 1000,
+   "fresh": true
+  },
+  {
+   "name": "at the ttl edge",
+   "at": 1000,
+   "ttl": 10,
+   "now": 1010,
+   "fresh": true
+  },
+  {
+   "name": "one second past ttl",
+   "at": 1000,
+   "ttl": 10,
+   "now": 1011,
+   "fresh": false
+  },
+  {
+   "name": "two seconds in the future",
+   "at": 1002,
+   "ttl": 10,
+   "now": 1000,
+   "fresh": true
+  },
+  {
+   "name": "three seconds in the future (clock set back)",
+   "at": 1003,
+   "ttl": 10,
+   "now": 1000,
+   "fresh": false
+  }
+ ]
+}

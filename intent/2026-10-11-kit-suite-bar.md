@@ -1,5 +1,5 @@
 ---
-status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
+status: building   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: the merged suite bar (one readout for the whole suite)
 
