@@ -1,51 +1,64 @@
 # Plan — Ambysto Kit: App Intents for the suite (APS-14)
 
-Intent: [`2026-10-12-kit-app-intents.md`](2026-10-12-kit-app-intents.md) (approved 2026-10-12: Raycast through Shortcuts, first adopter Optimer, local answers may name apps). Self-contained. Not yet accepted by the owner; an independent review follows before that.
+Intent: [`2026-10-12-kit-app-intents.md`](2026-10-12-kit-app-intents.md) (approved 2026-10-12: Raycast through Shortcuts, first adopter Optimer, local answers may name apps). Self-contained. Revised after an independent technical review (2 blockers, 5 major, 3 minor — folded in; log at the end). Not yet accepted by the owner.
 
-## The feasibility question first
-App Intents appear in Shortcuts and Spotlight only if the app bundle carries the **App Intents metadata** (`Metadata.appintents`), which Xcode produces at build time with `appintentsmetadataprocessor` from the compiler's *const values* output. The Ambysto apps are built with SwiftPM (`swift build` + each repo's `scripts/build-app.sh`), which does not run that step. The tool exists on this Mac (`xcrun appintentsmetadataprocessor`, options include `--source-file-list` and `--swift-const-vals-list`), so it can probably be run from the build script, but this is unproven. **Group 1 is a spike; if it fails, the work stops and the owner chooses** between an Xcode app shell per app (a build-system change in every repo) and dropping App Intents.
+## Order: prove it in Optimer, then move what is proven into the Kit
+App Intents appear in Shortcuts and Spotlight only if the app bundle carries the **App Intents metadata**, which Xcode produces with `appintentsmetadataprocessor` (and `appintentsnltrainingprocessor` for phrases) from the compiler's *const values*. The Ambysto apps are SwiftPM packages built by `swift build` and a `build-app.sh` that assembles a universal, ad-hoc-signed, `LSUIElement` app and a `.dmg`. The metadata extraction reads **literals in the app's own source** (titles, phrases, `openAppWhenRun`), so naming helpers and protocol-supplied defaults from a Kit library would likely be invisible to it. Therefore:
 
-## Files (in build order)
-Branch `aps-14-app-intents` (intent and plan in PR #28; build on `aps-14-build`).
+1. **Spike in Optimer** (its own repo, a branch that is not merged) answers feasibility with Optimer's real build.
+2. **Kit part** keeps only what does not depend on extraction: the spec (conventions, safety rule), the reusable **build step**, a **metadata lint** that enforces the safety rule at build time, and an in-process **confirmation router** pattern.
+3. **Optimer's intents** (its own ticket) are the reference adopter.
 
-### 1. Spike — `spikes/app-intents/` (main session, ≤ 2 h; deleted after, result recorded here)
-A minimal SwiftPM executable with one `AppIntent` ("Say hello (Ambysto Spike)") and one `AppShortcutsProvider`, built with `swift build` plus:
-- compiler flags for const values (`-Xfrontend -emit-const-values` / `-const-gather-protocols-file` as Xcode passes them; read Xcode's build log of a throwaway Xcode project with the same intent to copy the exact flags and the processor invocation);
-- `appintentsmetadataprocessor` run with the produced const-values and source lists, output `Metadata.appintents` copied into `Contents/Resources` of a hand-made bundle, ad-hoc signed;
-- check: the intent appears in Shortcuts after the app's first launch (`lsregister` refresh if needed), runs, returns its text; it appears in Spotlight on macOS 26; Raycast can run the shortcut.
-Result: **works** (record the exact flags and commands) or **fails** (stop; owner decision).
+If the spike fails, the work stops and the owner chooses between an Xcode app shell per app and dropping App Intents.
 
-### 2. Spec — `docs/spec/intents.md` (main session)
-Naming ("\<verb\> … (Ambysto \<App\>)"), result shapes (text + optional number with unit), refusals, the safety rule (read, or what the app runs without a confirmation sheet; anything that deletes, stops or changes settings opens the app on its confirmation step), local-only answers may name apps (never written to the suite folder), Windows note.
+## 1. Spike — `ambysto-optimer`, branch `ao-app-intents-spike` (main session, ≤ 3 h; not merged; result recorded here)
+Optimer's real build (`origin/main`, which already depends on the Kit at `9e8c470`): universal (`--arch arm64 --arch x86_64`), its Info.plist (`LSUIElement`), ad-hoc signing, the `.dmg` installed with quarantine (App Translocation), launched once.
+- One read intent with a literal `static let title` and an `AppShortcutsProvider` with a phrase containing `\(.applicationName)`; one "changes something" intent with a literal `openAppWhenRun = true` (and, on macOS 26, `supportedModes` if that is the non-deprecated form; the build gate is 0 warnings).
+- Flags: `-Xswiftc -emit-const-values-path …` and the const-gather protocols file passed on the `swift build` command line (not `unsafeFlags` in a dependency); try `--build-system swiftbuild` too. Copy the exact invocations from a throwaway Xcode project with the same intent (its build log).
+- Metadata: run `appintentsmetadataprocessor` **per architecture or once** — record which works with one `--target-triple` for a universal binary; run `appintentsnltrainingprocessor`; place outputs in `Contents/Resources/Metadata.appintents`.
+- Also test: a default `openAppWhenRun` supplied by a protocol extension (expected not to be seen; record).
+- Checks: the intents appear in Shortcuts after the first launch; the read intent answers without showing a window; the "changes something" intent opens Optimer; Spotlight on macOS 26; Raycast runs the shortcut; a cold launch by an intent (Optimer not running) — what the user sees (menu-bar icon appears, the suite readout starts, the app stays running).
+Result: **works** (exact flags and commands) or **fails** (stop; owner decision).
 
-### 3. Kit helpers — `Sources/AmbystoIntents/` (new library, depends on `AmbystoSuite` for the catalog's display names only) (builder, then reviewer)
-- `SuiteIntentName.title(_ verb: String, app: SuiteApp)` and phrase helpers for `AppShortcut`.
-- `SuiteIntentAnswer` (text, optional value + unit) → `ReturnsValue<…>` + `ProvidesDialog` shapes.
-- `SuiteIntentRefusal: Error, CustomLocalizedStringResourceConvertible`.
-- `ConfirmInApp` protocol: an intent that changes something conforms; its `perform()` is provided by the Kit and only opens the app with a URL/notification the app maps to its confirmation step (`openAppWhenRun = true`); a unit test checks that such an intent's `perform()` never calls the app's action closure.
-- `scripts/app-intents-metadata.sh`: the spike's build step, reusable by every app's `build-app.sh` (inputs: module name, build dir, bundle path).
+## 2. Spec — `docs/spec/intents.md` (Kit, main session)
+- Naming: titles as literals "\<Verb\> … (Ambysto \<App\>)"; phrases with `\(.applicationName)`.
+- Result shapes: a short text answer; a value with a unit as `Measurement` where supported (the output type comes from `perform()`'s signature, no wrapper types).
+- Refusals with a sentence the user can act on.
+- **Safety rule:** an intent may read, or start what the app itself runs without a confirmation sheet. Anything that deletes, stops a process or changes a setting must be an intent that **opens the app** (`openAppWhenRun` literal) and only routes to the confirmation step; the destructive API in the app takes a token that only the confirmation UI creates.
+- Local answers may name apps; **no donation, no indexing** of such answers; never written to the suite folder.
+- Cold launch: an intent may launch the app; the app behaves as on any launch (own icon or suite readout) and stays running.
+- Windows note.
 
-### 4. Optimer adoption — its own ticket and repo (not in this plan's PR)
-Opened as an Optimer ticket after this merges: "Memory in use", "What uses the most memory" (top three app names, local only), "Clean regenerable caches" (`ConfirmInApp` → the cleanup confirmation). Its own intent and plan.
+## 3. Kit tooling (builder, then reviewer)
+- `scripts/app-intents-metadata.sh`: the spike's proven build step, parameterised (module, build dir, bundle, archs); each app's `build-app.sh` calls it; fails loudly on an unknown Xcode version.
+- `scripts/app-intents-lint.py`: reads the produced metadata and fails the build when an intent **not** on the app's allow-list of read-only intents lacks `openAppWhenRun` (the allow-list lives in each app's repo, reviewed like code). This is the enforcement of the safety rule.
+- **Confirmation router pattern** (documented in the spec, a small helper in `AmbystoUI` only if the spike shows it is reusable): an in-process router registered in `App.init` (or `AppDependencyManager`) that holds a confirmation request until the app's window exists, so a cold launch works; no URL scheme, no distributed notification (both spoofable by other processes).
+- `AmbystoIntents` as a library is **not** created unless the spike shows extraction sees types from a dependency; the Kit defines no `AppIntent`, `AppEntity` or `AppEnum` types.
 
-### 5. CLAUDE.md (EASY)
-The new library, the build step, the safety rule under HARD (an intent that changes something must go through `ConfirmInApp`).
+## 4. Optimer adoption — its own ticket (after 1–3)
+"Memory in use" (`Measurement` percent), "What uses the most memory" (top three app names, local only), "Clean regenerable caches" (opens Optimer on the cleanup confirmation via the router; the cleaner takes the confirmation token). Its own intent and plan.
+
+## 5. CLAUDE.md (EASY)
+The build step, the lint, the safety rule under HARD (a new intent that changes something is HARD and must pass the lint); test count.
 
 ## Proof
-1. Spike recorded (works / fails with the reason).
-2. `swift build -c release` 0 warnings; `swift test` green including the `ConfirmInApp` test.
-3. Criteria 1–3 of the intent are owner-run with Optimer's first intents (its own ticket).
-4. Grep: `AmbystoIntents` holds no deletion, spawning or signal calls (the suite bar list).
-5. Independent review.
+1. Spike result recorded, with exact commands, or the stop.
+2. Kit: `swift build -c release` 0 warnings; `swift test` green; the lint fails on a fixture metadata file with a destructive intent missing `openAppWhenRun`, and passes on the allowed one.
+3. Intent criteria 1–3 owner-run with Optimer's intents (its ticket).
+4. Independent review.
 
 ## Risks
 | Risk | Catch |
 |---|---|
-| SwiftPM cannot produce the metadata | Spike first; stop and ask |
-| Metadata processor flags change between Xcode versions | The script reads the Xcode version and fails loudly; recorded in CLAUDE.md |
-| An intent performs a destructive action from Shortcuts | `ConfirmInApp` + test; HARD rule in CLAUDE.md; each app's review |
-| Ad-hoc signing blocks intent registration | Checked in the spike; Developer ID (AO-6) noted if needed |
-| Spotlight intents need macOS 26 | Degrade to Shortcuts on 14–15 |
+| SwiftPM cannot produce the metadata, or not for a universal binary | Spike with Optimer's real build; stop and ask |
+| Extraction does not see helpers or protocol defaults | Literals in each app; the spike records it; no Kit intent types |
+| A destructive intent runs from Shortcuts | `openAppWhenRun` literal + build-time lint + token-gated destructive API; HARD rule |
+| Ad-hoc signing, quarantine or translocation blocks registration | Tested in the spike with the `.dmg`; Developer ID (AO-6) noted if needed |
+| Cold launch surprises the user (icon appears, app stays) | Spec states it; owner check |
+| Xcode tool flags change | The build step checks the Xcode version |
 
 ## Out of this plan
 Each app's intents (own tickets); a Raycast extension; Siri phrases beyond defaults; Windows.
+
+## Review log (2026-10-12, independent technical review: 2 blockers, 5 major, 3 minor — folded in)
+1. (blocker) Naming helpers invisible to extraction → literals in each app, a lint instead of helpers. 2. (blocker) `ConfirmInApp` defaults likely invisible and its test vacuous → `openAppWhenRun` literal, build-time metadata lint with an allow-list, token-gated destructive APIs. 3. Spike scope → Optimer's real universal build, LSUIElement, ad-hoc signing, `.dmg` with quarantine, NL training processor, `--build-system swiftbuild`. 4. Flags → `-Xswiftc` on the command line, not `unsafeFlags` in a dependency; no intent types in the Kit. 5. Routing → in-process router, no URL scheme or notification. 6. Result types → `Measurement` in `perform()`'s signature; deprecation checked against the 0-warning gate. 7. Cold launch and local-answer privacy → in the spec. 8. "Optimer must first add the Kit" → already done on Optimer's `main` (AO-19 merged). 9. Order → spike in Optimer first. 10. Branch → the plan lives on `aps-15-suite-bar-followups` with APS-15's (one docs PR, #28); CLAUDE.md test count in group 5.
