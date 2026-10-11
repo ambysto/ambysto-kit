@@ -22,6 +22,16 @@ public struct ListeningSocket: Sendable, Hashable {
     public var addressClass: AddressClass
     /// Printable local address (`127.0.0.1`, `::1`, `0.0.0.0`, `::`, `192.168.1.5`, …).
     public var address: String
+
+    public init(pid: pid_t, fd: Int32, socketID: UInt64, port: UInt16, family: Int32, addressClass: AddressClass, address: String) {
+        self.pid = pid
+        self.fd = fd
+        self.socketID = socketID
+        self.port = port
+        self.family = family
+        self.addressClass = addressClass
+        self.address = address
+    }
 }
 
 public enum ListeningSockets {
