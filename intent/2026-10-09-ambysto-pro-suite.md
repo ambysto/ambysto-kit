@@ -64,4 +64,9 @@ Ambysto's choice: **separate native apps that share one license and one kit**, l
    - Each app gets its own Plane project.
    - A repo and its Plane project are created only when work on that app starts.
    - Apps depend on **Ambysto Kit by semver tag** (SwiftPM `from:`). Cross-app contracts (license format, merged mini bar protocol) live in the Kit's spec and change only with a Kit version bump.
+8. **The suite grows by features, not apps** (owner, 2026-10-11, after reviewing popular Mac utilities: Rectangle, Swish, Bartender, Maccy, Stats, Raycast, AlDente). The lineup stays at the seven apps of decision 6; a new idea becomes a feature of one of them or of the Kit.
+   - **Stats-style readout and Bartender's problem → the Kit's merged mini bar (APS-13).** Seven apps must not mean seven menu bar icons: the suite shows one combined readout, and each app's own icon is opt-in.
+   - **Raycast / Alfred → App Intents in each app**, so Shortcuts, Spotlight and Raycast can run its safe actions; the shared pattern lives in the Kit.
+   - **Not taken:** window tiling (built into macOS Sequoia; Rectangle is free), trackpad gestures, and charge limiting (AlDente's ground; Power's intent rules it out because it needs root SMC writes).
+   - Clip stays deferred (decision 6).
 
