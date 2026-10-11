@@ -76,6 +76,7 @@ public final class HostLock: Sendable {
     /// Blocks until this process holds the lock on the file that is at `url` now; `nil` once released.
     private func waitForLock(_ url: URL) -> Int32? {
         var loggedOpenFailure = false
+        var loggedLockFailure = false
         while true {
             if state.withLock({ $0.cancelled }) { return nil }
             let fd = HostLock.openLockFile(url.path)
@@ -91,7 +92,12 @@ public final class HostLock: Sendable {
             var result: Int32
             repeat { result = flock(fd, LOCK_EX) } while result != 0 && errno == EINTR
             guard result == 0 else {
+                let code = errno
                 close(fd)
+                if !loggedLockFailure {
+                    HostLock.log.error("cannot lock \(url.path, privacy: .public): errno \(code); retrying every 5 s")
+                    loggedLockFailure = true
+                }
                 Thread.sleep(forTimeInterval: HostLock.retryDelay)
                 continue
             }

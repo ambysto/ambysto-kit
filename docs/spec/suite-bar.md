@@ -130,6 +130,7 @@ While the readout is active, every app hides **its own floating bar** and releas
 - Watching: a vnode dispatch source on `glances/` (an atomic write is a rename into the directory), plus a re-read every 5 s to expire stale records.
 - Open: `DistributedNotificationCenter`, object = app id, no user info, `deliverImmediately: true`; observers use `suspensionBehavior: .deliverImmediately`. Wake: `NSWorkspace.didWakeNotification`.
 - Menu bar: the host's item is an `NSStatusItem` with autosave name `AmbystoSuite`; an app's own icon is its `MenuBarExtra(isInserted:)`.
+- "Shown" (for `hosting`): the item's `isVisible` flag is set (the user has not taken it out of the bar) and its button has a non-empty window on a screen. Occlusion does not count: an auto-hidden menu bar, a full-screen app, a locked screen or a sleeping display still leave the item in the bar. **Not detected and not tested:** an item hidden by macOS's own menu bar settings, or clipped by the notch, while its window still exists. The 5 s no-host fallback covers only what makes "shown" false.
 - **Spikes (2026-10-11, macOS 26.6.2, Apple Silicon):**
   1. A distributed notification posted with `deliverImmediately: true` reached two accessory (menu bar) apps that were not active within 1 ms, including one observing with the `.drop` behaviour.
   2. `MenuBarExtra(isInserted:)` removes and re-inserts a `.window`-style item every time. SwiftUI writes the binding three times per change with the **same** value, so only a write that differs from the current value is a user action.

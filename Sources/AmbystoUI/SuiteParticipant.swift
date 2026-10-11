@@ -34,6 +34,7 @@ public final class SuiteParticipant {
     @ObservationIgnored private let observesSystem: Bool
     @ObservationIgnored private let onOpen: @MainActor () -> Void
     @ObservationIgnored private var machine = SuiteStateMachine()
+    @ObservationIgnored private var lastWriteFailed = false
     @ObservationIgnored private var schedule = PublishSchedule()
     @ObservationIgnored private var last: (level: GlanceLevel, metrics: [GlanceMetric], ttl: Int)?
     @ObservationIgnored private(set) var lock: HostLock?
@@ -58,7 +59,8 @@ public final class SuiteParticipant {
     /// The periodic tick for a record with this `ttl`: every 5 s at most, and often enough that a heartbeat is never
     /// later than `ttl / 2` (spec "Freshness") for any allowed ttl (3...60), given the timer's tolerance.
     nonisolated static func tickInterval(ttl: Int) -> TimeInterval {
-        max(0.5, min(5, Double(ttl) / 2 - 0.5))   // the floor only guards a ttl the contract refuses
+        let ttl = min(max(ttl, GlanceRecord.ttlRange.lowerBound), GlanceRecord.ttlRange.upperBound)   // a refused ttl never sets a faster timer
+        return min(5, Double(ttl) / 2 - 0.5)
     }
     nonisolated static func tickTolerance(ttl: Int) -> TimeInterval { tickInterval(ttl: ttl) * 0.1 }
 
@@ -115,11 +117,14 @@ public final class SuiteParticipant {
         let record = GlanceRecord(app: app, hosting: isHost, at: now, ttl: last.ttl, level: last.level, metrics: last.metrics)
         if let problem = GlanceCodec.problem(in: record) {
             logOnce("invalid:\(problem)", "glance record not written: \(problem)")
+            lastWriteFailed = true
             return
         }
         // `margin` looks ahead one tick (with its tolerance), so a heartbeat is never later than the record's own `ttl / 2`.
         guard schedule.isDue(record, now: now + margin) else { return }
-        if write(record) { schedule.didWrite(record) }
+        let wrote = write(record)
+        lastWriteFailed = !wrote
+        if wrote { schedule.didWrite(record) }
     }
 
     @discardableResult
@@ -253,7 +258,9 @@ public final class SuiteParticipant {
     /// without it a second app starts with an empty folder and shows its icon for a moment before its first write.
     private func recordsWithSelf(now: Double) -> [SuiteApp: GlanceRecord] {
         var records = readRecords()
-        guard app.participates, !publishingSuspended, !didShutdown else { return records }
+        // Only while nothing says otherwise: a record that was refused or could not be written does not count, so
+        // this app never believes in an active readout that the other apps cannot see.
+        guard app.participates, !publishingSuspended, !didShutdown, !lastWriteFailed else { return records }
         if let own = records[app], own.isFresh(now: now) { return records }
         records[app] = GlanceRecord(app: app, hosting: false, at: now, ttl: last?.ttl ?? Self.defaultTTL, level: .ok, metrics: [])
         return records

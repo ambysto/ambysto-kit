@@ -68,14 +68,16 @@ final class SystemSuiteStatusItem: NSObject, SuiteStatusItem {
         }
     }
 
-    /// What this can and cannot tell. `item.isVisible` is a flag we and the system both write: it turns false when the
-    /// user takes the item out of the menu bar. On top of it the button's window must exist, be non-empty, sit on a
-    /// screen and not be fully occluded, which catches an item pushed off the bar (overflow, the notch) or on a
-    /// display that went away. It cannot see an item covered by another app's item or clipped by the notch while its
-    /// window still reports itself visible; the 5 s no-host fallback in the spec covers what slips through.
+    /// What this can and cannot tell (spec, macOS notes). `item.isVisible` is a flag we and the system both write: it
+    /// turns false when the user takes the item out of the menu bar. On top of it the button's window must exist, be
+    /// non-empty and sit on a screen. Occlusion is deliberately not used: an auto-hidden menu bar, a full-screen app, a
+    /// locked screen or a sleeping display occlude the item while it is still in the bar, and treating those as "not
+    /// shown" would bring every app's own icon back. Not detected, and not tested: an item hidden by macOS's own
+    /// menu bar settings or clipped by the notch while its window still exists; the 5 s no-host fallback covers only
+    /// what makes this property false.
     var isVisible: Bool {
         guard item.isVisible, let window = item.button?.window else { return false }
-        return !window.frame.isEmpty && window.screen != nil && window.occlusionState.contains(.visible)
+        return !window.frame.isEmpty && window.screen != nil
     }
 
     func update(values: [(MetricRef, GlanceMetric)], worst: GlanceLevel) {

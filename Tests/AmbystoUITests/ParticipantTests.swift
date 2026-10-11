@@ -192,6 +192,34 @@ struct SuiteParticipantTests {
         }
         #expect(record.metrics.map(\.id) == ["m"])   // the earlier valid record is still there
     }
+
+    @Test func anAppWhoseRecordWasRefusedDoesNotCountItself() async throws {
+        let folder = try makeTempFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let a = Rig(.optimer, folder: folder)
+        defer { a.finish() }
+        a.participant.publish(metrics: [GlanceMetric(id: "m", label: "Optimer", value: 2)], ttl: 60)   // stays fresh
+        let clock = TestClock(Date().timeIntervalSince1970)
+        let defaultsName = "ambysto-ui-test-\(UUID().uuidString)"
+        defer { UserDefaults(suiteName: defaultsName)?.removePersistentDomain(forName: defaultsName) }
+        let b = SuiteParticipant(app: .devbox, folders: [folder], defaults: UserDefaults(suiteName: defaultsName)!,
+                                 statusItems: SuiteStatusItemFactory { _ in FakeStatusItem(visible: true) },
+                                 clock: { clock.now }, observeSystem: false, onOpen: {})
+        defer { b.shutdown() }
+        #expect(b.isActive)   // running and not yet refused: it counts itself, so no icon flash
+        b.publish(metrics: [GlanceMetric(id: "Bad Id", label: "x", value: 1)])
+        #expect(GlanceStore(folder: folder).read(.devbox) == nil)
+        b.refresh()
+        clock.advance(11)   // past the 10 s hysteresis: only Optimer is fresh, B no longer counts itself
+        b.refresh()
+        #expect(!b.isActive)
+        #expect(b.showsOwnIcon)
+    }
+
+    @Test func aRefusedTTLNeverSetsAFasterTimer() {
+        #expect(SuiteParticipant.tickInterval(ttl: 0) == SuiteParticipant.tickInterval(ttl: 3))
+        #expect(SuiteParticipant.tickInterval(ttl: 1000) == 5)
+    }
 }
 
 @Suite("Suite text and theme")
@@ -215,4 +243,13 @@ struct SuiteTextTests {
         #expect(Theme.glyph(.notice) == "exclamationmark.circle")
         #expect(Theme.glyph(.alert) == "exclamationmark.triangle.fill")
     }
+}
+
+/// A clock tests move by hand.
+final class TestClock: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Double
+    init(_ start: Double) { value = start }
+    var now: Double { lock.withLock { value } }
+    func advance(_ seconds: Double) { lock.withLock { value += seconds } }
 }

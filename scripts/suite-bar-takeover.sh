@@ -4,10 +4,10 @@
 # defaults domain) and counts the menu bar items of the demo pids through Accessibility every 100 ms. A suite item is
 # told from a demo's own icon by its accessibility description ("Ambysto suite, ..."), read from the menu bar itself,
 # not from the demos' logs. Checks:
-#   A  three fresh demos settle on exactly one item (the suite item; their own icons are gone);
+#   A  three fresh demos settle on the suite item alone (asserted: one suite item, no own icon);
 #   B  `quit` (NSApp.terminate) to the host: at most one suite item in every sample, and the menu bar is never
-#      without any demo item for more than 2 s; it ends on exactly one item;
-#   C  `kill -9` of the new host: the same;
+#      without any demo item for more than 2 s; it ends on the suite item alone (two demos are still running);
+#   C  `kill -9` of the new host: the same, ending on exactly one item (suite or own: one demo is left);
 #   D  `freeze` one non-host: the host's log shows its row "notRunning" within ttl + 5 s.
 # The gap is the time from the first sample with no item to the next sample with one ("none" when no 100 ms sample
 # was empty). Three runs. Needs Accessibility
@@ -115,7 +115,7 @@ host_index() {
   return 1
 }
 
-# Over the samples taken after $1 (epoch): prints "<max suite> <longest gap> <last total> <samples>".
+# Over the samples taken after $1 (epoch): prints "<max suite> <longest gap> <last total> <samples> <last suite> <last own>".
 #   Each sample counts suite items and own icons of the demo pids directly (accessibility descriptions), so no log
 #   timing is involved. gap = from the first sample with no item at all to the next sample with one (or to the end
 #   of the window when none follows); "0" means no sample was ever empty.
@@ -128,12 +128,12 @@ for line in open(samples):
     f = line.split()
     if len(f) == 4 and float(f[0]) >= t0:
         rows.append((float(f[0]), int(f[1]), int(f[2])))
-max_suite = last = 0
+max_suite = last = last_suite = last_own = 0
 max_gap = 0.0
 zero_since = None
 for t, total, suite in rows:
     max_suite = max(max_suite, suite)
-    last = total
+    last, last_suite, last_own = total, suite, total - suite
     if total == 0:
         if zero_since is None: zero_since = t
     elif zero_since is not None:
@@ -141,19 +141,21 @@ for t, total, suite in rows:
         zero_since = None
 if zero_since is not None and rows:
     max_gap = max(max_gap, rows[-1][0] - zero_since)
-print(max_suite, "%.1f" % max_gap if max_gap > 0 else "0", last, len(rows))
+print(max_suite, "%.1f" % max_gap if max_gap > 0 else "0", last, len(rows), last_suite, last_own)
 PY
 }
 
-check_window() {   # run phase t0
-  local run="$1" phase="$2" max zmax last n gaptext
-  read -r max zmax last n <<< "$(analyse "$3")"
+check_window() {   # run phase t0 [expected end: suite | any]
+  local run="$1" phase="$2" end="${4:-any}" max zmax last n lsuite lown gaptext
+  read -r max zmax last n lsuite lown <<< "$(analyse "$3")"
   gaptext="${zmax}s"
   [ "$zmax" = 0 ] && gaptext="none"
   if [ "$n" -lt 5 ]; then report "$run" "$phase" bad "too few samples ($n)"
   elif [ "$max" -ge 2 ]; then report "$run" "$phase" bad "two suite items at once in at least one sample"
   elif [ "$zmax" != 0 ] && awk "BEGIN{exit !($zmax > 2.0)}"; then report "$run" "$phase" bad "no item for ${zmax}s"
   elif [ "$last" != 1 ]; then report "$run" "$phase" bad "ended on $last items"
+  elif [ "$end" = suite ] && { [ "$lsuite" != 1 ] || [ "$lown" != 0 ]; }; then
+    report "$run" "$phase" bad "ended on $lsuite suite item(s) and $lown own icon(s), expected the suite item alone"
   else report "$run" "$phase" ok "suite items at most $max in every 100 ms sample, empty menu bar: $gaptext"
   fi
 }
@@ -167,7 +169,7 @@ for run in $(seq 1 $RUNS); do
   if wait_total_one 20; then
     sleep 3
     t0="$(now)"; sleep 3
-    check_window "$run" A "$t0"
+    check_window "$run" A "$t0" suite
   else
     report "$run" A bad "never settled on one item (now $(last_total))"
   fi
@@ -179,7 +181,7 @@ for run in $(seq 1 $RUNS); do
     t0="$(now)"
     send "$host" quit
     sleep 5
-    check_window "$run" B "$t0"
+    check_window "$run" B "$t0" suite
   fi
 
   host2="$(host_index "$host")" || host2=""

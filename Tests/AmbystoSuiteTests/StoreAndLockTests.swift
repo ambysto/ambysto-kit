@@ -194,6 +194,35 @@ struct HostLockFoldersTests {
         waiter.release()
     }
 
+    @Test func noDeadlockWhenTheLocksArePreHeldByDifferentApps() async throws {
+        let a = try temporarySuiteFolder()
+        let b = try temporarySuiteFolder()
+        defer {
+            try? FileManager.default.removeItem(at: a.url)
+            try? FileManager.default.removeItem(at: b.url)
+        }
+        let sorted = [a.lockURL, b.lockURL].sorted { $0.path < $1.path }
+        let holdsFirst = HostLock(url: sorted[0])   // two older apps, one per folder
+        let holdsSecond = HostLock(url: sorted[1])
+        holdsFirst.start {}
+        holdsSecond.start {}
+        #expect(await waitUntil { holdsFirst.isHeld && holdsSecond.isHeld })
+        let p = HostLock(urls: [b.lockURL, a.lockURL])
+        let q = HostLock(urls: [a.lockURL, b.lockURL])
+        p.start {}
+        q.start {}
+        holdsFirst.release()   // whoever gets the first lock then waits for the second; the other waits for the first
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!p.isHeld && !q.isHeld)
+        holdsSecond.release()
+        #expect(await waitUntil(seconds: 2) { p.isHeld || q.isHeld })
+        #expect(p.isHeld != q.isHeld)
+        let (winner, other) = p.isHeld ? (p, q) : (q, p)
+        winner.release()
+        #expect(await waitUntil(seconds: 2) { other.isHeld })
+        other.release()
+    }
+
     @Test func anUnopenableLockFileIsRetriedNotAbandoned() async throws {
         let folder = try temporarySuiteFolder()
         defer { try? FileManager.default.removeItem(at: folder.url) }
