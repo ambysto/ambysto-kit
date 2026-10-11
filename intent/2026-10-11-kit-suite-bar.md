@@ -1,5 +1,5 @@
 ---
-status: building   # draft → approved → planned → building → verified → shipped (PR #n)
+status: building   # draft → approved → planned → building → verified → shipped (PR #n). Build done: proofs 1–4, 6, 8 pass; 5 partly (owner-run checks open); 7 waits for adoption by Optimer and DevBox.
 ---
 # Ambysto Kit: the merged suite bar (one readout for the whole suite)
 
