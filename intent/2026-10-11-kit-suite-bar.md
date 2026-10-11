@@ -63,7 +63,7 @@ One Ambysto readout for the whole machine, fed by every running Ambysto app, sho
 - Sandboxed apps cannot attach a payload to a distributed notification and cannot write outside their container without an App Group. A "changed" notification without payload is fine; the data goes through the shared folder.
 - Anything another local process can read must be harmless: hence glances carry numbers and states only.
 - The Kit's existing rules hold: the libraries never delete user files, never spawn processes and never send signals. Opening a sibling app goes through Launch Services, the same as clicking it in Finder.
-- The contract is a cross-app contract (suite decision 7): it lives in the Kit spec and changes only with a Kit version bump. Kit 0.3 is taken by APS-12; this lands as the next minor after it (0.4 unless the order changes). Apps adopt it by semver tag once tags exist.
+- The contract is a cross-app contract (suite decision 7): it lives in the Kit spec and changes only with a Kit version bump. Kit 0.3 is taken by APS-12; this is **Kit 0.4** (owner decision 6). Apps adopt it by semver tag (`from: "0.4.0"`) once tags exist.
 - Everything on GitHub in English; feature branch and PR; tickets synced on GitHub and Plane; this repo is public.
 
 ## Out of scope
@@ -81,6 +81,7 @@ One Ambysto readout for the whole machine, fed by every running Ambysto app, sho
 3. **Free:** the merged readout works for any two installed Ambysto apps, Free or Pro.
 4. **The other apps' icons are hidden by default** while the suite readout is shown; each app offers "Show my own menu bar icon".
 5. **Guard follows the suite rule** like every other app; its blocking prompts keep working without an icon.
+6. **The suite bar is Kit 0.4** (owner, 2026-10-12), although its code reached `main` (#21) before any tag. So `v0.2.0` and `v0.3.0` are cut on a release line, `release/0.2`, branched from `88b3b45` (the last `main` commit without the suite bar code); the production-key PR and APS-12 land on `main` and are cherry-picked onto that line before each tag. `v0.4.0` is cut on `main`.
 
 ## Open questions
 
