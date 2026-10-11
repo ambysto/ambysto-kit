@@ -1,0 +1,171 @@
+import Darwin
+import Foundation
+import Testing
+@testable import AmbystoSuite
+
+/// A suite folder in a fresh temporary directory. Tests delete only their own temporary directories.
+func temporarySuiteFolder() throws -> SuiteFolder {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("ambysto-suite-\(UUID().uuidString)")
+    let folder = SuiteFolder(url: url)
+    try folder.prepare()
+    return folder
+}
+
+func waitUntil(seconds: Double = 3, _ condition: () -> Bool) async -> Bool {
+    let deadline = Date().addingTimeInterval(seconds)
+    while Date() < deadline {
+        if condition() { return true }
+        try? await Task.sleep(for: .milliseconds(20))
+    }
+    return condition()
+}
+
+@Suite("Glance store")
+struct GlanceStoreTests {
+    @Test func writesAndReadsBack() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let store = GlanceStore(folder: folder)
+        let record = GlanceRecord(app: .devbox, at: 5, metrics: [GlanceMetric(id: "servers", label: "Servers", value: 3)])
+        try store.write(record)
+        #expect(store.readAll() == [.devbox: .valid(record)])
+    }
+
+    @Test func folderIsOwnerOnly() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let attributes = try FileManager.default.attributesOfItem(atPath: folder.glancesURL.path)
+        #expect((attributes[.posixPermissions] as? Int) == 0o700)
+    }
+
+    @Test func skipsAFifoWithoutBlocking() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        #expect(mkfifo(folder.glanceURL(for: .power).path, 0o600) == 0)
+        let started = Date()
+        #expect(GlanceStore(folder: folder).read(.power) == .invalid(reason: "not a regular file"))
+        #expect(Date().timeIntervalSince(started) < 1)
+    }
+
+    @Test func doesNotFollowASymlink() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let target = folder.url.appendingPathComponent("elsewhere.json")
+        try Data(#"{"contract":1}"#.utf8).write(to: target)
+        try FileManager.default.createSymbolicLink(at: folder.glanceURL(for: .guard), withDestinationURL: target)
+        guard case .invalid = GlanceStore(folder: folder).read(.guard) else {
+            Issue.record("a symlink was followed")
+            return
+        }
+    }
+
+    @Test func readsAtMostTheLimit() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        try Data(repeating: 0x20, count: 1_000_000).write(to: folder.glanceURL(for: .optimer))
+        guard case .data(let data) = GlanceStore.safeRead(path: folder.glanceURL(for: .optimer).path, limit: 2049) else {
+            Issue.record("expected data")
+            return
+        }
+        #expect(data.count == 2049)
+        #expect(GlanceStore(folder: folder).read(.optimer) == .invalid(reason: "size: at most 2,048 bytes"))
+    }
+
+    @Test func ignoresFilesThatAreNotCatalogNames() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        try Data("junk".utf8).write(to: folder.glancesURL.appendingPathComponent(".optimer.json.tmp"))
+        try Data("junk".utf8).write(to: folder.glancesURL.appendingPathComponent("clip.json"))
+        #expect(GlanceStore(folder: folder).readAll().isEmpty)
+    }
+
+    @Test func publishScheduleWritesOnChangeAndHeartbeat() {
+        var schedule = PublishSchedule()
+        let first = GlanceRecord(app: .optimer, at: 100, ttl: 10, metrics: [GlanceMetric(id: "m", label: "M", value: 1)])
+        #expect(schedule.isDue(first, now: 100))
+        schedule.didWrite(first)
+        var same = first
+        same.at = 104
+        #expect(!schedule.isDue(same, now: 104))
+        same.at = 105
+        #expect(schedule.isDue(same, now: 105))   // ttl / 2
+        var changed = first
+        changed.at = 101
+        changed.metrics[0].value = .number(2)
+        #expect(schedule.isDue(changed, now: 101))
+        schedule.forceNext()
+        #expect(schedule.isDue(same, now: 101))
+    }
+}
+
+@Suite("Host lock", .serialized)
+struct HostLockTests {
+    @Test func secondWaiterGetsTheLockWhenTheFirstLetsGo() async throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let first = HostLock(url: folder.lockURL)
+        let second = HostLock(url: folder.lockURL)
+        first.start {}
+        #expect(await waitUntil { first.isHeld })
+        second.start {}
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!second.isHeld)
+        first.release()
+        #expect(await waitUntil(seconds: 1) { second.isHeld })
+        second.release()
+    }
+
+    @Test func aWaiterReleasedEarlyPassesTheLockOn() async throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let first = HostLock(url: folder.lockURL)
+        let cancelled = HostLock(url: folder.lockURL)
+        let third = HostLock(url: folder.lockURL)
+        first.start {}
+        #expect(await waitUntil { first.isHeld })
+        cancelled.start {}
+        try await Task.sleep(for: .milliseconds(100))
+        cancelled.release()
+        third.start {}
+        try await Task.sleep(for: .milliseconds(100))
+        first.release()
+        #expect(await waitUntil(seconds: 2) { third.isHeld })
+        #expect(!cancelled.isHeld)
+        third.release()
+    }
+
+    @Test func aReplacedLockFileIsLockedAgain() async throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let first = HostLock(url: folder.lockURL)
+        first.start {}
+        #expect(await waitUntil { first.isHeld })
+        let second = HostLock(url: folder.lockURL)
+        second.start {}
+        try await Task.sleep(for: .milliseconds(100))   // second now waits on the old file
+        try Data().write(to: folder.lockURL, options: .atomic)   // the path now names a new file
+        first.release()
+        #expect(await waitUntil(seconds: 2) { second.isHeld })
+        // The lock second holds is on the file at the path now: a non-blocking try on it fails.
+        let probe = HostLock.openLockFile(folder.lockURL.path)
+        defer { close(probe) }
+        #expect(flock(probe, LOCK_EX | LOCK_NB) != 0)
+        second.release()
+    }
+
+    @Test func descriptorIsNotInherited() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let fd = HostLock.openLockFile(folder.lockURL.path)
+        defer { close(fd) }
+        #expect(fd >= 0)
+        #expect(fcntl(fd, F_GETFD) & FD_CLOEXEC != 0)
+    }
+
+    @Test func doesNotFollowASymlinkedLockFile() throws {
+        let folder = try temporarySuiteFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        try FileManager.default.createSymbolicLink(at: folder.lockURL, withDestinationURL: folder.url.appendingPathComponent("x"))
+        #expect(HostLock.openLockFile(folder.lockURL.path) < 0)
+    }
+}

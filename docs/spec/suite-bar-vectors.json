@@ -1,6 +1,6 @@
 {
  "contract": 1,
- "note": "Each `text` is the exact file content (UTF-8). `outcome`: valid, invalid or skipped (a higher contract major). Freshness applies to `running` records only.",
+ "note": "Each `text` is the exact file content (UTF-8). `outcome`: valid, invalid or skipped (a higher contract major). `rule` names the first rule an invalid record breaks. Freshness applies to `running` records only.",
  "records": [
   {
    "name": "no metrics",
@@ -121,11 +121,11 @@
    "rule": "value: at most 2 decimals"
   },
   {
-   "name": "NaN value",
+   "name": "NaN value (not a JSON number)",
    "file": "optimer.json",
    "outcome": "invalid",
    "text": "{\"contract\":1,\"app\":\"optimer\",\"hosting\":false,\"state\":\"running\",\"at\":1791700000,\"ttl\":10,\"level\":\"ok\",\"metrics\":[{\"id\":\"mem\",\"label\":\"Memory\",\"value\":NaN,\"unit\":\"%\",\"level\":\"ok\"}]}",
-   "rule": "value: finite number"
+   "rule": "JSON"
   },
   {
    "name": "unit of 7 scalars",
