@@ -28,12 +28,23 @@ public enum ProcessReader {
         public var cpuTicks: UInt64
         public var diskRead: UInt64
         public var diskWritten: UInt64
+        /// Times the process woke the processor package from idle (`ri_pkg_idle_wkups`).
+        public var idleWakeups: UInt64
+        /// Interrupt wakeups (`ri_interrupt_wkups`).
+        public var interruptWakeups: UInt64
+        /// The kernel's own per-process energy estimate in nanojoules (`ri_energy_nj`). `nil` where only
+        /// `RUSAGE_INFO_V4` answered: unavailable is not 0.
+        public var energy: UInt64?
 
-        public init(footprint: UInt64, cpuTicks: UInt64, diskRead: UInt64, diskWritten: UInt64) {
+        public init(footprint: UInt64, cpuTicks: UInt64, diskRead: UInt64, diskWritten: UInt64,
+                    idleWakeups: UInt64 = 0, interruptWakeups: UInt64 = 0, energy: UInt64? = nil) {
             self.footprint = footprint
             self.cpuTicks = cpuTicks
             self.diskRead = diskRead
             self.diskWritten = diskWritten
+            self.idleWakeups = idleWakeups
+            self.interruptWakeups = interruptWakeups
+            self.energy = energy
         }
     }
 
@@ -67,14 +78,31 @@ public enum ProcessReader {
                        name: name.isEmpty ? string(fromTuple: info.pbi_comm) : name, status: info.pbi_status)
     }
 
+    /// One `proc_pid_rusage` call (`RUSAGE_INFO_V6`). A kernel that refuses V6 with `EINVAL` is asked again for
+    /// V4, which has no energy. Never `ri_billed_energy`: it does not count a process's own work
+    /// (docs/spec/process.md, macOS note on wakeups and energy).
     public static func usage(_ pid: pid_t) -> Usage? {
-        var info = rusage_info_v4()
-        let result = withUnsafeMutablePointer(to: &info) { pointer in
+        var v6 = rusage_info_v6()
+        let result = withUnsafeMutablePointer(to: &v6) { pointer in
+            pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(pid, RUSAGE_INFO_V6, $0) }
+        }
+        if result == 0 {
+            return Usage(footprint: v6.ri_phys_footprint, cpuTicks: v6.ri_user_time &+ v6.ri_system_time,
+                         diskRead: v6.ri_diskio_bytesread, diskWritten: v6.ri_diskio_byteswritten,
+                         idleWakeups: v6.ri_pkg_idle_wkups, interruptWakeups: v6.ri_interrupt_wkups,
+                         energy: v6.ri_energy_nj)
+        }
+        // V6 exists on every macOS this package supports (14+), so this fallback is defensive and has no test:
+        // a kernel that refuses the flavor answers EINVAL; any other error means the process is unreadable.
+        guard errno == EINVAL else { return nil }
+        var v4 = rusage_info_v4()
+        let fallback = withUnsafeMutablePointer(to: &v4) { pointer in
             pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(pid, RUSAGE_INFO_V4, $0) }
         }
-        guard result == 0 else { return nil }
-        return Usage(footprint: info.ri_phys_footprint, cpuTicks: info.ri_user_time &+ info.ri_system_time,
-                     diskRead: info.ri_diskio_bytesread, diskWritten: info.ri_diskio_byteswritten)
+        guard fallback == 0 else { return nil }
+        return Usage(footprint: v4.ri_phys_footprint, cpuTicks: v4.ri_user_time &+ v4.ri_system_time,
+                     diskRead: v4.ri_diskio_bytesread, diskWritten: v4.ri_diskio_byteswritten,
+                     idleWakeups: v4.ri_pkg_idle_wkups, interruptWakeups: v4.ri_interrupt_wkups, energy: nil)
     }
 
     public static func executablePath(_ pid: pid_t) -> String? {

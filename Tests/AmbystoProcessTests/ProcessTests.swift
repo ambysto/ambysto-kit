@@ -146,7 +146,7 @@ final class FakeSource: ProcessSource, @unchecked Sendable {
 
 final class FakeTime: @unchecked Sendable { var value: UInt64 = 1_000_000_000 }
 
-@Suite("ProcessSampler")
+@Suite("ProcessSampler", .serialized)
 struct ProcessSamplerTests {
     @Test func computesPerCoreCPUFromDeltas() {
         let source = FakeSource(), time = FakeTime()
@@ -193,5 +193,203 @@ struct ProcessSamplerTests {
             if best > 20 { break }
         }
         #expect(best > 20, "yes used \(best)%")
+    }
+
+    // MARK: Deltas, wakeups, energy (fake source, injected clock)
+
+    private let unitClock = MachClock(numer: 1, denom: 1)
+
+    private func usage(_ counter: Counter? = nil, drop: Bool = false, energy: UInt64? = 1_000) -> ProcessReader.Usage {
+        // Baseline values; `drop` lowers the named counter by one.
+        func value(_ base: UInt64, _ own: Counter) -> UInt64 { drop && counter == own ? base - 1 : base }
+        return ProcessReader.Usage(footprint: 7, cpuTicks: value(1_000, .cpu), diskRead: value(2_000, .diskRead),
+                                   diskWritten: value(3_000, .diskWritten), idleWakeups: value(40, .idleWakeups),
+                                   interruptWakeups: value(50, .interruptWakeups), energy: energy.map { value($0, .energy) })
+    }
+
+    @Test func deltasIntervalAndRatesAreExact() throws {
+        let source = FakeUsageSource(), time = FakeTime()
+        var sampler = ProcessSampler(source: source, clock: unitClock, now: { time.value })
+        source.processes[10] = (start: 1, usage: usage())
+        let first = try #require(sampler.sample().processes.first)
+        #expect(first.deltas == nil && first.idleWakeupsPerSecond == nil && first.interruptWakeupsPerSecond == nil)
+
+        source.processes[10] = (start: 1, usage: ProcessReader.Usage(
+            footprint: 9, cpuTicks: 1_000 + 500_000_000, diskRead: 2_000 + 4_000, diskWritten: 3_000 + 8_000,
+            idleWakeups: 40 + 30, interruptWakeups: 50 + 10, energy: 1_000 + 2_000_000))
+        time.value += 2_000_000_000
+        let second = try #require(sampler.sample().processes.first)
+        #expect(second.deltas == UsageDeltas(interval: 2_000_000_000, cpuNanoseconds: 500_000_000, idleWakeups: 30,
+                                             interruptWakeups: 10, energy: 2_000_000, diskRead: 4_000, diskWritten: 8_000))
+        #expect(second.cpuPercent == 25)
+        #expect(abs((second.idleWakeupsPerSecond ?? 0) - 15) < 1e-9 && abs((second.interruptWakeupsPerSecond ?? 0) - 5) < 1e-9)
+        #expect(second.diskReadPerSecond == 2_000 && second.diskWritePerSecond == 4_000)
+    }
+
+    @Test func aReusedIdentityHasNoDeltasOrRates() throws {
+        let source = FakeUsageSource(), time = FakeTime()
+        var sampler = ProcessSampler(source: source, clock: unitClock, now: { time.value })
+        source.processes[10] = (start: 1, usage: usage())
+        _ = sampler.sample()
+        source.processes[10] = (start: 2, usage: usage())   // same pid, new process
+        time.value += 1_000_000_000
+        let reused = try #require(sampler.sample().processes.first)
+        #expect(reused.deltas == nil && reused.cpuPercent == nil && reused.idleWakeupsPerSecond == nil)
+    }
+
+    enum Counter: CaseIterable, Sendable { case cpu, diskRead, diskWritten, idleWakeups, interruptWakeups, energy }
+
+    @Test(arguments: Counter.allCases)
+    private func oneDecreasingCounterVoidsEverythingForThatProcess(counter: Counter) throws {
+        let source = FakeUsageSource(), time = FakeTime()
+        var sampler = ProcessSampler(source: source, clock: unitClock, now: { time.value })
+        // The first sample is the baseline; the second equals it except one counter, 1 lower.
+        source.processes[10] = (start: 1, usage: usage())
+        _ = sampler.sample()
+        source.processes[10] = (start: 1, usage: usage(counter, drop: true))
+        time.value += 1_000_000_000
+        let process = try #require(sampler.sample().processes.first)
+        #expect(process.deltas == nil)
+        #expect(process.cpuPercent == nil && process.diskReadPerSecond == nil && process.diskWritePerSecond == nil)
+        #expect(process.idleWakeupsPerSecond == nil && process.interruptWakeupsPerSecond == nil)
+    }
+
+    @Test func energyZeroInBothSamplesIsZeroNotAbsent() throws {
+        let source = FakeUsageSource(), time = FakeTime()
+        var sampler = ProcessSampler(source: source, clock: unitClock, now: { time.value })
+        source.processes[10] = (start: 1, usage: usage(energy: 0))
+        _ = sampler.sample()
+        source.processes[10] = (start: 1, usage: usage(energy: 0))
+        time.value += 1_000_000_000
+        #expect(try #require(sampler.sample().processes.first).deltas?.energy == 0)
+    }
+
+    @Test(arguments: [(nil, 5), (5, nil), (nil, nil)] as [(UInt64?, UInt64?)])
+    func missingEnergyInEitherSampleLeavesEnergyNilAndTheRestPresent(before: UInt64?, after: UInt64?) throws {
+        let source = FakeUsageSource(), time = FakeTime()
+        var sampler = ProcessSampler(source: source, clock: unitClock, now: { time.value })
+        source.processes[10] = (start: 1, usage: usage(energy: before))
+        _ = sampler.sample()
+        var later = usage(energy: after)
+        later.cpuTicks += 100
+        later.idleWakeups += 3
+        source.processes[10] = (start: 1, usage: later)
+        time.value += 1_000_000_000
+        let deltas = try #require(sampler.sample().processes.first?.deltas)
+        #expect(deltas.energy == nil)
+        #expect(deltas.cpuNanoseconds == 100 && deltas.idleWakeups == 3)
+    }
+
+    @Test func aZombieIsFlagged() throws {
+        let source = FakeUsageSource()
+        source.processes[10] = (start: 1, usage: usage())
+        source.zombies = [10]
+        var sampler = ProcessSampler(source: source, clock: unitClock)
+        #expect(try #require(sampler.sample().processes.first).isZombie)
+        source.zombies = []
+        #expect(try #require(sampler.sample().processes.first).isZombie == false)
+    }
+
+    // MARK: Live
+
+    @Test func ownThreadShowsCPUAndWakeupsAndTheIntervalIsBounded() throws {
+        var sampler = ProcessSampler(source: OwnProcessSource(), clock: .current)
+        let beforeFirst = DispatchTime.now().uptimeNanoseconds
+        _ = sampler.sample()
+        let firstDone = DispatchTime.now().uptimeNanoseconds
+        runSleepySpinner()
+        let secondStart = DispatchTime.now().uptimeNanoseconds
+        let process = try #require(sampler.sample().processes.first { $0.pid == getpid() })
+        let afterSecond = DispatchTime.now().uptimeNanoseconds
+
+        let deltas = try #require(process.deltas)
+        #expect(deltas.cpuNanoseconds > 0)
+        #expect(deltas.idleWakeups + deltas.interruptWakeups > 0, "idle \(deltas.idleWakeups), interrupt \(deltas.interruptWakeups)")
+        #expect(deltas.interval >= secondStart - firstDone)
+        #expect(deltas.interval <= afterSecond - beforeFirst)
+        #expect(process.isZombie == false)
+    }
+
+    @Test(.enabled(if: energyIsAvailable, "needs Apple Silicon and RUSAGE_INFO_V6"))
+    func ownBusyLoopRaisesEnergy() throws {
+        var sampler = ProcessSampler(source: OwnProcessSource(), clock: .current)
+        _ = sampler.sample()
+        let start = DispatchTime.now().uptimeNanoseconds
+        var sink = 0.0
+        while DispatchTime.now().uptimeNanoseconds - start < 500_000_000 { sink += sin(sink + 1) }
+        #expect(sink.isFinite)
+        let deltas = try #require(sampler.sample().processes.first { $0.pid == getpid() }?.deltas)
+        #expect((deltas.energy ?? 0) > 0)
+    }
+}
+
+/// A thread that sleeps 5 ms two hundred times with a short spin between sleeps; returns when it is done.
+private func runSleepySpinner() {
+    let done = DispatchSemaphore(value: 0)
+    let thread = Thread {
+        for _ in 0 ..< 200 {
+            let spinStart = DispatchTime.now().uptimeNanoseconds
+            var sink = 0.0
+            while DispatchTime.now().uptimeNanoseconds - spinStart < 200_000 { sink += sin(sink + 1) }
+            Thread.sleep(forTimeInterval: 0.005)
+        }
+        done.signal()
+    }
+    thread.start()
+    done.wait()
+}
+
+private let energyIsAvailable: Bool = {
+    var arm64: Int32 = 0
+    var size = MemoryLayout<Int32>.size
+    let isArm = sysctlbyname("hw.optional.arm64", &arm64, &size, nil, 0) == 0 && arm64 == 1
+    return isArm && ProcessReader.usage(getpid())?.energy != nil
+}()
+
+/// The live source restricted to this process, so the assertions are about a process the test controls.
+private struct OwnProcessSource: ProcessSource {
+    private let live = LiveProcessSource()
+    func allPIDs() -> [pid_t] { [getpid()] }
+    func bsdInfo(_ pid: pid_t) -> ProcessReader.BSDInfo? { live.bsdInfo(pid) }
+    func usage(_ pid: pid_t) -> ProcessReader.Usage? { live.usage(pid) }
+    func executablePath(_ pid: pid_t) -> String? { live.executablePath(pid) }
+}
+
+/// A fake process table with full usage values, for the deltas tests.
+final class FakeUsageSource: ProcessSource, @unchecked Sendable {
+    var processes: [pid_t: (start: UInt64, usage: ProcessReader.Usage)] = [:]
+    var zombies: Set<pid_t> = []
+    func allPIDs() -> [pid_t] { Array(processes.keys).sorted() }
+    func bsdInfo(_ pid: pid_t) -> ProcessReader.BSDInfo? {
+        processes[pid].map {
+            ProcessReader.BSDInfo(ppid: 1, uid: 501, startTime: $0.start, name: "p\(pid)",
+                                  status: zombies.contains(pid) ? UInt32(SZOMB) : UInt32(SRUN))
+        }
+    }
+    func usage(_ pid: pid_t) -> ProcessReader.Usage? { processes[pid]?.usage }
+    func executablePath(_ pid: pid_t) -> String? { "/bin/p\(pid)" }
+}
+
+/// A pid reused between the two reads of one sample: the counters may belong to another process.
+final class ReusedBetweenReadsSource: ProcessSource, @unchecked Sendable {
+    var start: UInt64 = 100
+    func allPIDs() -> [pid_t] { [42] }
+    func bsdInfo(_ pid: pid_t) -> ProcessReader.BSDInfo? {
+        ProcessReader.BSDInfo(ppid: 1, uid: 501, startTime: start, name: "p", status: UInt32(SRUN))
+    }
+    func usage(_ pid: pid_t) -> ProcessReader.Usage? {
+        start += 1   // the id now names a new process
+        return ProcessReader.Usage(footprint: 1, cpuTicks: 10, diskRead: 0, diskWritten: 0)
+    }
+    func executablePath(_ pid: pid_t) -> String? { "/bin/p" }
+}
+
+@Suite("ProcessSampler, reads that belong together")
+struct ProcessSamplerReadOrderTests {
+    @Test func aPidReusedBetweenReadsIsSkipped() {
+        var sampler = ProcessSampler(source: ReusedBetweenReadsSource())
+        let (processes, hidden) = sampler.sample()
+        #expect(processes.isEmpty)
+        #expect(hidden == 1)
     }
 }
