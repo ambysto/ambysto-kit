@@ -1,31 +1,35 @@
 # Plan — Ambysto Kit: suite bar follow-ups (APS-15)
 
-Intent: [`2026-10-12-kit-suite-bar-followups.md`](2026-10-12-kit-suite-bar-followups.md) (approved 2026-10-12). Self-contained: an implementing agent reads this file and the intent only. Not yet accepted by the owner; an independent review follows before that.
+Intent: [`2026-10-12-kit-suite-bar-followups.md`](2026-10-12-kit-suite-bar-followups.md) (approved 2026-10-12). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (1 blocker, 3 major, 5 minor — folded in; log at the end). **One owner decision is needed** (the shortcut, §3). Not yet accepted by the owner.
 
 ## Design
 
 ### 1. Stale data (`SuiteParticipant`)
 - New init parameter `staleAfter: TimeInterval? = nil` (stored; also settable). Effective value: `max(staleAfter ?? 3 × ttl, ttl)` seconds, where `ttl` is the last `publish` call's ttl.
 - `publish(...)` records `lastPublishAt = clock()`.
-- `writeIfDue` builds the record from `last`; when `clock() − lastPublishAt > effectiveStaleAfter`, it uses **`metrics: []`** and keeps `last.level`. The heartbeat schedule sees a content change and writes at once; the next `publish` restores the metrics (another content change, written at once).
+- `writeIfDue` builds the record from the **last valid** publish (a publish the validator refused never becomes the source of a later record); when `clock() − lastPublishAt > effectiveStaleAfter`, its numbers have **expired**: it uses **`metrics: []`** and keeps the level. (The spec calls this "expired numbers", since "stale" already means a record past its ttl.)
+- When an app's publish interval is longer than its `staleAfter` (numbers would blink every cycle), the participant logs it once.
+- After a sleep longer than `staleAfter`, the first heartbeat on wake writes the record without numbers until the app publishes again; the spec says so and a test covers it. The heartbeat schedule sees a content change and writes at once; the next `publish` restores the metrics (another content change, written at once).
 - `suspendPublishing()` (proofs) keeps its meaning: no writes at all.
 - The state machine and the readout need no change: a fresh record without metrics is already a "running" row with no numbers.
 
 ### 2. Reopen
-- `public func handleReopen() -> Bool` on `SuiteParticipant`: when `!showsOwnIcon` it calls the `onOpen` action the app gave at init (the app's own "show my main window") and returns `false` (the app handled it); otherwise it does nothing and returns `true` (AppKit's default). An app calls it from `applicationShouldHandleReopen`. Optimer's existing behaviour is exactly this; DevBox, which opens its window always, may keep its own handler.
+- `public func handleReopen() -> Bool` on `SuiteParticipant`, for `applicationShouldHandleReopen`: when `!showsOwnIcon` it calls the `onOpen` action the app gave at init (the app's own "show my main window") and returns `false`, so AppKit and SwiftUI do not also reopen a window; otherwise it does nothing and returns `true`, letting the system's default reopen happen. Today Optimer's handler always returns `true` and DevBox's always `false`; adopting the helper changes Optimer's return value, so its adoption PR includes a manual reopen check. DevBox, which shows its window on every reopen, may keep its own handler.
 - Spec: a new section "Adopting the suite bar" lists the adopter's obligations (fixed labels, numbers and states only; own icon bound to `showsOwnIcon`; Open opens the main window; **reopen shows the main window while the own icon is hidden**; own floating bar and shortcut give way while active; a `staleAfter` that fits the app's refresh rhythm).
 
-### 3. The shortcut's status
-- `GlobalHotKey` keeps `RegisterEventHotKey`'s status: `public private(set) var isRegistered: Bool` (`status == noErr`). A test seam: an internal initialiser that takes the register function (`(UInt32, UInt32, EventHotKeyID, EventTargetRef?, OptionBits, UnsafeMutablePointer<EventHotKeyRef?>) -> OSStatus`), default Carbon's.
-- `SuiteHost`: after creating the key, if `!isRegistered`, log once ("⌃⌥M is in use by another app") and set an observable `shortcutAvailable = false` on the participant; it retries (invalidate + create) each time the suite popover opens, at most once per opening.
-- `SuitePopover`: under "Show floating bar", when `!shortcutAvailable`, a caption "⌃⌥M is in use by another app." (accessibility label included).
+### 3. The shortcut — owner decision needed (the review found the premise wrong)
+Carbon hot keys are **not exclusive across processes** (`CarbonEvents.h`: "Hot keys are normally non-exclusive: when the key is pressed, … the same hot key can be registered by multiple applications"; `eventHotKeyExistsErr` only for a duplicate in the same process or against a `kEventHotKeyExclusive` registrant). So when another app also uses ⌃⌥M, registration **succeeds** and one press triggers both apps; the approved "⌃⌥M is in use" note would almost never show.
+- **Option A (recommended):** drop the popover note and criterion 4; record the Carbon semantics in the spec's macOS notes ("another app using ⌃⌥M receives the same press"); keep only `GlobalHotKey.isRegistered` with a one-time log for the rare exclusive case. Cheap and honest.
+- **Option B:** register the suite key with `kEventHotKeyExclusive`, so a press reaches only the suite. A frozen host holding the exclusive key would then block the new host (worse than today), the hand-over with Optimer's own key needs a retry on the tick, and a spike with two processes comes first.
+- **Option C:** drop outcome 3 entirely (no `isRegistered`).
+Until the owner chooses, group 2 builds §1 and §2 only.
 
 ## Files (in build order)
 Branch `aps-15-suite-bar-followups` (this PR holds the intents and plans; the build goes on `aps-15-build`); one commit per group.
 
 1. **Spec** `docs/spec/suite-bar.md` (main session; HARD): "Freshness" gains the stale rule (default 3 × ttl, never below ttl, level kept, metrics dropped); new "Adopting the suite bar" section; "The readout" gains the shortcut note. No vector changes (a record without metrics is already in the vectors).
 2. **`AmbystoUI`** (main session; the stale rule is contract behaviour): `SuiteParticipant` (`staleAfter`, `lastPublishAt`, stale branch in `writeIfDue`, `handleReopen`, `shortcutAvailable`), `GlobalHotKey` (`isRegistered`, seam), `SuiteHost` (log once, retry on popover open), `SuiteViews` (caption).
-   Tests (`Tests/AmbystoUITests`, injected clock, fake status items, `observeSystem: false`): stale after 3 × ttl with the default and after an explicit value; a value below ttl raised to ttl; level kept, metrics empty, back to metrics on the next publish; `handleReopen` calls `onOpen` only while the own icon is hidden; `GlobalHotKey` with a fake register function returning `eventHotKeyExistsErr` → `isRegistered == false`; the host sets `shortcutAvailable = false` and retries on the next popover opening.
+   Tests (`Tests/AmbystoUITests`, injected clock, fake status items, `observeSystem: false`): numbers expire after 3 × ttl with the default and after an explicit value; a value below ttl raised to ttl; level kept, metrics empty, back to metrics on the next publish; a refused publish never becomes the source of a later record; a wake after a long sleep writes no numbers until the next publish; the one-time log when the publish interval exceeds `staleAfter`; `handleReopen` calls `onOpen` only while the own icon is hidden and returns `false` then, `true` otherwise. The existing `heartbeatsAreNeverFurtherApartThanHalfTheTtl` loop is bounded below the expiry point. (Shortcut tests depend on the §3 decision.)
 3. **CLAUDE.md** (EASY): the adoption checklist gains reopen and `staleAfter`; test count.
 
 ## Proof
@@ -45,4 +49,8 @@ Branch `aps-15-suite-bar-followups` (this PR holds the intents and plans; the bu
 | Additive API breaks an adopter | Defaulted parameters; proof 2 |
 
 ## Out of this plan
-Removing DevBox's watchdog and adding Optimer's retry (their follow-up PRs); detecting an item hidden by macOS; Windows.
+Removing DevBox's watchdog — **the DevBox PR that moves its Kit pin past this change must pass `staleAfter: 150`** (its loop publishes every 60 s plus the refresh time, which App Nap can stretch; the 90 s default would make its numbers blink) — and Optimer adopting `handleReopen` (their follow-up PRs, each with a behaviour check, not only a build); detecting an item hidden by macOS; Windows.
+
+## Review log (2026-10-12, independent technical review: 1 blocker, 3 major, 5 minor — folded in)
+1. (blocker) Carbon hot keys are non-exclusive across processes, so "⌃⌥M is in use" almost never happens → §3 rewritten as an owner decision (A recommended). 2. DevBox's 60 s loop would blink with the 90 s default → its pin-move PR must pass `staleAfter: 150`, with a behaviour check. 3. Reopen return values differ between the apps → semantics stated; Optimer's adoption includes a manual check. 4. Host test seams for the shortcut → depend on §3. 5. A refused publish could become the source of an expired record → only the last valid publish. 6. Wake after a long sleep → in the spec, tested. 7. Blinking when the publish interval exceeds `staleAfter` → one-time log. 8. "Stale" already meant past ttl → "expired numbers". 9. An existing test crossed the expiry point → bounded.
+
