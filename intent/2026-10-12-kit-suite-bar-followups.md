@@ -1,5 +1,5 @@
 ---
-status: approved   # draft → approved → planned → building → verified → shipped (PR #n)
+status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: suite bar follow-ups — stale data, reopen, the shortcut's status
 
@@ -44,7 +44,7 @@ Ticket: APS-15 (`ambysto/ambysto-kit#26`, Plane APS-15), part of APS-2. Found by
 ## Decisions (owner, 2026-10-12)
 
 1. **Default `staleAfter` = 3 × ttl** (raised to ttl if set lower); an app with a slow refresh sets its own.
-2. **A taken shortcut shows a one-line note** next to "Show floating bar" in the suite popover, besides the log line.
+2. **A taken shortcut shows a one-line note** next to "Show floating bar" in the suite popover, besides the log line. *(Superseded 2026-10-12 by the plan review: Carbon hot keys are non-exclusive across processes, so the key is almost never "taken"; the owner accepted the plan with option A — no note, a log for the rare exclusive case, the semantics in the spec. Criterion 4 is dropped.)*
 
 ## Open questions
 

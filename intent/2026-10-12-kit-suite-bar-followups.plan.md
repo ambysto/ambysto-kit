@@ -1,6 +1,6 @@
 # Plan — Ambysto Kit: suite bar follow-ups (APS-15)
 
-Intent: [`2026-10-12-kit-suite-bar-followups.md`](2026-10-12-kit-suite-bar-followups.md) (approved 2026-10-12). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (1 blocker, 3 major, 5 minor — folded in; log at the end). **One owner decision is needed** (the shortcut, §3). Not yet accepted by the owner.
+Intent: [`2026-10-12-kit-suite-bar-followups.md`](2026-10-12-kit-suite-bar-followups.md) (approved 2026-10-12). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (1 blocker, 3 major, 5 minor — folded in; log at the end). Plan accepted by the owner on 2026-10-12 ("Merge"), with **option A** for the shortcut (the recommendation; the owner did not pick another).
 
 ## Design
 
@@ -22,7 +22,7 @@ Carbon hot keys are **not exclusive across processes** (`CarbonEvents.h`: "Hot k
 - **Option A (recommended):** drop the popover note and criterion 4; record the Carbon semantics in the spec's macOS notes ("another app using ⌃⌥M receives the same press"); keep only `GlobalHotKey.isRegistered` with a one-time log for the rare exclusive case. Cheap and honest.
 - **Option B:** register the suite key with `kEventHotKeyExclusive`, so a press reaches only the suite. A frozen host holding the exclusive key would then block the new host (worse than today), the hand-over with Optimer's own key needs a retry on the tick, and a spike with two processes comes first.
 - **Option C:** drop outcome 3 entirely (no `isRegistered`).
-Until the owner chooses, group 2 builds §1 and §2 only.
+**Chosen: option A** (2026-10-12). The popover note and criterion 4 are dropped; `isRegistered` with a one-time log stays; the spec's macOS notes state the Carbon semantics.
 
 ## Files (in build order)
 Branch `aps-15-suite-bar-followups` (this PR holds the intents and plans; the build goes on `aps-15-build`); one commit per group.

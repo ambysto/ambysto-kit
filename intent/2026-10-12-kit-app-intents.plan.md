@@ -1,6 +1,6 @@
 # Plan — Ambysto Kit: App Intents for the suite (APS-14)
 
-Intent: [`2026-10-12-kit-app-intents.md`](2026-10-12-kit-app-intents.md) (approved 2026-10-12: Raycast through Shortcuts, first adopter Optimer, local answers may name apps). Self-contained. Revised after an independent technical review (2 blockers, 5 major, 3 minor — folded in; log at the end). Not yet accepted by the owner.
+Intent: [`2026-10-12-kit-app-intents.md`](2026-10-12-kit-app-intents.md) (approved 2026-10-12: Raycast through Shortcuts, first adopter Optimer, local answers may name apps). Self-contained. Revised after an independent technical review (2 blockers, 5 major, 3 minor — folded in; log at the end). Plan accepted by the owner on 2026-10-12.
 
 ## Order: prove it in Optimer, then move what is proven into the Kit
 App Intents appear in Shortcuts and Spotlight only if the app bundle carries the **App Intents metadata**, which Xcode produces with `appintentsmetadataprocessor` (and `appintentsnltrainingprocessor` for phrases) from the compiler's *const values*. The Ambysto apps are SwiftPM packages built by `swift build` and a `build-app.sh` that assembles a universal, ad-hoc-signed, `LSUIElement` app and a `.dmg`. The metadata extraction reads **literals in the app's own source** (titles, phrases, `openAppWhenRun`), so naming helpers and protocol-supplied defaults from a Kit library would likely be invisible to it. Therefore:
