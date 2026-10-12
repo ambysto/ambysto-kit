@@ -1,4 +1,3 @@
-import os
 import AmbystoSuite
 import AppKit
 import SwiftUI
@@ -13,7 +12,6 @@ public final class SuiteHost {
     private var hotKey: GlobalHotKey?
     private var shown: (values: [(MetricRef, GlanceMetric)], worst: GlanceLevel)?
 
-    static let log = Logger(subsystem: "com.ambysto.suite", category: "host")
     static let barSize = CGSize(width: 300, height: 132)
     static let expandedSize = CGSize(width: 340, height: 460)
 
@@ -23,7 +21,7 @@ public final class SuiteHost {
         if registersHotKey {
             let key = GlobalHotKey { [weak self] in self?.toggleFloatingBar() }
             if !key.isRegistered {
-                SuiteHost.log.error("the suite shortcut \(GlobalHotKey.displayName, privacy: .public) could not be registered (another app holds it exclusively)")
+                participant.logOnce("shortcut", "the suite shortcut \(GlobalHotKey.displayName) could not be registered: this app still holds the same keys (a duplicate in one process)")
             }
             hotKey = key
         }

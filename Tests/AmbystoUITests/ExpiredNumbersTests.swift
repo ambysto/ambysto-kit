@@ -5,8 +5,8 @@ import Testing
 
 // APS-15: numbers the app stopped updating expire; the heartbeat keeps the row without them.
 
-private func written(_ folder: SuiteFolder) -> GlanceRecord? {
-    guard case .valid(let record)? = GlanceStore(folder: folder).read(.optimer) else { return nil }
+private func written(_ folder: SuiteFolder, _ app: SuiteApp = .optimer) -> GlanceRecord? {
+    guard case .valid(let record)? = GlanceStore(folder: folder).read(app) else { return nil }
     return record
 }
 
@@ -54,6 +54,36 @@ struct ExpiredNumbersTests {
         #expect(rig.participant.effectiveStaleAfter(ttl: 10) == 10)
         rig.participant.staleAfter = nil
         #expect(rig.participant.effectiveStaleAfter(ttl: 10) == 30)
+    }
+
+    @Test func anExplicitStaleAfterIsWhatExpiresTheNumbers() throws {
+        let folder = try makeTempFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let clock = ClockBox(40_000)
+        let rig = Rig(.devbox, folder: folder, clock: clock.read)
+        defer { rig.finish() }
+        rig.participant.staleAfter = 150
+        rig.participant.publish(metrics: memory, ttl: 30)
+        tick(rig, clock, for: 140, step: 5)   // past the 90 s default, inside the explicit 150 s
+        #expect(written(folder, .devbox)?.metrics == memory)
+        tick(rig, clock, for: 15, step: 5)
+        #expect(written(folder, .devbox)?.metrics.isEmpty == true)
+    }
+
+    @Test func theBlinkLogFiresOnlyForAnIntervalBetweenPublishesNotForASleep() throws {
+        let folder = try makeTempFolder()
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let clock = ClockBox(50_000)
+        let rig = Rig(.optimer, folder: folder, clock: clock.read)
+        defer { rig.finish() }
+        rig.participant.publish(metrics: memory, ttl: 10)
+        clock.advance(600)
+        rig.participant.didWake()   // a sleep: no log
+        rig.participant.publish(metrics: memory, ttl: 10)
+        #expect(!rig.participant.hasLogged("expired"))
+        clock.advance(45)   // 45 s between two publishes, staleAfter 30 s: a misfit
+        rig.participant.publish(metrics: memory, ttl: 10)
+        #expect(rig.participant.hasLogged("expired"))
     }
 
     @Test func aRefusedPublishNeverBecomesTheSourceOfARecord() throws {

@@ -1,5 +1,5 @@
 ---
-status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
+status: verified   # draft → approved → planned → building → verified → shipped (PR #n). Criteria 1–3, 5, 6 pass; criterion 4 dropped with option A.
 ---
 # Ambysto Kit: suite bar follow-ups — stale data, reopen, the shortcut's status
 

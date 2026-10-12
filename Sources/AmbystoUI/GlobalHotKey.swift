@@ -16,8 +16,9 @@ public final class GlobalHotKey {
 
     public static let displayName = "⌃⌥M"
     /// Whether Carbon accepted the registration. Hot keys are non-exclusive across processes: another app using the
-    /// same keys does not make this false (both receive the press); only a duplicate in this process or another
-    /// app's *exclusive* registration does (spec, macOS notes).
+    /// same keys does not make this false (both receive the press). Another app's *exclusive* registration does not
+    /// make it false either — the registration is accepted but receives no presses, which cannot be detected. Only a
+    /// duplicate in this process does (spec, macOS notes).
     public private(set) var isRegistered = false
 
     public init(keyCode: Int = kVK_ANSI_M, modifiers: Int = controlKey | optionKey, action: @escaping @MainActor () -> Void) {

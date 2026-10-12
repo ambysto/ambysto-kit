@@ -40,10 +40,10 @@ public final class SuiteParticipant {
     @ObservationIgnored private var last: (level: GlanceLevel, metrics: [GlanceMetric], ttl: Int)?
     /// When the app last published valid metrics; after `staleAfter` without one, its numbers have expired.
     @ObservationIgnored private var lastPublishAt: Double?
-    @ObservationIgnored private var numbersExpired = false
+    @ObservationIgnored private var sleptSincePublish = false
     /// Seconds without a valid `publish` after which the record is written without numbers (spec "Freshness",
     /// expired numbers). `nil` = 3 × ttl. Never below the ttl. An app with a slow refresh sets its own.
-    public var staleAfter: TimeInterval?
+    @ObservationIgnored public var staleAfter: TimeInterval?
     @ObservationIgnored private(set) var lock: HostLock?
     @ObservationIgnored private var host: SuiteHost?
     @ObservationIgnored private var watchers: [DispatchSourceFileSystemObject] = []
@@ -105,7 +105,9 @@ public final class SuiteParticipant {
     // MARK: Publishing
 
     /// Remembers the metrics and writes the record when it changed or the heartbeat is due. A record that breaks
-    /// the contract is logged once per reason and never written. Keeps publishing on its own until `shutdown()`.
+    /// the contract is logged once per reason and never written. The heartbeat keeps the app's row on its own until
+    /// `shutdown()`, but the numbers expire: call `publish` at least every `staleAfter` seconds, even with unchanged
+    /// values (spec "Expired numbers").
     public func publish(level: GlanceLevel = .ok, metrics: [GlanceMetric], ttl: Int = 10) {
         let first = last == nil
         let now = clock()
@@ -115,10 +117,11 @@ public final class SuiteParticipant {
             lastWriteFailed = true
             return
         }
-        if numbersExpired {
-            logOnce("expired", "the app published after its numbers had expired: its publish interval is longer than staleAfter (\(effectiveStaleAfter(ttl: ttl)) s)")
-            numbersExpired = false
+        // Only the interval between two publishes reveals a misfit `staleAfter`; a sleep or a stall does not.
+        if let previous = lastPublishAt, now - previous > effectiveStaleAfter(ttl: ttl), !sleptSincePublish {
+            logOnce("expired", "the interval between two publishes (\(Int(now - previous)) s) is longer than staleAfter (\(Int(effectiveStaleAfter(ttl: ttl))) s): the numbers blink")
         }
+        sleptSincePublish = false
         last = (level, metrics, ttl)
         lastPublishAt = now
         if ttl != timerTTL { startTimer(ttl: ttl) }
@@ -142,7 +145,6 @@ public final class SuiteParticipant {
         let now = clock()
         // Expired numbers: the heartbeat keeps the app's row, but never with numbers the app stopped updating.
         let expired = lastPublishAt.map { now - $0 > effectiveStaleAfter(ttl: last.ttl) } ?? false
-        if expired { numbersExpired = true }
         let record = GlanceRecord(app: app, hosting: isHost, at: now, ttl: last.ttl, level: last.level,
                                   metrics: expired ? [] : last.metrics)
         if let problem = GlanceCodec.problem(in: record) {
@@ -171,7 +173,10 @@ public final class SuiteParticipant {
         return wrote
     }
 
-    private func logOnce(_ key: String, _ message: String) {
+    /// Logged problems by key, once per run (internal for tests).
+    func hasLogged(_ key: String) -> Bool { loggedProblems.contains(key) }
+
+    func logOnce(_ key: String, _ message: String) {
         guard loggedProblems.insert(key).inserted else { return }
         Self.log.error("\(message, privacy: .public)")
     }
@@ -394,8 +399,10 @@ public final class SuiteParticipant {
         }))
     }
 
-    private func didWake() {
+    /// Internal for tests.
+    func didWake() {
         guard !didShutdown else { return }
+        sleptSincePublish = true
         machine.didWake(now: clock())
         schedule.forceNext()
         refresh()
