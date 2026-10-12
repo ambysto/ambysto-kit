@@ -92,7 +92,7 @@ struct ParticipantFlowTests {
             let spacing = timer.timeInterval + timer.tolerance
             var writes: [Double] = []
             let start = clock.read()
-            while clock.read() - start < Double(ttl) * 3 {
+            while clock.read() - start < Double(ttl) * 2.5 {   // below the 3 × ttl expiry point (APS-15)
                 if let at = record(in: folder, .optimer)?.at, writes.last != at { writes.append(at) }
                 clock.advance(spacing)
                 rig.participant.refresh(tick: true)

@@ -19,7 +19,11 @@ public final class SuiteHost {
         self.participant = participant
         statusItem = factory.make(self)
         if registersHotKey {
-            hotKey = GlobalHotKey { [weak self] in self?.toggleFloatingBar() }
+            let key = GlobalHotKey { [weak self] in self?.toggleFloatingBar() }
+            if !key.isRegistered {
+                participant.logOnce("shortcut", "the suite shortcut \(GlobalHotKey.displayName) could not be registered: this app still holds the same keys (a duplicate in one process)")
+            }
+            hotKey = key
         }
         update()
     }
