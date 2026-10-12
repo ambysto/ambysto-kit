@@ -36,7 +36,14 @@ public final class SuiteParticipant {
     @ObservationIgnored private var machine = SuiteStateMachine()
     @ObservationIgnored private var lastWriteFailed = false
     @ObservationIgnored private var schedule = PublishSchedule()
+    /// The last publish the validator accepted: the only source of written records (a refused publish never is).
     @ObservationIgnored private var last: (level: GlanceLevel, metrics: [GlanceMetric], ttl: Int)?
+    /// When the app last published valid metrics; after `staleAfter` without one, its numbers have expired.
+    @ObservationIgnored private var lastPublishAt: Double?
+    @ObservationIgnored private var numbersExpired = false
+    /// Seconds without a valid `publish` after which the record is written without numbers (spec "Freshness",
+    /// expired numbers). `nil` = 3 × ttl. Never below the ttl. An app with a slow refresh sets its own.
+    public var staleAfter: TimeInterval?
     @ObservationIgnored private(set) var lock: HostLock?
     @ObservationIgnored private var host: SuiteHost?
     @ObservationIgnored private var watchers: [DispatchSourceFileSystemObject] = []
@@ -71,6 +78,7 @@ public final class SuiteParticipant {
                 statusItems: SuiteStatusItemFactory = .system,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 },
                 observeSystem: Bool = true,
+                staleAfter: TimeInterval? = nil,
                 onOpen: @escaping @MainActor () -> Void) {
         self.app = app
         self.folders = folders
@@ -79,6 +87,7 @@ public final class SuiteParticipant {
         self.clock = clock
         self.observesSystem = observeSystem
         self.onOpen = onOpen
+        self.staleAfter = staleAfter
         self.showOwnIconStorage = defaults.bool(forKey: Self.showOwnIconKey)
 
         for folder in folders {
@@ -99,7 +108,19 @@ public final class SuiteParticipant {
     /// the contract is logged once per reason and never written. Keeps publishing on its own until `shutdown()`.
     public func publish(level: GlanceLevel = .ok, metrics: [GlanceMetric], ttl: Int = 10) {
         let first = last == nil
+        let now = clock()
+        let probe = GlanceRecord(app: app, at: now, ttl: ttl, level: level, metrics: metrics)
+        if let problem = GlanceCodec.problem(in: probe) {
+            logOnce("invalid:\(problem)", "glance record not written: \(problem)")
+            lastWriteFailed = true
+            return
+        }
+        if numbersExpired {
+            logOnce("expired", "the app published after its numbers had expired: its publish interval is longer than staleAfter (\(effectiveStaleAfter(ttl: ttl)) s)")
+            numbersExpired = false
+        }
         last = (level, metrics, ttl)
+        lastPublishAt = now
         if ttl != timerTTL { startTimer(ttl: ttl) }
         // The first publish counts this app as running before its file lands, so a second app never flashes its icon.
         if first { evaluate() }
@@ -111,10 +132,19 @@ public final class SuiteParticipant {
         publishingSuspended = true
     }
 
+    /// `staleAfter`, or 3 × ttl, never below the ttl.
+    func effectiveStaleAfter(ttl: Int) -> TimeInterval {
+        max(staleAfter ?? Double(ttl) * 3, Double(ttl))
+    }
+
     private func writeIfDue(margin: Double) {
         guard !didShutdown, !publishingSuspended, let last else { return }
         let now = clock()
-        let record = GlanceRecord(app: app, hosting: isHost, at: now, ttl: last.ttl, level: last.level, metrics: last.metrics)
+        // Expired numbers: the heartbeat keeps the app's row, but never with numbers the app stopped updating.
+        let expired = lastPublishAt.map { now - $0 > effectiveStaleAfter(ttl: last.ttl) } ?? false
+        if expired { numbersExpired = true }
+        let record = GlanceRecord(app: app, hosting: isHost, at: now, ttl: last.ttl, level: last.level,
+                                  metrics: expired ? [] : last.metrics)
         if let problem = GlanceCodec.problem(in: record) {
             logOnce("invalid:\(problem)", "glance record not written: \(problem)")
             lastWriteFailed = true
@@ -372,6 +402,15 @@ public final class SuiteParticipant {
     }
 
     // MARK: Open
+
+    /// For `applicationShouldHandleReopen` (spec "Adopting the suite bar"): while the own icon is hidden, reopening
+    /// the app runs the `onOpen` action given at init (the app's main window) and returns `false`, so AppKit and
+    /// SwiftUI do not also reopen a window; otherwise it does nothing and returns `true` (the system's default).
+    public func handleReopen() -> Bool {
+        guard !showsOwnIcon else { return true }
+        onOpen()
+        return false
+    }
 
     /// Asks `app` to open its main window (spec "Open").
     public static func requestOpen(_ app: SuiteApp) {

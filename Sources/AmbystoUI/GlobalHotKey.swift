@@ -15,6 +15,10 @@ public final class GlobalHotKey {
     nonisolated static let signature = OSType(0x4153_5549)   // 'ASUI'
 
     public static let displayName = "⌃⌥M"
+    /// Whether Carbon accepted the registration. Hot keys are non-exclusive across processes: another app using the
+    /// same keys does not make this false (both receive the press); only a duplicate in this process or another
+    /// app's *exclusive* registration does (spec, macOS notes).
+    public private(set) var isRegistered = false
 
     public init(keyCode: Int = kVK_ANSI_M, modifiers: Int = controlKey | optionKey, action: @escaping @MainActor () -> Void) {
         id = Self.nextID
@@ -35,8 +39,9 @@ public final class GlobalHotKey {
             DispatchQueue.main.async { MainActor.assumeIsolated { GlobalHotKey.actions[id]?() } }
             return noErr
         }, 1, &spec, UnsafeMutableRawPointer(bitPattern: UInt(id)), &handler)
-        RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), EventHotKeyID(signature: Self.signature, id: id),
-                            GetApplicationEventTarget(), 0, &hotKey)
+        let status = RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), EventHotKeyID(signature: Self.signature, id: id),
+                                         GetApplicationEventTarget(), 0, &hotKey)
+        isRegistered = status == noErr
     }
 
     /// Unregisters the shortcut and its handler. Safe to call twice.
