@@ -81,6 +81,8 @@ A publisher rewrites its record when a value changes, at least every `ttl / 2` s
 
 A stale or `stopped` record means that app is **not running** for the suite: its row shows "not running" with no numbers for 60 s, then disappears.
 
+**Expired numbers.** The heartbeat proves the app runs, not that its numbers are current. When an app has not published new values for **`staleAfter`** seconds (default 3 × ttl, never below the ttl; an app with a slow refresh sets its own, e.g. 150 s for a 60 s refresh), its record is written **without metrics**, keeping its last level, until it publishes again. The row stays (the app runs) but shows no numbers. After a sleep longer than `staleAfter`, the first heartbeat on wake has no numbers until the app publishes. A value the validator refuses is never the source of a later record. An app whose publish interval is longer than its `staleAfter` would blink between numbers and none; implementations log that once.
+
 ## Active
 
 The readout is **active** when at least **two participants** have a fresh `running` record. It becomes inactive only after fewer than two have been fresh for **10 s** without a break, and for 10 s after waking from sleep it never becomes inactive. Space and Tune never count in contract 1.
@@ -111,6 +113,16 @@ While the readout is active, every app hides **its own floating bar** and releas
 - **Merged floating bar:** the same rows, compact (one line per app) or expanded; off by default. The suite shortcut **Control-Option-M** toggles it; only the host registers it.
 - **settings.json** keeps the two chosen values, whether the floating bar is shown and expanded, its top-left position, and the menu bar item's position. Unknown keys, and known keys whose value has an unexpected type, are kept unchanged (integers exactly) when the file is rewritten.
 
+## Adopting the suite bar
+
+An app that joins the readout must:
+- publish fixed labels and numbers or state words only (reviewed for names on adoption);
+- choose a `staleAfter` that fits its refresh rhythm;
+- bind its own menu bar icon to the participant's "show own icon" state;
+- open its main window on **Open**;
+- **show its main window when it is opened again while running and its own icon is hidden** (on macOS, `applicationShouldHandleReopen`), so it is always reachable;
+- hide its own floating bar and release its own shortcut while the readout is active.
+
 ## Open
 
 **Open** sends the system-wide notification `com.ambysto.suite.open` whose only content is the target app id (no other data), delivered immediately even to background apps. The target app opens its main window. Any local process can send it; the worst it can do is bring a window forward.
@@ -136,3 +148,5 @@ While the readout is active, every app hides **its own floating bar** and releas
   2. `MenuBarExtra(isInserted:)` removes and re-inserts a `.window`-style item every time. SwiftUI writes the binding three times per change with the **same** value, so only a write that differs from the current value is a user action.
   3. A second process blocked in `flock(LOCK_EX)` got the lock 16 ms after the holder received `SIGKILL`.
   4. On macOS 26 every menu bar item's window belongs to Control Center, so `CGWindowListCopyWindowInfo` cannot tell which app owns an item. The Accessibility attribute `AXExtrasMenuBar` of an app (its children are its items) can, and is what the proof script counts; it needs Accessibility permission for the terminal that runs it.
+- **The suite shortcut and other apps:** Carbon hot keys are non-exclusive across processes (`CarbonEvents.h`): another app that registers Control-Option-M receives the same press, and registration still succeeds. Only a duplicate in the same process, or another app's *exclusive* registration (`kEventHotKeyExclusive`), makes it fail; the host then logs it once. The suite does not register exclusively, so a frozen host can never block the key.
+
