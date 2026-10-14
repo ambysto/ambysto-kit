@@ -1,0 +1,4 @@
+# Fails: openAppWhenRun is true but supportedModes is 1 (the metadata contradicts itself), not listed.
+# Read intents of the app, one identifier per line.
+
+SpikeMemoryInUseIntent

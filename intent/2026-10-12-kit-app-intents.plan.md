@@ -31,6 +31,7 @@ Result: **works** (exact flags and commands) or **fails** (stop; owner decision)
 
 ## 3. Kit tooling (builder, then reviewer)
 - `scripts/app-intents-metadata.sh`: the spike's proven build step, parameterised (module, build dir, bundle, archs); each app's `build-app.sh` calls it; fails loudly on an unknown Xcode version.
+Built (2026-10-14): the build dir is the package's `.build` and only the arm64 const values are read (the arm64 and x86_64 outputs were byte-identical); not parameters.
 - `scripts/app-intents-lint.py`: reads the produced metadata and fails the build when an intent **not** on the app's allow-list of read-only intents lacks `openAppWhenRun` (the allow-list lives in each app's repo, reviewed like code). This is the enforcement of the safety rule.
 - **Confirmation router pattern** (documented in the spec, a small helper in `AmbystoUI` only if the spike shows it is reusable): an in-process router registered in `App.init` (or `AppDependencyManager`) that holds a confirmation request until the app's window exists, so a cold launch works; no URL scheme, no distributed notification (both spoofable by other processes).
 - `AmbystoIntents` as a library is **not** created unless the spike shows extraction sees types from a dependency; the Kit defines no `AppIntent`, `AppEntity` or `AppEnum` types.

@@ -1,0 +1,120 @@
+{
+  "actions": {
+    "SpikeMemoryInUseIntent": {
+      "assistantDefinedSchemaTraits": [],
+      "assistantDefinedSchemas": [],
+      "authenticationPolicy": 0,
+      "availabilityAnnotations": {
+        "LNPlatformNameWildcard": {
+          "introducedVersion": "*"
+        }
+      },
+      "effectiveBundleIdentifiers": [],
+      "fullyQualifiedTypeName": "AmbystoOptimer.SpikeMemoryInUseIntent",
+      "identifier": "SpikeMemoryInUseIntent",
+      "isAuthPolExplicit": false,
+      "isDiscoverable": true,
+      "mangledTypeName": "14AmbystoOptimer22SpikeMemoryInUseIntentV",
+      "mangledTypeNameByBundleIdentifier": {},
+      "mangledTypeNameByBundleIdentifierV2": {},
+      "mangledTypeNameV2": "14AmbystoOptimer22SpikeMemoryInUseIntentV",
+      "openAppWhenRun": false,
+      "outputFlags": 4,
+      "outputType": {
+        "primitive": {
+          "wrapper": {
+            "typeIdentifier": 2
+          }
+        }
+      },
+      "parameters": [],
+      "presentationStyle": 0,
+      "requiredCapabilities": [],
+      "supportedModes": 1,
+      "systemProtocolMetadata": [],
+      "systemProtocolMetadataV2": [],
+      "systemProtocols": [],
+      "title": {
+        "alternatives": [],
+        "key": "Memory in use (Ambysto Optimer)"
+      },
+      "typeSpecificMetadata": [],
+      "visibilityMetadata": {
+        "assistantOnly": false,
+        "isDiscoverable": true
+      }
+    },
+    "SpikeOpenCleanupIntent": {
+      "assistantDefinedSchemaTraits": [],
+      "assistantDefinedSchemas": [],
+      "authenticationPolicy": 0,
+      "availabilityAnnotations": {
+        "LNPlatformNameWildcard": {
+          "introducedVersion": "*"
+        }
+      },
+      "effectiveBundleIdentifiers": [],
+      "fullyQualifiedTypeName": "AmbystoOptimer.SpikeOpenCleanupIntent",
+      "identifier": "SpikeOpenCleanupIntent",
+      "isAuthPolExplicit": false,
+      "isDiscoverable": true,
+      "mangledTypeName": "14AmbystoOptimer22SpikeOpenCleanupIntentV",
+      "mangledTypeNameByBundleIdentifier": {},
+      "mangledTypeNameByBundleIdentifierV2": {},
+      "mangledTypeNameV2": "14AmbystoOptimer22SpikeOpenCleanupIntentV",
+      "openAppWhenRun": true,
+      "outputFlags": 0,
+      "parameters": [],
+      "presentationStyle": 0,
+      "requiredCapabilities": [],
+      "supportedModes": 1,
+      "systemProtocolMetadata": [],
+      "systemProtocolMetadataV2": [],
+      "systemProtocols": [],
+      "title": {
+        "alternatives": [],
+        "key": "Clean regenerable caches (Ambysto Optimer)"
+      },
+      "typeSpecificMetadata": [],
+      "visibilityMetadata": {
+        "assistantOnly": false,
+        "isDiscoverable": true
+      }
+    }
+  },
+  "assistantEntities": [],
+  "assistantIntentNegativePhrases": [],
+  "assistantIntents": [],
+  "autoShortcutProviderMangledName": "14AmbystoOptimer14SpikeShortcutsV",
+  "autoShortcuts": [
+    {
+      "actionIdentifier": "SpikeMemoryInUseIntent",
+      "availabilityAnnotations": {
+        "LNPlatformNameWildcard": {
+          "introducedVersion": "*"
+        }
+      },
+      "phraseTemplates": [
+        {
+          "alternatives": [],
+          "key": "Memory in use in ${applicationName}"
+        }
+      ],
+      "shortTitle": {
+        "alternatives": [],
+        "key": "Memory in use"
+      },
+      "systemImageName": "memorychip"
+    }
+  ],
+  "entities": {},
+  "enums": [],
+  "generator": {
+    "name": "xcode-tools",
+    "version": "27A266a"
+  },
+  "negativePhrases": [],
+  "queries": {},
+  "shortcutTileColor": 14,
+  "version": 1
+}

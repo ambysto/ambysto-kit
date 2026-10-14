@@ -51,6 +51,11 @@ if [[ $known -eq 0 ]]; then
   exit 1
 fi
 
+if [[ -n "${TOOLCHAINS:-}" ]]; then
+  echo "error: TOOLCHAINS is set ('$TOOLCHAINS'): only the Xcode default toolchain is proven. Unset it." >&2
+  exit 1
+fi
+
 PLIST="$APP/Contents/Info.plist"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$PLIST")"
 DEPLOYMENT="$(/usr/libexec/PlistBuddy -c 'Print LSMinimumSystemVersion' "$PLIST")"
@@ -73,6 +78,18 @@ fi
 CONST_FILE="${CONST_FILES[0]}"
 SOURCES_DIR="$PACKAGE/Sources/$MODULE"
 [[ -d "$SOURCES_DIR" ]] || { echo "error: sources folder not found: $SOURCES_DIR" >&2; exit 1; }
+
+# Stale build: the const values must come from the sources and the binary in the bundle.
+NEWER="$(find "$SOURCES_DIR" -name '*.swift' -newer "$CONST_FILE" | head -n 1)"
+if [[ -n "$NEWER" ]]; then
+  echo "error: $NEWER is newer than $CONST_FILE (stale build). Rebuild: swift build --package-path '$PACKAGE' -c $CONFIG --arch arm64 --arch x86_64" >&2
+  exit 1
+fi
+EXE="$APP/Contents/MacOS/$MODULE"
+if [[ -e "$EXE" && "$EXE" -ot "$CONST_FILE" ]]; then
+  echo "error: $EXE is older than $CONST_FILE (the bundle holds an older binary than the last build). Rebuild and assemble the .app again." >&2
+  exit 1
+fi
 
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TOOLCHAIN="$(dirname "$(dirname "$(dirname "$(xcrun --find swift)")")")"
