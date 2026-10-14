@@ -1,5 +1,5 @@
 ---
-status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
+status: building   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: App Intents for the suite (Shortcuts, Spotlight, Raycast)
 

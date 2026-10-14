@@ -1,0 +1,5 @@
+# Fails: the list names an intent that is not in the metadata.
+# Read intents of the app, one identifier per line.
+
+SpikeMemoryInUseIntent
+SpikeRemovedIntent

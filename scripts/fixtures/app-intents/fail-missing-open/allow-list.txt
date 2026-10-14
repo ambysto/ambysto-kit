@@ -1,0 +1,4 @@
+# Fails: the probe is not listed and its openAppWhenRun is false.
+# Read intents of the app, one identifier per line.
+
+SpikeMemoryInUseIntent
