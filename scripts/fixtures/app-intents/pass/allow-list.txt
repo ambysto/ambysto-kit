@@ -1,0 +1,4 @@
+# Passes: the read intent is listed and does not open the app; the other opens the app.
+# Read intents of the app, one identifier per line.
+
+SpikeMemoryInUseIntent

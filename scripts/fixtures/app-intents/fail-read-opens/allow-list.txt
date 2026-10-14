@@ -1,0 +1,5 @@
+# Fails: a listed read intent has openAppWhenRun true.
+# Read intents of the app, one identifier per line.
+
+SpikeMemoryInUseIntent
+SpikeOpenCleanupIntent
