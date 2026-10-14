@@ -68,7 +68,7 @@ def main(argv):
                 reasons.append("openAppWhenRun is true (a read intent must not open the app)")
             elif opens is not False:
                 reasons.append(f"openAppWhenRun is {opens!r}, not false (unproven)")
-            if modes != 1:
+            if type(modes) is not int or modes != 1:
                 reasons.append(f"supportedModes is {modes!r}, not 1 (unproven)")
             if reasons:
                 problems.append(f"{name}: on the allow-list but " + "; ".join(reasons))
@@ -76,7 +76,7 @@ def main(argv):
             # Anything else must open the app: openAppWhenRun exactly true and supportedModes exactly 2.
             if opens is not True:
                 reasons.append(f"openAppWhenRun is {opens!r}, not true (an intent that changes something must open the app; a read intent must be listed)")
-            if modes != 2:
+            if type(modes) is not int or modes != 2:
                 reasons.append(f"supportedModes is {modes!r}, not 2 (unproven)")
             if reasons:
                 problems.append(f"{name}: not on the allow-list but " + "; ".join(reasons))

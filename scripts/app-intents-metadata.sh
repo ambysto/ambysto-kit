@@ -86,7 +86,8 @@ if [[ -n "$NEWER" ]]; then
   exit 1
 fi
 EXE="$APP/Contents/MacOS/$MODULE"
-if [[ -e "$EXE" && "$EXE" -ot "$CONST_FILE" ]]; then
+[[ -f "$EXE" ]] || { echo "error: $EXE not found (assemble the .app before this step)" >&2; exit 1; }
+if [[ "$EXE" -ot "$CONST_FILE" ]]; then
   echo "error: $EXE is older than $CONST_FILE (the bundle holds an older binary than the last build). Rebuild and assemble the .app again." >&2
   exit 1
 fi
