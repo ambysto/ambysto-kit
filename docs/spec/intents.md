@@ -39,7 +39,7 @@ Each app keeps an allow-list of its **read** intents in its own repository. Addi
 
 - Answers are computed on the Mac when the intent runs. No network, no telemetry.
 - The app donates nothing and indexes nothing of its own. The system itself records each run of an intent (on macOS, a per-app activity stream), so the spec does not promise that a run leaves no trace on the Mac.
-- A local answer may name apps (owner decision 3, 2026-10-12). It is never written to the suite folders. **Open:** decision 3 was made before the system's own record was known; whether intents that answer with app names stay is the owner's to confirm.
+- A local answer may name apps (owner decision 3, 2026-10-12). It is never written to the suite folders. The owner confirmed it on 2026-10-14, knowing the system keeps its own record of each run on the same Mac.
 
 ## Launch and lifetime
 

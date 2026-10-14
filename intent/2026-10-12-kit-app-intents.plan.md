@@ -99,3 +99,5 @@ Optimer's real build through `scripts/spike-app-intents.sh` (universal `--arch a
 
 ## Review log (2026-10-14, independent review of `docs/spec/intents.md`: 4 major, 4 minor, folded in)
 1. (major) Confirmation not bound to what it shows → token bound to the exact items, single use; a new request never changes a confirmation on screen; parameters only pre-select and the app re-measures. 2. (major) A "sticky" rule beyond the owner decision → removed; the own-icon wording added. 3. (major) Log-out trap while the quit's origin is unproven → "when the app cannot tell, it accepts". 4. (major) Name-returning answers vs the system's own record → marked open for the owner. 5–8. (minor) Read kind "starts something" removed (a spec change adds one); over-stated claims (Raycast, Kit tooling, macOS 14, `lsregister`, `.dmg`) corrected; title rule matches its examples; a system dialog never replaces the app's step, and the allow-list review covers each intent's code.
+
+**Owner decision (2026-10-14), review finding 4:** intents that answer with app names stay (decision 3 confirmed, knowing the system keeps its own record of each run on the same Mac).
