@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped
+status: approved   # draft → approved → planned → building → verified → shipped
 ---
 # Ambysto Kit: Gate's ids become `gate`
 
@@ -48,6 +48,10 @@ Unchanged, on purpose: bit positions, the license format, both vector files (nei
 - Optimer and DevBox: they move their pins in their own PRs. Neither names `.guard`.
 - Windows: it implements from the spec tables, which this change updates.
 
-## Open questions
+## Decisions (owner, 2026-10-15)
 
-1. **Should APS-17's display-name table also go onto `release/0.2`?** On `88b3b45`, `Product.displayName` is still built from the id. After this pick it would print "Ambysto Gate" by itself, but still "Ambysto Space" and "Ambysto Devbox". Proposed: yes, pick APS-17's license part (`Product.displayName`, `license.md` App column) together with this one, so `v0.2.0` shows the same names as `main`.
+1. No suite bar contract bump; no compatibility aliases.
+2. The license part goes onto `release/0.2` before `v0.2.0`.
+3. **APS-17's license display names go onto `release/0.2` too** ("có pick"), so `v0.2.0` shows Lean, DevBox and Gate like `main`.
+
+Plan: `2026-10-15-kit-gate-ids.plan.md`.
