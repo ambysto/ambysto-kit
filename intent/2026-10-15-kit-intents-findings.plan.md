@@ -33,3 +33,7 @@ Intent: [`2026-10-15-kit-intents-findings.md`](2026-10-15-kit-intents-findings.m
 |---|---|
 | A one-machine observation is written as a rule | Each note carries its date, macOS and Xcode version; review criterion 1 |
 | The rule text drifts from the macOS notes | Criterion 2: the rules are unchanged |
+
+## Review log (2026-10-15, independent review of groups 1–3)
+- First pass: FAIL, 0 blocker, 4 major (the log-out sender over-claimed; the script's path assumed package = module and dropped the config; BackgroundOnly claimed for both intent kinds; the platform rule not pointing at the macOS note), 3 minor. All folded in (`f36f4bc`).
+- Second pass: 1 blocker in the fold-in: `%%` (longest suffix) could name a folder far above the build folder when a parent folder starts with `<Module>-` (for example "Remove '/Users/x'"). Fixed with `%` (shortest suffix); a scratch run under `MyApp-dev/pkg` names `…/Intermediates.noindex/MyPkg.build/Release`.
