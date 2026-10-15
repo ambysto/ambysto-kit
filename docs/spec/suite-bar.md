@@ -14,11 +14,11 @@ When two or more Ambysto apps run, they show **one** readout for the whole machi
 | 4 | `devbox` | `com.ambysto.devbox` | Ambysto DevBox | yes | yes |
 | 5 | `power` | `com.ambysto.power` | Ambysto Power | yes | yes |
 | 6 | `tune` | `com.ambysto.tune` | Ambysto Tune | no (runs only while open) | no |
-| 7 | `guard` | `com.ambysto.guard` | Ambysto Gate | yes | yes |
+| 7 | `gate` | `com.ambysto.gate` | Ambysto Gate | yes | yes |
 
 The order is the display order everywhere. A new app is added at the end in a minor contract release.
 
-The name is what users see; the app id and the bundle id are identifiers and never follow a rename. Two apps were renamed after their ids were fixed: `space` is shown as **Ambysto Lean** (renamed 2026-10-15, was Ambysto Space) and `guard` as **Ambysto Gate** (renamed 2026-10-12, was Ambysto Guard). A rename changes only this column, so it needs no contract version.
+The name is what users see; the app id and the bundle id are identifiers, fixed from the first release, and never follow a rename. A rename changes only this column, so it needs no contract version: `space` is shown as **Ambysto Lean** (renamed 2026-10-15, was Ambysto Space). One id changed before any release: `gate` was `guard` (and `com.ambysto.guard`) until 2026-10-15, when Ambysto Gate (named Ambysto Guard until 2026-10-12) dropped the old id. No record or setting with `guard` was ever published, so contract 1 names only `gate`, and a record with `"app": "guard"` is invalid like any unknown id.
 
 ## The shared folders
 

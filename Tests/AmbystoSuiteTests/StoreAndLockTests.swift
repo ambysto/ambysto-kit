@@ -52,8 +52,8 @@ struct GlanceStoreTests {
         defer { try? FileManager.default.removeItem(at: folder.url) }
         let target = folder.url.appendingPathComponent("elsewhere.json")
         try Data(#"{"contract":1}"#.utf8).write(to: target)
-        try FileManager.default.createSymbolicLink(at: folder.glanceURL(for: .guard), withDestinationURL: target)
-        guard case .invalid = GlanceStore(folder: folder).read(.guard) else {
+        try FileManager.default.createSymbolicLink(at: folder.glanceURL(for: .gate), withDestinationURL: target)
+        guard case .invalid = GlanceStore(folder: folder).read(.gate) else {
             Issue.record("a symlink was followed")
             return
         }

@@ -47,7 +47,7 @@ struct ThemeTests {
     @Test func tonesArePinnedAndDistinct() {
         let expected: [SuiteApp: UInt32] = [
             .optimer: 0xB0ADFF, .steady: 0x62C4F5, .space: 0xF99A8F, .devbox: 0x4ECFBD,
-            .power: 0x9FC675, .tune: 0xDFAE5B, .guard: 0xE69AD4,
+            .power: 0x9FC675, .tune: 0xDFAE5B, .gate: 0xE69AD4,
         ]
         #expect(Set(SuiteApp.allCases) == Set(expected.keys))
         for app in SuiteApp.allCases { #expect(Theme.toneHex(app) == expected[app], "\(app)") }

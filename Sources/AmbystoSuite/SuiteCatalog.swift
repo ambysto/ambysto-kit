@@ -1,7 +1,8 @@
 import Foundation
 
 /// The suite catalog (spec `suite-bar.md`, "The suite catalog"). Case order is the display order.
-/// The ids are wire and system identifiers and never follow a rename: `space` is shown as Lean, `guard` as Gate.
+/// The ids are wire and system identifiers, fixed from the first release: `space` is shown as Lean;
+/// `gate` was `guard` until 2026-10-15, before any release (APS-20).
 public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
     case optimer
     case steady
@@ -9,7 +10,7 @@ public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
     case devbox
     case power
     case tune
-    case `guard`
+    case gate
 
     public var bundleIdentifier: String { "com.ambysto.\(rawValue)" }
 
@@ -21,7 +22,7 @@ public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
         case .devbox: "Ambysto DevBox"
         case .power: "Ambysto Power"
         case .tune: "Ambysto Tune"
-        case .guard: "Ambysto Gate"
+        case .gate: "Ambysto Gate"
         }
     }
 
@@ -39,7 +40,7 @@ public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
     /// May hold the host lock and show the readout. Steady is a window app; Lean and Tune do not participate.
     public var canHost: Bool {
         switch self {
-        case .optimer, .devbox, .power, .guard: true
+        case .optimer, .devbox, .power, .gate: true
         case .steady, .space, .tune: false
         }
     }
