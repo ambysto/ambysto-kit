@@ -1,5 +1,5 @@
 ---
-status: building   # draft → approved → planned → building → verified → shipped
+status: shipped (PR #43)   # draft → approved → planned → building → verified → shipped
 ---
 # Ambysto Kit: the suite catalog shows Lean and Gate
 
