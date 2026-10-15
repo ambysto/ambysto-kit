@@ -44,19 +44,57 @@ struct LevelGlyph: View {
     }
 }
 
+/// The small pixel "A" of the floating bar's header: a 5 x 7 grid, `1` lit in ink, `2` lit in dim, `0` empty.
+struct BrandMark: View {
+    static let grid = ["01110", "10001", "10001", "11112", "10001", "10001", "10001"]
+    static var litCount: Int { grid.joined().filter { $0 == "1" }.count }
+    static var dimCount: Int { grid.joined().filter { $0 == "2" }.count }
+
+    private let cell: CGFloat = 2
+
+    var body: some View {
+        Canvas { context, _ in
+            for (y, line) in Self.grid.enumerated() {
+                for (x, mark) in line.enumerated() where mark != "0" {
+                    let square = CGRect(x: CGFloat(x) * cell, y: CGFloat(y) * cell, width: cell, height: cell)
+                    context.fill(Path(square), with: .color(mark == "1" ? Theme.Terminal.ink : Theme.Terminal.dim))
+                }
+            }
+        }
+        .frame(width: cell * 5, height: cell * 7)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The app's tone as a bar beside its name: identity only, never a state.
+private struct ToneBar: View {
+    let app: SuiteApp
+
+    var body: some View {
+        Rectangle().fill(Theme.tone(app)).frame(width: 3, height: 14).accessibilityHidden(true)
+    }
+}
+
 /// The rows of the readout in catalog order: running apps with their metrics, the others as "not running".
-struct SuiteRowsView: View {
+/// Public only for the snapshot proof (`SuiteBarDemo --snapshot`), through the `Snapshot` SPI.
+@_spi(Snapshot) public struct SuiteRowsView: View {
     var suite: SuiteParticipant
     var showsOpen = true
 
-    var body: some View {
+    public init(suite: SuiteParticipant, showsOpen: Bool = true) {
+        self.suite = suite
+        self.showsOpen = showsOpen
+    }
+
+    public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(suite.rows, id: \.app) { row in
                 switch row {
                 case .running(let record):
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(record.app.shortName).font(.headline)
+                            ToneBar(app: record.app)
+                            Text(record.app.shortName).font(Theme.mono(.headline, weight: .semibold))
                             LevelGlyph(level: record.level)
                             Spacer(minLength: 8)
                             if showsOpen {
@@ -70,7 +108,7 @@ struct SuiteRowsView: View {
                                 Text(metric.label).foregroundStyle(.secondary)
                                 Spacer(minLength: 8)
                                 LevelGlyph(level: metric.level)
-                                Text(SuiteFormat.text(metric)).monospacedDigit()
+                                Text(SuiteFormat.text(metric)).font(Theme.mono(.callout))
                             }
                             .font(.callout)
                             .accessibilityElement(children: .combine)
@@ -78,7 +116,8 @@ struct SuiteRowsView: View {
                     }
                 case .notRunning(let app):
                     HStack {
-                        Text(app.shortName).font(.headline)
+                        ToneBar(app: app)
+                        Text(app.shortName).font(Theme.mono(.headline, weight: .semibold))
                         Spacer(minLength: 8)
                         Text("not running").foregroundStyle(.secondary)
                     }
@@ -115,7 +154,7 @@ public struct SuitePopover: View {
 
     private var menuBarPickers: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Show in menu bar").font(.subheadline).foregroundStyle(.secondary)
+            Text("Show in menu bar").font(Theme.mono(.subheadline)).foregroundStyle(.secondary)
             ForEach(0..<SuiteSettings.maxMenuBarValues, id: \.self) { slot in
                 Picker("Value \(slot + 1)", selection: slotBinding(slot)) {
                     Text("None").tag(MetricRef?.none)
@@ -154,7 +193,7 @@ public struct SuitePopover: View {
 
     private var appsSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Ambysto apps").font(.subheadline).foregroundStyle(.secondary)
+            Text("Ambysto apps").font(Theme.mono(.subheadline)).foregroundStyle(.secondary)
             ForEach(installed, id: \.0) { app, url in
                 Button(app.displayName) {
                     NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
@@ -195,8 +234,8 @@ public struct SuiteFloatingBar: View {
         let expanded = suite.settings.floatingExpanded
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: "circle.hexagongrid").accessibilityHidden(true)
-                Text("Ambysto").font(.caption.weight(.semibold))
+                BrandMark()
+                Text("Ambysto").font(Theme.mono(.caption, weight: .semibold))
                 Spacer()
                 Button {
                     var settings = suite.settings
@@ -214,10 +253,11 @@ public struct SuiteFloatingBar: View {
                 ForEach(suite.rows, id: \.app) { row in compactLine(row) }
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.Terminal.ink)
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: expanded ? .infinity : nil, alignment: .topLeading)
-        .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .background(Theme.Terminal.ground, in: RoundedRectangle(cornerRadius: Theme.panelRadius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.panelRadius).stroke(Theme.Terminal.rule, lineWidth: Theme.hairlineWidth))
         .environment(\.colorScheme, .dark)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -227,18 +267,18 @@ public struct SuiteFloatingBar: View {
         switch row {
         case .running(let record):
             HStack(spacing: 6) {
-                Text(record.app.shortName).font(.caption.weight(.medium))
+                Text(record.app.shortName).font(Theme.mono(.caption, weight: .medium)).foregroundStyle(Theme.tone(record.app))
                 LevelGlyph(level: record.level)
                 Spacer(minLength: 6)
                 Text(record.metrics.prefix(2).map { SuiteFormat.text($0) }.joined(separator: "  "))
-                    .font(.caption).monospacedDigit()
+                    .font(Theme.mono(.caption))
             }
             .accessibilityElement(children: .combine)
         case .notRunning(let app):
             HStack {
-                Text(app.shortName).font(.caption.weight(.medium))
+                Text(app.shortName).font(Theme.mono(.caption, weight: .medium)).foregroundStyle(Theme.tone(app))
                 Spacer()
-                Text("not running").font(.caption).foregroundStyle(.secondary)
+                Text("not running").font(.caption).foregroundStyle(Theme.Terminal.mute)
             }
             .accessibilityElement(children: .combine)
         }
