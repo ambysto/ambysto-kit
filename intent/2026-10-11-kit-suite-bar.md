@@ -39,7 +39,7 @@ One Ambysto readout for the whole machine, fed by every running Ambysto app, sho
 ### 4. Pieces the bar needs from the rest of APS-2
 
 - **Suite discovery:** which Ambysto apps are installed (bundle ids in the spec), which are running, open one. Apps that are not installed never appear in the readout; they appear only in the "Ambysto apps" menu (the suite intent: cross-sell at the right moment, never an ad).
-- **Brand tokens** (violet `#6B5CE8`, coral `#ED708F`, ink `#1C1A33`, rounded numerals) and the **floating panel framework**, moved into the Kit so the bar looks the same from every host.
+- **Brand tokens** (violet `#6B5CE8`, coral `#ED708F`, ink `#1C1A33`, rounded numerals; *superseded by APS-16 (Terminal theme), 2026-10-15*) and the **floating panel framework**, moved into the Kit so the bar looks the same from every host.
 
 ### Success criteria (measurable)
 

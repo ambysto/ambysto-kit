@@ -26,7 +26,7 @@ Ambysto's choice: **separate native apps that share one license and one kit**, l
    - **Later candidates:** DevBox (developer ports, servers, AI agents), Tune (reversible system tweaks), Power (battery / thermal), Clip (clipboard), Guard (per-app network, needs Developer ID).
 2. **Ambysto Kit:** a shared Swift package (and later a matching .NET library for Windows) with:
    - license verification (format in AO-5);
-   - brand tokens (violet `#6B5CE8`, axolotl coral `#ED708F`, ink, rounded numerals);
+   - brand tokens (violet `#6B5CE8`, axolotl coral `#ED708F`, ink, rounded numerals); *(superseded by APS-16 (Terminal theme), 2026-10-15)*
    - the floating mini bar framework;
    - "Ambysto apps" discovery and cross-launch;
    - shared Settings sections.
