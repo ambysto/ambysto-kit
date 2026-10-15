@@ -90,7 +90,7 @@ public enum Theme {
         case .devbox: 0x4ECFBD
         case .power: 0x9FC675
         case .tune: 0xDFAE5B
-        case .guard: 0xE69AD4       // shown as Gate
+        case .gate: 0xE69AD4
         }
     }
 

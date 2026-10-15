@@ -2,7 +2,7 @@
 /// A new product is added by a minor Kit release; verifiers ignore bits they do not know.
 public enum Product: String, CaseIterable, Sendable, Hashable {
     case optimer, steady, space, devbox, power, tune
-    case `guard`
+    case gate
 
     public var bit: Int {
         switch self {
@@ -12,11 +12,12 @@ public enum Product: String, CaseIterable, Sendable, Hashable {
         case .devbox: 3
         case .power: 4
         case .tune: 5
-        case .guard: 6
+        case .gate: 6
         }
     }
 
-    /// The name users see. Ids and bits never follow a rename: `space` is shown as Lean, `guard` as Gate (APS-17).
+    /// The name users see (APS-17). Ids and bits are fixed from the first release: `space` is shown as Lean;
+    /// `gate` was `guard` until 2026-10-15, before any release (APS-20).
     public var displayName: String {
         switch self {
         case .optimer: "Ambysto Optimer"
@@ -25,7 +26,7 @@ public enum Product: String, CaseIterable, Sendable, Hashable {
         case .devbox: "Ambysto DevBox"
         case .power: "Ambysto Power"
         case .tune: "Ambysto Tune"
-        case .guard: "Ambysto Gate"
+        case .gate: "Ambysto Gate"
         }
     }
 

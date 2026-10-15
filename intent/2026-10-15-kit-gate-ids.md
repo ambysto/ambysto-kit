@@ -1,5 +1,5 @@
 ---
-status: planned   # draft → approved → planned → building → verified → shipped
+status: shipped (PR #49); criterion 7 waits for the release/0.2 port   # draft → approved → planned → building → verified → shipped
 ---
 # Ambysto Kit: Gate's ids become `gate`
 

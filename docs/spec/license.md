@@ -16,9 +16,9 @@ A license lists products in a 32-bit mask. Positions never change.
 | 3 | `devbox` | Ambysto DevBox |
 | 4 | `power` | Ambysto Power |
 | 5 | `tune` | Ambysto Tune |
-| 6 | `guard` | Ambysto Gate |
+| 6 | `gate` | Ambysto Gate |
 
-The App column is the name users see; the product id and the bit never follow a rename (`space` is shown as Ambysto Lean since 2026-10-15, `guard` as Ambysto Gate since 2026-10-12). New products take the next free bit in a minor Kit release. **Verifiers ignore bits they do not know**, so apps built before a product existed still accept newer suite keys and see only the products they know. One key unlocks an app on every platform; `seats` counts machines across platforms and is informational.
+The App column is the name users see. Product ids and bits are fixed from the first release and never follow a rename: `space` is shown as Ambysto Lean since 2026-10-15. Bit 6 is shown as Ambysto Gate since 2026-10-12 (was Ambysto Guard); its id was `guard` until 2026-10-15, when it became `gate` before any release. The bit did not move. New products take the next free bit in a minor Kit release. **Verifiers ignore bits they do not know**, so apps built before a product existed still accept newer suite keys and see only the products they know. One key unlocks an app on every platform; `seats` counts machines across platforms and is informational.
 
 ## Payload (big-endian)
 

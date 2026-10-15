@@ -95,20 +95,32 @@ struct GlanceCodecTests {
     }
 
     @Test func catalogOrderAndRoles() {
-        #expect(SuiteApp.allCases.map(\.rawValue) == ["optimer", "steady", "space", "devbox", "power", "tune", "guard"])
-        #expect(SuiteApp.allCases.filter(\.canHost) == [.optimer, .devbox, .power, .guard])
+        #expect(SuiteApp.allCases.map(\.rawValue) == ["optimer", "steady", "space", "devbox", "power", "tune", "gate"])
+        #expect(SuiteApp.allCases.filter(\.canHost) == [.optimer, .devbox, .power, .gate])
         #expect(SuiteApp.allCases.filter { !$0.participates } == [.space, .tune])
-        #expect(SuiteApp.guard.bundleIdentifier == "com.ambysto.guard")
+        #expect(SuiteApp.gate.bundleIdentifier == "com.ambysto.gate")
     }
 
-    @Test func renamedAppsKeepTheirIds() {
+    @Test func renamedAppsShowTheNewNames() {
         #expect(SuiteApp.space.displayName == "Ambysto Lean")
         #expect(SuiteApp.space.shortName == "Lean")
-        #expect(SuiteApp.guard.displayName == "Ambysto Gate")
-        #expect(SuiteApp.guard.shortName == "Gate")
+        #expect(SuiteApp.gate.displayName == "Ambysto Gate")
+        #expect(SuiteApp.gate.shortName == "Gate")
         #expect(SuiteApp.space.rawValue == "space" && SuiteApp.space.glanceFileName == "space.json")
-        #expect(SuiteApp.guard.rawValue == "guard" && SuiteApp.guard.glanceFileName == "guard.json")
+        #expect(SuiteApp.gate.rawValue == "gate" && SuiteApp.gate.glanceFileName == "gate.json")
         #expect(SuiteApp.space.bundleIdentifier == "com.ambysto.space")
-        #expect(SuiteApp.guard.bundleIdentifier == "com.ambysto.guard")
+        #expect(SuiteApp.gate.bundleIdentifier == "com.ambysto.gate")
+    }
+
+    @Test func retiredGuardIdIsUnknown() {
+        let record = #"{"contract":1,"app":"APP","hosting":false,"state":"running","at":1,"ttl":10,"level":"ok","metrics":[]}"#
+        let old = record.replacingOccurrences(of: "APP", with: "guard")
+        #expect(GlanceCodec.decode(Data(old.utf8), fileName: "guard.json") == .invalid(reason: "app: catalog id"))
+        let new = record.replacingOccurrences(of: "APP", with: "gate")
+        guard case .valid(let decoded) = GlanceCodec.decode(Data(new.utf8), fileName: "gate.json") else {
+            Issue.record("a gate record was not accepted")
+            return
+        }
+        #expect(decoded.app == .gate)
     }
 }
