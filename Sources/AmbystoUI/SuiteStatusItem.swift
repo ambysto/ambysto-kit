@@ -46,9 +46,11 @@ public enum SuiteStatusItemPosition {
 
 /// The real thing: a variable-length `NSStatusItem` showing the mark and up to two values; a click toggles a popover.
 @MainActor
-final class SystemSuiteStatusItem: NSObject, SuiteStatusItem {
+final class SystemSuiteStatusItem: NSObject, SuiteStatusItem, NSPopoverDelegate {
     private let item: NSStatusItem
     private let popover = NSPopover()
+    /// When the popover last closed, on a monotonic clock; `nil` until it has.
+    private var lastClose: TimeInterval?
 
     init(host: SuiteHost) {
         if let position = host.participant.settings.statusItemPosition {
@@ -58,10 +60,14 @@ final class SystemSuiteStatusItem: NSObject, SuiteStatusItem {
         item.autosaveName = SuiteStatusItemPosition.autosaveName
         super.init()
         popover.behavior = .transient
+        popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: SuitePopover(suite: host.participant))
         if let button = item.button {
             button.target = self
             button.action = #selector(togglePopover(_:))
+            // On mouse-down, as menu bar items do: the transient close and this action then come from the same event,
+            // so the reopen guard does not depend on how long the button is held.
+            button.sendAction(on: [.leftMouseDown])
             button.imagePosition = .imageLeading
             button.image = SuiteMark.image(level: .ok)
             button.setAccessibilityLabel("Ambysto suite")
@@ -101,8 +107,33 @@ final class SystemSuiteStatusItem: NSObject, SuiteStatusItem {
         if popover.isShown {
             popover.close()
         } else {
+            guard PopoverToggle.shouldOpen(now: ProcessInfo.processInfo.systemUptime, lastClose: lastClose) else { return }
+            // An accessory app is not active, so without this the popover window never becomes key and a click
+            // outside or Esc would not close it.
+            NSApp.activate()
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
         }
+    }
+
+    /// When the close starts, not after its animation: by the time the item's action runs, `isShown` may already be
+    /// false while `popoverDidClose` has not been sent yet.
+    func popoverWillClose(_ notification: Notification) {
+        lastClose = ProcessInfo.processInfo.systemUptime
+    }
+}
+
+/// The reopen rule of the item. A transient popover closes on the mouse-down of a click outside it, which includes a
+/// click on the item itself; the item's action, sent on the same mouse-down, would open it again. A close this recent
+/// is that same click, so it is not followed by an open.
+struct PopoverToggle {
+    static let reopenGuard: TimeInterval = 0.3
+
+    /// `now` and `lastClose` come from one monotonic clock. A clock that went backwards (`lastClose` after `now`)
+    /// does not block the open.
+    static func shouldOpen(now: TimeInterval, lastClose: TimeInterval?) -> Bool {
+        guard let lastClose, now >= lastClose else { return true }
+        return now - lastClose >= reopenGuard
     }
 }
 
