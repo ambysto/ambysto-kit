@@ -1,8 +1,14 @@
 ---
-status: building   # draft → approved → planned → building → verified → shipped
+status: superseded   # 2026-10-15, see the note under the title; the old text stays below
 ---
 
 # Suite landing (AO-12)
+
+> **Superseded 2026-10-15.** This spec describes the first plan: a waitlist page with a price question, no Buy action and no screenshots. Do not build from it. The owner replaced it with two decisions:
+> - **Brand record, 2026-10-12:** the page is written as if all seven apps are finished and can be bought. It shows a price placeholder and a Buy action that only says checkout is not connected, never an invented price or a working payment (ambysto-kit#40).
+> - **Owner rule, 2026-10-15, for every Ambysto landing:** the page is a preview. Download actions only say the download is not public yet, "Apple Silicon and Intel" stays, and real download links (Developer ID, then the Mac App Store) come after the Developer ID exists. The "Why not the Mac App Store?" question was removed (ambysto-kit#46).
+>
+> The page in `site/` is the reference now. The old text below is kept as the record.
 
 The public front door for the Ambysto Pro Suite. It explains the suite, links to the app pages that already exist, and asks what a visitor would pay. It does not sell anything.
 
