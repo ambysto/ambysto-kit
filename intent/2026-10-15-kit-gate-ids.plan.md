@@ -52,6 +52,6 @@ Each pick is a hand port, not `git cherry-pick`. APS-17's commit also touches Su
 
 1. `swift build -c release` (fresh scratch path): 0 warnings. `swift test`: 165 (36 Safety, 24 Process, 23 License, 41 Suite, 41 UI).
 2. `python3 -I scripts/check-vectors.py`: 35 vectors, 0 failed. `git diff origin/main -- docs/spec/*.json` is empty.
-3. `git grep -nIw guard -- Sources Tests docs/spec scripts` finds only the Swift keyword, plus the two spec notes and the doc comment that record the old id.
+3. `git grep -nIw guard -- Sources Tests docs/spec scripts` finds only the Swift keyword, the two spec notes and the two doc comments that record the old id, and the `retiredGuardIdIsUnknown` test.
 4. The grep lists of CLAUDE.md have zero hits in `Sources/AmbystoProcess`, `AmbystoSafety`, `AmbystoSuite` and `AmbystoUI`.
 5. An independent review of the diff against the intent and this plan.
