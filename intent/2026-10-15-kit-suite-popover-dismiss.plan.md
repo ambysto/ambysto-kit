@@ -1,6 +1,6 @@
 # Plan: the suite popover closes like a menu bar popover should (APS-19)
 
-Intent: [`2026-10-15-kit-suite-popover-dismiss.md`](2026-10-15-kit-suite-popover-dismiss.md). Branch `aps-19-suite-popover`; one commit per group; PR with `## What` / `## Proof`. Check `gh api user --jq .login` = `ambysto` first.
+Intent: [`2026-10-15-kit-suite-popover-dismiss.md`](2026-10-15-kit-suite-popover-dismiss.md) (intent approved and plan accepted by the owner 2026-10-15). Branch `aps-19-suite-popover`; one commit per group; PR with `## What` / `## Proof`. Check `gh api user --jq .login` = `ambysto` first.
 
 ## Groups
 ### 1. Popover behaviour (builder, then reviewer)

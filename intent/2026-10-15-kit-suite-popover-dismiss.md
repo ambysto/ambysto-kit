@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: the suite popover closes like a menu bar popover should
 
