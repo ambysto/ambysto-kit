@@ -55,3 +55,9 @@ Each pick is a hand port, not `git cherry-pick`. APS-17's commit also touches Su
 3. `git grep -nIw guard -- Sources Tests docs/spec scripts` finds only the Swift keyword, the two spec notes and the two doc comments that record the old id, and the `retiredGuardIdIsUnknown` test.
 4. The grep lists of CLAUDE.md have zero hits in `Sources/AmbystoProcess`, `AmbystoSafety`, `AmbystoSuite` and `AmbystoUI`.
 5. An independent review of the diff against the intent and this plan.
+
+## Review log (2026-10-15, independent review of the build: PASS, 0 blocker, 0 major, 3 minor, all folded in)
+
+1. The bit-6 check derived products from the same table it pinned, and no key or vector carried bit 6 → the product test now issues a test key for Gate and expects it to verify as `gate` only (mask `1 << 6`). 2. `license.md` dropped the Gate display-rename date → added, matching `suite-bar.md`. 3. Proof 3 was reworded during the build (it also lists the two doc comments and the `retiredGuardIdIsUnknown` test) → recorded here.
+
+Not run: the owner-run suite bar scripts, `SuiteBarDemo`, an installed Gate appearing in the "Ambysto apps" list, and the `release/0.2` port (criterion 7 stays open until `v0.2.0`).

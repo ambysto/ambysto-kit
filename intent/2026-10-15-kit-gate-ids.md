@@ -1,5 +1,5 @@
 ---
-status: building   # draft → approved → planned → building → verified → shipped
+status: verified   # draft → approved → planned → building → verified → shipped
 ---
 # Ambysto Kit: Gate's ids become `gate`
 
