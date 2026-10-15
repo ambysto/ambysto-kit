@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VECTORS = os.path.join(HERE, "..", "docs", "spec", "license-test-vectors.json")
 ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 SPKI_PREFIX = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d030107034200")
-PRODUCTS = ["optimer", "steady", "space", "devbox", "power", "tune", "guard"]
+PRODUCTS = ["optimer", "steady", "space", "devbox", "power", "tune", "gate"]
 DOMAIN = b"AMBYSTO-LICENSE-1"
 
 def decode_text(text):

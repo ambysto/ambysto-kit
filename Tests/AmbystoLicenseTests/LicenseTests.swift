@@ -83,7 +83,7 @@ struct LicenseBehaviourTests {
     @Test func aSuiteKeyCoversExactlyItsProducts() throws {
         let license = try testVerifier.verify(issue("Suite", [.optimer, .steady, .space])).get()
         #expect(license.covers(.space) && license.covers(.optimer) && license.covers(.steady))
-        #expect(!license.covers(.devbox) && !license.covers(.guard))
+        #expect(!license.covers(.devbox) && !license.covers(.gate))
     }
 
     @Test func updatesUntilIsInclusiveAndForLifeAllowsAnyDate() throws {
@@ -296,4 +296,20 @@ extension Result {
 
 extension Result where Failure == LicenseSigner.InputError {
     var failure: LicenseSigner.InputError? { if case .failure(let error) = self { error } else { nil } }
+}
+
+@Suite("Product names")
+struct ProductNameTests {
+    @Test func namesFollowTheRenamesAndIdsAreFixed() throws {
+        #expect(Product.allCases.map(\.displayName) == [
+            "Ambysto Optimer", "Ambysto Steady", "Ambysto Lean", "Ambysto DevBox",
+            "Ambysto Power", "Ambysto Tune", "Ambysto Gate",
+        ])
+        #expect(Product.allCases.map(\.rawValue) == ["optimer", "steady", "space", "devbox", "power", "tune", "gate"])
+        #expect(Product.allCases.map(\.bit) == [0, 1, 2, 3, 4, 5, 6])
+        // A key for Gate carries bit 6 and verifies as `gate`.
+        #expect(Product.mask([.gate]) == 1 << 6)
+        let gate = try testVerifier.verify(issue("Gate", [.gate])).get()
+        #expect(gate.products == [.gate] && gate.covers(.gate) && !gate.covers(.space))
+    }
 }
