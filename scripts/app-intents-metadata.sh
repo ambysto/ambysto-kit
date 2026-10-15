@@ -83,7 +83,7 @@ SOURCES_DIR="$PACKAGE/Sources/$MODULE"
 NEWER="$(find "$SOURCES_DIR" -name '*.swift' -newer "$CONST_FILE" | head -n 1)"
 if [[ -n "$NEWER" ]]; then
   # An incremental build recompiles the objects but leaves the const values behind, so a plain rebuild does not help.
-  echo "error: $NEWER is newer than $CONST_FILE (stale const values). Remove '$PACKAGE/.build/out/Intermediates.noindex/$MODULE.build' and rebuild: swift build --package-path '$PACKAGE' -c $CONFIG --arch arm64 --arch x86_64" >&2
+  echo "error: $NEWER is newer than $CONST_FILE (stale const values). Remove '${CONST_FILE%%/$MODULE-*.build/Objects-normal/*}' and rebuild: swift build --package-path '$PACKAGE' -c $CONFIG --arch arm64 --arch x86_64" >&2
   exit 1
 fi
 EXE="$APP/Contents/MacOS/$MODULE"
