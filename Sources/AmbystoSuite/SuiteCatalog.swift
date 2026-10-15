@@ -1,6 +1,7 @@
 import Foundation
 
 /// The suite catalog (spec `suite-bar.md`, "The suite catalog"). Case order is the display order.
+/// The ids are wire and system identifiers and never follow a rename: `space` is shown as Lean, `guard` as Gate.
 public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
     case optimer
     case steady
@@ -16,18 +17,18 @@ public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
         switch self {
         case .optimer: "Ambysto Optimer"
         case .steady: "Ambysto Steady"
-        case .space: "Ambysto Space"
+        case .space: "Ambysto Lean"
         case .devbox: "Ambysto DevBox"
         case .power: "Ambysto Power"
         case .tune: "Ambysto Tune"
-        case .guard: "Ambysto Guard"
+        case .guard: "Ambysto Gate"
         }
     }
 
     /// The name without the brand, for compact rows.
     public var shortName: String { String(displayName.dropFirst("Ambysto ".count)) }
 
-    /// Counts towards "active" and appears in the readout (contract 1). Space and Tune run only while open.
+    /// Counts towards "active" and appears in the readout (contract 1). Lean and Tune run only while open.
     public var participates: Bool {
         switch self {
         case .space, .tune: false
@@ -35,7 +36,7 @@ public enum SuiteApp: String, CaseIterable, Sendable, Codable, Comparable {
         }
     }
 
-    /// May hold the host lock and show the readout. Steady is a window app; Space and Tune do not participate.
+    /// May hold the host lock and show the readout. Steady is a window app; Lean and Tune do not participate.
     public var canHost: Bool {
         switch self {
         case .optimer, .devbox, .power, .guard: true

@@ -100,4 +100,15 @@ struct GlanceCodecTests {
         #expect(SuiteApp.allCases.filter { !$0.participates } == [.space, .tune])
         #expect(SuiteApp.guard.bundleIdentifier == "com.ambysto.guard")
     }
+
+    @Test func renamedAppsKeepTheirIds() {
+        #expect(SuiteApp.space.displayName == "Ambysto Lean")
+        #expect(SuiteApp.space.shortName == "Lean")
+        #expect(SuiteApp.guard.displayName == "Ambysto Gate")
+        #expect(SuiteApp.guard.shortName == "Gate")
+        #expect(SuiteApp.space.rawValue == "space" && SuiteApp.space.glanceFileName == "space.json")
+        #expect(SuiteApp.guard.rawValue == "guard" && SuiteApp.guard.glanceFileName == "guard.json")
+        #expect(SuiteApp.space.bundleIdentifier == "com.ambysto.space")
+        #expect(SuiteApp.guard.bundleIdentifier == "com.ambysto.guard")
+    }
 }

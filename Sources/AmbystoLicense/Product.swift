@@ -16,7 +16,18 @@ public enum Product: String, CaseIterable, Sendable, Hashable {
         }
     }
 
-    public var displayName: String { "Ambysto " + rawValue.prefix(1).uppercased() + rawValue.dropFirst() }
+    /// The name users see. Ids and bits never follow a rename: `space` is shown as Lean, `guard` as Gate (APS-17).
+    public var displayName: String {
+        switch self {
+        case .optimer: "Ambysto Optimer"
+        case .steady: "Ambysto Steady"
+        case .space: "Ambysto Lean"
+        case .devbox: "Ambysto DevBox"
+        case .power: "Ambysto Power"
+        case .tune: "Ambysto Tune"
+        case .guard: "Ambysto Gate"
+        }
+    }
 
     static func products(in mask: UInt32) -> Set<Product> {
         Set(allCases.filter { mask & (1 << UInt32($0.bit)) != 0 })

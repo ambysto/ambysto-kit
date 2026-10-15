@@ -10,13 +10,15 @@ When two or more Ambysto apps run, they show **one** readout for the whole machi
 |---|---|---|---|---|---|
 | 1 | `optimer` | `com.ambysto.optimer` | Ambysto Optimer | yes | yes |
 | 2 | `steady` | `com.ambysto.steady` | Ambysto Steady | only with the shared group folder | no (a window app) |
-| 3 | `space` | `com.ambysto.space` | Ambysto Space | no (runs only while open) | no |
+| 3 | `space` | `com.ambysto.space` | Ambysto Lean | no (runs only while open) | no |
 | 4 | `devbox` | `com.ambysto.devbox` | Ambysto DevBox | yes | yes |
 | 5 | `power` | `com.ambysto.power` | Ambysto Power | yes | yes |
 | 6 | `tune` | `com.ambysto.tune` | Ambysto Tune | no (runs only while open) | no |
-| 7 | `guard` | `com.ambysto.guard` | Ambysto Guard | yes | yes |
+| 7 | `guard` | `com.ambysto.guard` | Ambysto Gate | yes | yes |
 
 The order is the display order everywhere. A new app is added at the end in a minor contract release.
+
+The name is what users see; the app id and the bundle id are identifiers and never follow a rename. Two apps were renamed after their ids were fixed: `space` is shown as **Ambysto Lean** (renamed 2026-10-15, was Ambysto Space) and `guard` as **Ambysto Gate** (renamed 2026-10-12, was Ambysto Guard). A rename changes only this column, so it needs no contract version.
 
 ## The shared folders
 
@@ -85,7 +87,7 @@ A stale or `stopped` record means that app is **not running** for the suite: its
 
 ## Active
 
-The readout is **active** when at least **two participants** have a fresh `running` record. It becomes inactive only after fewer than two have been fresh for **10 s** without a break, and for 10 s after waking from sleep it never becomes inactive. Space and Tune never count in contract 1.
+The readout is **active** when at least **two participants** have a fresh `running` record. It becomes inactive only after fewer than two have been fresh for **10 s** without a break, and for 10 s after waking from sleep it never becomes inactive. Lean and Tune never count in contract 1.
 
 ## The host
 
