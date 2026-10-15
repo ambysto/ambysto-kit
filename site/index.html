@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambysto: Seven Mac apps. One rule.</title>
+<meta name="description" content="Memory, disk, ports, battery, tweaks, and which app is on the network. Ambysto measures first. You decide what changes. One key for Pro.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 7 9' shape-rendering='crispEdges'%3E%3Crect x='-1' y='-1' width='7' height='9' fill='%230b0b0c'/%3E%3Cpath fill='%23e8e8e6' d='M1 0h3v1H1zM0 1h1v6H0zM4 1h1v6H4zM1 3h2v1H1z'/%3E%3Cpath fill='%233a3a3c' d='M3 3h1v1H3z'/%3E%3C/svg%3E">
+<style>
+@font-face {
+  font-family: "Geist"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url(fonts/geist-latin.woff2) format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: swap;
+  src: url(fonts/jetbrains-mono-latin.woff2) format("woff2");
+}
+:root {
+  --bg: #0b0b0c;
+  --panel: #101011;
+  --ink: #e8e8e6;
+  --mute: #8a8a8c;
+  --rule: #222224;
+  --dim: #3a3a3c;
+  --sans: "Geist", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html {
+  background: var(--bg);
+  color-scheme: dark;
+  scrollbar-color: var(--dim) var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--ink); color: var(--bg); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, p, ul, figure { margin: 0; padding: 0; }
+ul { list-style: none; }
+img { max-width: 100%; height: auto; display: block; }
+.wrap { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: clamp(20px, 4vw, 48px); }
+
+/* tones: identity only, never status */
+.t-optimer { --tone: #b0adff; }
+.t-steady  { --tone: #62c4f5; }
+.t-space   { --tone: #f99a8f; }
+.t-devbox  { --tone: #4ecfbd; }
+.t-power   { --tone: #9fc675; }
+.t-tune    { --tone: #dfae5b; }
+.t-gate    { --tone: #e69ad4; }
+
+/* header and suite bar */
+.top { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.topbar { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brandmark { display: inline-flex; align-items: center; gap: 0.7em; font-family: var(--mono); font-size: 15px; line-height: 1; }
+.brandmark svg { height: 22px; width: auto; }
+.brandmark b { font-weight: 700; }
+.brandmark span { color: var(--mute); }
+.links { display: flex; align-items: center; gap: clamp(14px, 2.4vw, 32px); font-family: var(--mono); font-size: 0.8125rem; color: var(--mute); }
+.links a:not(.btn):hover { color: var(--ink); }
+.suitebar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cell { --idle: color-mix(in srgb, var(--tone) 26%, var(--bg)); display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+.cellbar { display: block; height: 4px; background: var(--idle); transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.cell.reached .cellbar { background: var(--tone); }
+.celllabel { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.02em; color: var(--mute); }
+.cell:hover .celllabel, .cell[aria-current="location"] .celllabel { color: var(--ink); }
+@media (max-width: 759px) {
+  .suitebar { display: none; }
+  .links a:not(.btn) { display: none; }
+}
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 500; font-size: 0.875rem; line-height: 1;
+  padding: 14px 20px; border-radius: 6px; border: 1px solid var(--ink);
+  background: transparent; color: var(--ink); cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn.primary:hover { background: #ffffff; border-color: #ffffff; }
+.btn.ghost { border-color: var(--dim); }
+.btn.ghost:hover { border-color: var(--ink); }
+.btn.small { padding: 9px 14px; font-size: 0.8125rem; }
+
+/* shared text */
+.leader { align-self: flex-end; height: 0.5em; margin-bottom: 0.3em; min-width: 24px; border-bottom: 2px dotted var(--dim); }
+.note { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 16px; margin-top: 36px; }
+.block { padding-block: clamp(56px, 8vw, 112px); border-top: 1px solid var(--rule); scroll-margin-top: 112px; }
+h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-height: 1.08; font-size: clamp(1.75rem, 3.4vw, 2.875rem); text-wrap: balance; }
+.lede { margin-top: 14px; max-width: 62ch; color: var(--mute); text-wrap: pretty; }
+
+/* hero: the ledger */
+.hero { padding-top: clamp(40px, 7vw, 88px); padding-bottom: clamp(56px, 8vw, 104px); }
+.what { max-width: 52ch; margin-bottom: clamp(24px, 4vw, 44px); font-size: clamp(1.125rem, 1.7vw, 1.375rem); line-height: 1.45; text-wrap: pretty; }
+.lg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); border-top: 1px solid var(--rule); }
+.lg h1 { display: contents; font: inherit; }
+.say, .out { padding-block: clamp(14px, 2.2vw, 28px); border-bottom: 1px solid var(--rule); }
+.say {
+  grid-column: 1; display: flex; align-items: flex-end; gap: 20px;
+  font-family: var(--mono); font-weight: 700; line-height: 1; letter-spacing: -0.03em;
+  font-size: clamp(1.5rem, 4vw, 3.75rem);
+}
+.say::after { content: ""; flex: 1; align-self: flex-end; height: 0.5em; margin-bottom: 0.3em; min-width: 24px; border-bottom: 2px dotted var(--dim); }
+.out {
+  grid-column: 2; display: flex; align-items: flex-end; padding-left: 20px;
+  font-family: var(--mono); font-size: clamp(0.875rem, 1.2vw, 1.0625rem); line-height: 1.35;
+}
+.r1 { grid-row: 1; } .r2 { grid-row: 2; } .r3 { grid-row: 3; }
+@media (max-width: 719px) {
+  .lg { grid-template-columns: minmax(0, 1fr); }
+  .say { border-bottom: 0; padding-bottom: 6px; }
+  .say::after { display: none; }
+  .out { grid-column: 1; padding-left: 0; padding-top: 0; color: var(--mute); }
+  .say.r1 { grid-row: 1; } .out.r1 { grid-row: 2; }
+  .say.r2 { grid-row: 3; } .out.r2 { grid-row: 4; }
+  .say.r3 { grid-row: 5; } .out.r3 { grid-row: 6; }
+}
+
+/* the seven, as an index */
+.index { margin-top: clamp(40px, 6vw, 72px); border-top: 1px solid var(--rule); }
+.index a { display: grid; grid-template-columns: 9.5ch minmax(24px, 1fr) minmax(0, 46ch); align-items: baseline; column-gap: 20px; padding-block: 14px; border-bottom: 1px solid var(--rule); transition: border-color 0.25s; }
+.index a:hover { border-bottom-color: var(--tone); }
+.index .nm { font-family: var(--mono); font-weight: 700; color: var(--tone); }
+.index .leader { align-self: center; margin-bottom: 0; }
+.index .why { color: var(--mute); }
+@media (max-width: 719px) {
+  .index a { grid-template-columns: 1fr; row-gap: 2px; }
+  .index .leader { display: none; }
+}
+
+/* screenshots */
+.shot { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.hero .shot { margin-top: clamp(40px, 6vw, 72px); }
+
+/* app sections */
+.appid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; font-family: var(--mono); font-weight: 500; font-size: 1.25rem; line-height: 1.2; }
+.appid::before { content: ""; display: block; width: 56px; height: 4px; background: var(--tone); }
+.appid .co { color: var(--mute); }
+.appid .nm { color: var(--tone); font-weight: 700; }
+.split { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(32px, 5vw, 64px); align-items: center; }
+.split.flip { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+.split.flip .copy { order: 2; }
+.ticks { margin-top: 28px; border-top: 1px solid var(--rule); max-width: 62ch; }
+.ticks li { display: flex; gap: 14px; align-items: baseline; padding-block: 10px; border-bottom: 1px solid var(--rule); font-size: 0.9375rem; }
+.ticks li::before { content: ""; flex: none; width: 6px; height: 10px; background: var(--tone, var(--ink)); transform: translateY(1px); }
+@media (max-width: 899px) {
+  .split, .split.flip { grid-template-columns: minmax(0, 1fr); }
+  .split.flip .copy { order: 0; }
+}
+
+/* ledger rows: modes, refusals */
+.rows { margin-top: 40px; border-top: 1px solid var(--rule); }
+.rows li { display: grid; grid-template-columns: minmax(0, max-content) minmax(24px, 1fr) minmax(0, 46ch); align-items: baseline; column-gap: 20px; padding-block: 18px; border-bottom: 1px solid var(--rule); }
+.rows .no { font-family: var(--mono); font-weight: 700; font-size: 1.0625rem; }
+.rows .leader { align-self: center; margin-bottom: 0; }
+.rows .why { color: var(--mute); }
+.rows .res { font-family: var(--mono); font-size: 0.875rem; color: var(--mute); }
+.rows + .ticks { margin-top: 40px; }
+@media (max-width: 859px) {
+  .rows li { grid-template-columns: 1fr; row-gap: 6px; }
+  .rows .leader { display: none; }
+}
+
+/* free and pro: two receipts */
+.receipts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; align-items: start; }
+.receipt { padding: clamp(20px, 3vw, 32px); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+.rhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 14px; border-bottom: 1px dashed var(--dim); font-family: var(--mono); font-weight: 700; font-size: 1.125rem; }
+.rhead span { font-weight: 400; font-size: 0.75rem; color: var(--mute); }
+.receipt ul { padding-block: 12px; }
+.receipt li { display: flex; align-items: baseline; gap: 12px; padding-block: 7px; font-family: var(--mono); font-size: 0.8125rem; line-height: 1.4; }
+.receipt li .nm { color: var(--tone, var(--ink)); flex: none; }
+.receipt li .leader { flex: 1; margin-bottom: 0.2em; }
+.receipt li .inc { color: var(--mute); text-align: right; max-width: 30ch; }
+.receipt li.total { margin-top: 8px; padding-top: 14px; border-top: 1px dashed var(--dim); font-weight: 700; font-size: 0.875rem; }
+.receipt li.total .inc { color: var(--ink); }
+.receipt .btn { margin-top: 12px; }
+.after { margin-top: 20px; }
+@media (max-width: 899px) {
+  .receipts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 479px) {
+  .receipt li { flex-wrap: wrap; row-gap: 2px; }
+  .receipt li .leader { display: none; }
+  .receipt li .inc { flex-basis: 100%; max-width: none; text-align: left; }
+}
+
+/* questions */
+.faq { margin-top: 36px; border-top: 1px solid var(--rule); max-width: 760px; }
+.faq details { border-bottom: 1px solid var(--rule); }
+.faq summary { display: flex; justify-content: space-between; gap: 16px; padding-block: 18px; cursor: pointer; list-style: none; font-family: var(--mono); font-weight: 500; font-size: 1rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--mute); }
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p { padding-bottom: 20px; max-width: 62ch; color: var(--mute); }
+
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-block: 40px 56px; border-top: 1px solid var(--rule); }
+.foot p { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
+.foot em { font-style: italic; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topbar">
+    <a class="brandmark" href="#top" aria-label="Ambysto Technologies">
+      <svg viewBox="0 0 5 7" aria-hidden="true" shape-rendering="crispEdges"><path fill="#e8e8e6" d="M1.04 .04h.92v.92h-.92zM2.04 .04h.92v.92h-.92zM3.04 .04h.92v.92h-.92zM.04 1.04h.92v.92h-.92zM4.04 1.04h.92v.92h-.92zM.04 2.04h.92v.92h-.92zM4.04 2.04h.92v.92h-.92zM.04 3.04h.92v.92h-.92zM1.04 3.04h.92v.92h-.92zM2.04 3.04h.92v.92h-.92zM4.04 3.04h.92v.92h-.92zM.04 4.04h.92v.92h-.92zM4.04 4.04h.92v.92h-.92zM.04 5.04h.92v.92h-.92zM4.04 5.04h.92v.92h-.92zM.04 6.04h.92v.92h-.92zM4.04 6.04h.92v.92h-.92z"/><path fill="#3a3a3c" d="M3.04 3.04h.92v.92h-.92z"/></svg>
+      <span class="bn"><b>Ambysto</b> <span>Technologies</span></span>
+    </a>
+    <nav class="links" aria-label="Page">
+      <a href="#optimer">Apps</a>
+      <a href="#safety">What none of them do</a>
+      <a href="#questions">Questions</a>
+      <a class="btn small primary" href="#pricing">Free and Pro</a>
+    </nav>
+  </div>
+  <nav class="wrap suitebar" aria-label="The seven apps">
+    <a class="cell t-optimer" href="#optimer"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Optimer</span></a>
+    <a class="cell t-space" href="#space"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Space</span></a>
+    <a class="cell t-devbox" href="#devbox"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">DevBox</span></a>
+    <a class="cell t-power" href="#power"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Power</span></a>
+    <a class="cell t-tune" href="#tune"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Tune</span></a>
+    <a class="cell t-gate" href="#gate"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Gate</span></a>
+    <a class="cell t-steady" href="#steady"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Steady</span></a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="wrap hero" aria-label="Ambysto">
+    <p class="what">Memory, disk, ports, battery, tweaks, the connection, and which app is talking to the network. Seven Mac apps, one rule.</p>
+    <div class="lg">
+      <h1 aria-label="Measure first. Change safely. Always reversible.">
+        <span class="say r1">$ measure first</span>
+        <span class="say r2">$ change safely</span>
+        <span class="say r3">$ always reversible</span>
+      </h1>
+      <p class="out r1">Each app shows the number.</p>
+      <p class="out r2">You decide what changes.</p>
+      <p class="out r3">The way back is kept.</p>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="#optimer">See the apps</a>
+      <a class="btn ghost" href="#pricing">Free and Pro</a>
+      <p class="note">macOS 14 or later. No account. Nothing leaves the Mac.</p>
+    </div>
+
+    <ul class="index" aria-label="The seven apps">
+      <li><a class="t-optimer" href="#optimer"><span class="nm">Optimer</span><span class="leader" aria-hidden="true"></span><span class="why">Which app is using memory, CPU and disk.</span></a></li>
+      <li><a class="t-space" href="#space"><span class="nm">Space</span><span class="leader" aria-hidden="true"></span><span class="why">Where the disk went, and what you put in the Trash.</span></a></li>
+      <li><a class="t-devbox" href="#devbox"><span class="nm">DevBox</span><span class="leader" aria-hidden="true"></span><span class="why">Ports, containers, and coding agents.</span></a></li>
+      <li><a class="t-power" href="#power"><span class="nm">Power</span><span class="leader" aria-hidden="true"></span><span class="why">Battery, heat, and what keeps the Mac awake.</span></a></li>
+      <li><a class="t-tune" href="#tune"><span class="nm">Tune</span><span class="leader" aria-hidden="true"></span><span class="why">Switches that remember the old value.</span></a></li>
+      <li><a class="t-gate" href="#gate"><span class="nm">Gate</span><span class="leader" aria-hidden="true"></span><span class="why">Allow or block an app’s connections.</span></a></li>
+      <li><a class="t-steady" href="#steady"><span class="nm">Steady</span><span class="leader" aria-hidden="true"></span><span class="why">Monitor, diagnose, and recover the connection.</span></a></li>
+    </ul>
+  </section>
+
+  <section id="optimer" class="wrap block t-optimer" aria-labelledby="optimer-title">
+    <div class="split">
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Optimer</span></span></p>
+        <h2 id="optimer-title">Which app. Which number.</h2>
+        <p class="lede">One row per app for memory, CPU and disk. Pressure, swap and heat sit above them. Cleanup measures first, removes caches that grow back, and asks before anything personal.</p>
+        <ul class="ticks">
+          <li>Live memory, CPU and disk, per app.</li>
+          <li>A floating bar that stays on screen.</li>
+          <li>Measure, then clean only caches that rebuild.</li>
+          <li>Personal files stay unticked until you tick them.</li>
+          <li>It never force-quits a process.</li>
+        </ul>
+      </div>
+      <figure class="shot">
+        <img src="img/optimer-dark.jpg" width="1600" height="1261" alt="The Optimer dashboard with live memory, CPU, disk and the list of apps">
+      </figure>
+    </div>
+  </section>
+
+  <section id="space" class="wrap block t-space" aria-labelledby="space-title">
+    <div class="split flip">
+      <figure class="shot">
+        <img src="img/map-dark.webp" width="1800" height="1174" loading="lazy" alt="Ambysto Space disk map: folders drawn as blocks sized by how much space they use">
+      </figure>
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Space</span></span></p>
+        <h2 id="space-title">Where the disk went.</h2>
+        <p class="lede">The map, the large files, the old files, the byte-identical copies, and the leftovers of an app you removed. Only the rows you tick move to the Trash.</p>
+        <ul class="ticks">
+          <li>A map of the whole disk.</li>
+          <li>Large files, old files, and exact duplicates.</li>
+          <li>Uninstall an app, then the files it left behind.</li>
+          <li>Every move is checked, then written down.</li>
+          <li>Put it back from the journal.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="devbox" class="wrap block t-devbox" aria-labelledby="devbox-title">
+    <div class="split">
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">DevBox</span></span></p>
+        <h2 id="devbox-title">What this Mac is running.</h2>
+        <p class="lede">The port, the process, and the project it belongs to. The disk your containers keep. The coding agents that are busy. Stopping asks you first.</p>
+        <ul class="ticks">
+          <li>Every listener: port, process, project, and how far it is reachable.</li>
+          <li>Containers, and the disk the runtime is holding.</li>
+          <li>Agent sessions, with CPU and memory.</li>
+          <li>A runaway session is flagged in the list.</li>
+          <li>Stop, only after you confirm.</li>
+        </ul>
+      </div>
+      <figure class="shot">
+        <img src="img/devbox-dark.jpg" width="1600" height="1109" loading="lazy" alt="Ambysto DevBox agents: coding sessions with CPU, memory, project and a stop button">
+      </figure>
+    </div>
+  </section>
+
+  <section id="power" class="wrap block t-power" aria-labelledby="power-title">
+    <div class="split flip">
+      <figure class="shot">
+        <img src="img/power-dark.jpg" width="1600" height="1142" loading="lazy" alt="Ambysto Power: charge, watts, time left, battery health, cycles and a charge chart">
+      </figure>
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Power</span></span></p>
+        <h2 id="power-title">The battery, and what spends it.</h2>
+        <p class="lede">Charge, draw, time left, health and cycles. Which apps use the power. How hot the Mac is. Who is keeping it awake. It measures. It does not force a mode.</p>
+        <ul class="ticks">
+          <li>Charge, watts, time remaining, health and cycle count.</li>
+          <li>Power by app.</li>
+          <li>Thermal state, on the same Mac.</li>
+          <li>The list of what is keeping the Mac awake.</li>
+          <li>Keep-awake you start yourself, with the screen on, and a way to stop it.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="tune" class="wrap block t-tune" aria-labelledby="tune-title">
+    <div class="split">
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Tune</span></span></p>
+        <h2 id="tune-title">A switch. And the way back.</h2>
+        <p class="lede">Finder, Dock, keyboard, login items, privacy and Spotlight. Each switch stores the value it replaced. One click puts that value back. Restore all puts the Mac back.</p>
+        <ul class="ticks">
+          <li>Every tweak is a switch, with the effect written under it.</li>
+          <li>The previous value is saved before anything changes.</li>
+          <li>Restore one tweak, or every tweak.</li>
+          <li>Login items and background items, in the same window.</li>
+          <li>A journal of what changed on this Mac.</li>
+        </ul>
+      </div>
+      <figure class="shot">
+        <img src="img/tune-dark.jpg" width="1600" height="1030" loading="lazy" alt="Ambysto Tune Dock settings: each tweak is a switch with a short explanation">
+      </figure>
+    </div>
+  </section>
+
+  <section id="gate" class="wrap block t-gate" aria-labelledby="gate-title">
+    <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Gate</span></span></p>
+    <h2 id="gate-title">Which app. Which address.</h2>
+    <p class="lede">Outgoing connections, decided when each one starts. You see the app and where it is going. You allow it or you block it. The choice is per app, and you can undo it.</p>
+    <ul class="rows">
+      <li><span class="no">Watch</span><span class="leader" aria-hidden="true"></span><span class="why">See every app and where it connects. Nothing is blocked until you say so.</span></li>
+      <li><span class="no">Ask</span><span class="leader" aria-hidden="true"></span><span class="why">A new destination asks you. Allow it, or block it, for that app.</span></li>
+      <li><span class="no">Lockdown</span><span class="leader" aria-hidden="true"></span><span class="why">Only what you have already allowed gets out. The rest waits for you.</span></li>
+    </ul>
+    <ul class="ticks">
+      <li>Rules for an app, including lists and timed rules.</li>
+      <li>A journal of what you decided, with undo.</li>
+      <li>History of the activity, on this Mac.</li>
+    </ul>
+  </section>
+
+  <section id="steady" class="wrap block t-steady" aria-labelledby="steady-title">
+    <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Steady</span></span></p>
+    <h2 id="steady-title">The connection, in three steps.</h2>
+    <p class="lede">Steady keeps the connection stable. Three jobs, in this order.</p>
+    <ul class="rows">
+      <li><span class="no">Monitor</span><span class="leader" aria-hidden="true"></span><span class="why">Watches the connection while you work.</span></li>
+      <li><span class="no">Diagnose</span><span class="leader" aria-hidden="true"></span><span class="why">Tells you what is wrong with it.</span></li>
+      <li><span class="no">Recover</span><span class="leader" aria-hidden="true"></span><span class="why">Brings the connection back.</span></li>
+    </ul>
+  </section>
+
+  <section id="safety" class="wrap block" aria-labelledby="safety-title">
+    <h2 id="safety-title">What none of them do.</h2>
+    <p class="lede">The same rule in every app.</p>
+    <ul class="rows">
+      <li><span class="no">A “Free RAM” button, or a force-quit</span><span class="leader" aria-hidden="true"></span><span class="res">none</span></li>
+      <li><span class="no">A delete, block, or tweak without an action you take</span><span class="leader" aria-hidden="true"></span><span class="res">never</span></li>
+      <li><span class="no">A malware scanner, or a driver updater</span><span class="leader" aria-hidden="true"></span><span class="res">none</span></li>
+      <li><span class="no">A subscription, or auto-renew</span><span class="leader" aria-hidden="true"></span><span class="res">none</span></li>
+      <li><span class="no">An account, or telemetry</span><span class="leader" aria-hidden="true"></span><span class="res">none</span></li>
+      <li><span class="no">A countdown, or a fake discount</span><span class="leader" aria-hidden="true"></span><span class="res">none</span></li>
+    </ul>
+  </section>
+
+  <section id="pricing" class="wrap block" aria-labelledby="pricing-title">
+    <h2 id="pricing-title">Free does the job.</h2>
+    <p class="lede">The measuring, the cleanup, the Trash, the stop, the tweak, and the restore are free. Pro is a longer memory, an export, and an alert. One key. Paid once.</p>
+    <div class="receipts">
+      <div class="receipt">
+        <p class="rhead">Free <span>the whole job of every app</span></p>
+        <ul>
+          <li class="t-optimer"><span class="nm">Optimer</span><span class="leader" aria-hidden="true"></span><span class="inc">monitor and cleanup</span></li>
+          <li class="t-space"><span class="nm">Space</span><span class="leader" aria-hidden="true"></span><span class="inc">map, files, duplicates, uninstall, Trash</span></li>
+          <li class="t-devbox"><span class="nm">DevBox</span><span class="leader" aria-hidden="true"></span><span class="inc">ports, containers, agents, confirmed stop</span></li>
+          <li class="t-power"><span class="nm">Power</span><span class="leader" aria-hidden="true"></span><span class="inc">battery, apps, heat, keep-awake</span></li>
+          <li class="t-tune"><span class="nm">Tune</span><span class="leader" aria-hidden="true"></span><span class="inc">switches, restore, journal</span></li>
+          <li class="t-gate"><span class="nm">Gate</span><span class="leader" aria-hidden="true"></span><span class="inc">allow and block</span></li>
+          <li class="t-steady"><span class="nm">Steady</span><span class="leader" aria-hidden="true"></span><span class="inc">the connection</span></li>
+          <li class="total"><span class="nm">Free</span><span class="leader" aria-hidden="true"></span><span class="inc">$0, forever</span></li>
+        </ul>
+        <a class="btn ghost" href="#optimer">Use the apps</a>
+      </div>
+      <div class="receipt">
+        <p class="rhead">Pro <span>everything in Free, plus</span></p>
+        <ul>
+          <li><span class="nm">History</span><span class="leader" aria-hidden="true"></span><span class="inc">past the free window, on that Mac</span></li>
+          <li><span class="nm">Export</span><span class="leader" aria-hidden="true"></span><span class="inc">Markdown, JSON, a battery report</span></li>
+          <li><span class="nm">Alerts</span><span class="leader" aria-hidden="true"></span><span class="inc">pressure, disk, a heavy app, a runaway session, a new public listener</span></li>
+          <li><span class="nm">Presets</span><span class="leader" aria-hidden="true"></span><span class="inc">Tune switches, applied and restored together</span></li>
+          <li><span class="nm">Reminders</span><span class="leader" aria-hidden="true"></span><span class="inc">no reminder to pay</span></li>
+          <li><span class="nm">Key</span><span class="leader" aria-hidden="true"></span><span class="inc">checked on the Mac, no account, no renewal</span></li>
+          <li class="total"><span class="nm">Pro</span><span class="leader" aria-hidden="true"></span><span class="inc">once, one key</span></li>
+        </ul>
+        <a class="btn primary" href="#optimer">See what’s included</a>
+      </div>
+    </div>
+    <p class="note after">Safety is never behind the key. A free app still deletes only what you approve, and still restores.</p>
+  </section>
+
+  <section id="questions" class="wrap block" aria-labelledby="questions-title">
+    <h2 id="questions-title">Questions.</h2>
+    <div class="faq">
+      <details>
+        <summary>Why seven apps?</summary>
+        <p>Each one does one job, and that job stays free. One key covers Pro in every app. They are not modules of a cleaner.</p>
+      </details>
+      <details>
+        <summary>Why not the Mac App Store?</summary>
+        <p>The sandbox blocks the work: reading another app’s memory, cleaning caches, writing another app’s settings. The apps are offered direct.</p>
+      </details>
+      <details>
+        <summary>Does Pro lock the cleanup, the delete, or the restore?</summary>
+        <p>No. Free keeps the job. Pro adds a longer history, export, alerts, and presets.</p>
+      </details>
+      <details>
+        <summary>What does the key do?</summary>
+        <p>It is checked on the Mac, with no network call. It names the apps it covers. Registered to the name on the key. It is not a subscription.</p>
+      </details>
+      <details>
+        <summary>Windows?</summary>
+        <p>A native Windows app, built from the same written behavior. The Mac apps come first. No phone app.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="wrap block" aria-labelledby="close-title">
+    <h2 id="close-title">The menu bar, filled in.</h2>
+    <p class="lede">Seven apps. The same rule in each of them. Measure first, then you decide.</p>
+    <div class="actions">
+      <a class="btn primary" href="#optimer">Start with Optimer</a>
+      <a class="btn ghost" href="#pricing">Compare Free and Pro</a>
+      <p class="note">macOS 14 or later.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>© 2026 Ambysto Technologies. Not affiliated with Apple.</p>
+  <p>Named after <em>Ambystoma</em>, the axolotl.</p>
+</footer>
+
+<script>
+(() => {
+  const cells = [...document.querySelectorAll(".suitebar .cell")];
+  const targets = cells.map((c) => document.querySelector(c.getAttribute("href")));
+  const update = () => {
+    let reached = -1;
+    targets.forEach((t, i) => { if (t && t.getBoundingClientRect().top < innerHeight * 0.55) reached = i; });
+    cells.forEach((c, i) => {
+      c.classList.toggle("reached", i <= reached);
+      if (i === reached) c.setAttribute("aria-current", "location"); else c.removeAttribute("aria-current");
+    });
+  };
+  update();
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
+})();
+</script>
+</body>
+</html>
