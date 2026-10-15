@@ -1,6 +1,7 @@
 // Proof helper (suite bar plan group 5): a fake suite participant. No app depends on it.
 //
 //   SuiteBarDemo --folder <path> --app <id> --metric "Label=value[unit]" [--metric ...] [--level ok|notice|alert]
+//   SuiteBarDemo --snapshot <dir>      (APS-16: renders the suite views to PNG files in <dir>; see Snapshot.swift)
 //
 // Publishes every 2 s, hosts when elected, and prints one JSON line to stdout per transition. Commands on stdin:
 // `quit` (NSApp.terminate, which runs the participant's clean-quit path, then exit) and `freeze` (stop publishing, heartbeats included).
@@ -14,7 +15,7 @@ setvbuf(stdout, nil, _IOLBF, 0)
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data("SuiteBarDemo: \(message)\n".utf8))
-    FileHandle.standardError.write(Data("usage: SuiteBarDemo --folder <path> --app <id> --metric \"Label=value[unit]\" (max 4) [--level ok|notice|alert]\n".utf8))
+    FileHandle.standardError.write(Data("usage: SuiteBarDemo --folder <path> --app <id> --metric \"Label=value[unit]\" (max 4) [--level ok|notice|alert] | --snapshot <dir>\n".utf8))
     exit(2)
 }
 
@@ -31,6 +32,11 @@ func parseMetric(_ text: String, index: Int) -> GlanceMetric {
     let digits = rest.prefix { $0.isNumber || $0 == "." || $0 == "-" }
     guard let value = Double(digits) else { fail("metric value is not a number or a state word: \(text)") }
     return GlanceMetric(id: id, label: label, value: value, unit: String(rest.dropFirst(digits.count)))
+}
+
+if CommandLine.arguments.dropFirst().first == "--snapshot" {
+    guard CommandLine.arguments.count == 3 else { fail("--snapshot takes one directory") }
+    runSnapshot(directory: CommandLine.arguments[2])
 }
 
 var folderPath: String?
