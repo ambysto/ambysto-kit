@@ -1,6 +1,6 @@
 # Plan — Ambysto Kit: the Terminal theme in AmbystoUI (APS-16)
 
-Intent: [`2026-10-15-kit-terminal-theme.md`](2026-10-15-kit-terminal-theme.md) (approved 2026-10-15, with the owner's decisions 1 to 3). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (3 major, 6 minor; folded in, log at the end). Not yet accepted by the owner.
+Intent: [`2026-10-15-kit-terminal-theme.md`](2026-10-15-kit-terminal-theme.md) (approved 2026-10-15, with the owner's decisions 1 to 3). Self-contained: an implementing agent reads this file and the intent only. Revised after an independent technical review (3 major, 6 minor; folded in, log at the end). Plan accepted by the owner on 2026-10-15 ("approve all"), including the popover's tone bar (intent outcome 3 as amended).
 
 Rating (Kit CLAUDE.md): **MEDIUM**. `AmbystoUI` views and additive API; builder builds, reviewer reviews. Nothing here touches the suite bar contract (`docs/spec/suite-bar.md`, `AmbystoSuite`, vectors): the theme is presentation only.
 

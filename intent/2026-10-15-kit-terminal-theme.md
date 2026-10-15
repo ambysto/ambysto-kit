@@ -1,5 +1,5 @@
 ---
-status: approved   # draft → approved → planned → building → verified → shipped
+status: planned   # draft → approved → planned → building → verified → shipped
 ---
 # Ambysto Kit: the Terminal theme in AmbystoUI
 
