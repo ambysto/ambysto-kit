@@ -21,7 +21,7 @@ One source of the brand's native tokens, in the Kit, that every app reads; the s
 
 1. **`Theme` holds the Terminal tokens.** The neutrals above, the hairline width, radius 6 (controls) and 8 (panels), and SF Mono for readouts (decision 2). Existing names (`accent`, `secondary`, `ink`, `page`, `card`, `hairline`, `cardRadius`, `cardPadding`) keep compiling: their values change, they are not removed (removal would be a major version).
 2. **One tone per app, from the catalog.** `Theme.tone(_ app: SuiteApp) -> Color` (name decided in the plan) returns the seven hexes above. The tone is identity only: an app name, a bar, one border. The level colours (`ok`, `notice`, `alert`) and `glyph(_:)` stay as they are: a tone never stands for a state, and a state never relies on colour alone.
-3. **The suite bar views use it.** The floating bar and the popover: Terminal ground, hairlines, each app's short name in its tone, readouts in mono with tabular figures, radius 8. No change to what is shown, only how.
+3. **The suite bar views use it.** The floating bar (always dark): Terminal ground, hairlines, each app's short name in its tone, readouts in mono, radius 8. The popover (follows the system appearance): each app's name in the normal text colour with a tone bar beside it, since the tones fall to about 2:1 on a light ground (amended 2026-10-15 after the plan review). No change to what is shown, only how.
 4. **Apps switch in their own PRs.** Optimer, Lean (Space), DevBox and Tune drop their local `Theme.swift` for the Kit's (or alias to it) when they next move their pin, the same way they adopt any Kit change. Each app's restyle of its own windows is that app's ticket, not this one.
 
 ### Success criteria (measurable)
