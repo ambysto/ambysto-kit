@@ -297,3 +297,15 @@ extension Result {
 extension Result where Failure == LicenseSigner.InputError {
     var failure: LicenseSigner.InputError? { if case .failure(let error) = self { error } else { nil } }
 }
+
+@Suite("Product names")
+struct ProductNameTests {
+    @Test func namesFollowTheRenamesWhileIdsAndBitsStay() {
+        #expect(Product.allCases.map(\.displayName) == [
+            "Ambysto Optimer", "Ambysto Steady", "Ambysto Lean", "Ambysto DevBox",
+            "Ambysto Power", "Ambysto Tune", "Ambysto Gate",
+        ])
+        #expect(Product.allCases.map(\.rawValue) == ["optimer", "steady", "space", "devbox", "power", "tune", "guard"])
+        #expect(Product.allCases.map(\.bit) == [0, 1, 2, 3, 4, 5, 6])
+    }
+}

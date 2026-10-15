@@ -6,7 +6,7 @@ Shared foundation of the **Ambysto Pro Suite**, a set of native utilities that *
 |---|---|---|
 | Ambysto Optimer | System resources monitor + safe cleanup | `ambysto/ambysto-optimer` |
 | Ambysto Steady | Stable Internet connection (monitor, diagnose, recover) | separate |
-| Ambysto Space | Disk map, large/old files, duplicates, uninstall (planned) | `ambysto/ambysto-space` |
+| Ambysto Lean (was Space) | Disk map, large/old files, duplicates, uninstall (planned) | `ambysto/ambysto-space` |
 
 This repo holds:
 
