@@ -1,6 +1,6 @@
 # Plan: the intents spec and build step catch up with Optimer's adoption (APS-18)
 
-Intent: [`2026-10-15-kit-intents-findings.md`](2026-10-15-kit-intents-findings.md). Branch `aps-18-intents-findings`; one commit per group; PR with `## What` / `## Proof`. Check `gh api user --jq .login` = `ambysto` first.
+Intent: [`2026-10-15-kit-intents-findings.md`](2026-10-15-kit-intents-findings.md) (intent approved and plan accepted by the owner 2026-10-15). Branch `aps-18-intents-findings`; one commit per group; PR with `## What` / `## Proof`. Check `gh api user --jq .login` = `ambysto` first.
 
 ## Groups
 ### 1. Spec (main session, HARD)

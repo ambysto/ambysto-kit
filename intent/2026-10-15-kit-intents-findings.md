@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: planned   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit: the intents spec and build step catch up with Optimer's adoption
 
