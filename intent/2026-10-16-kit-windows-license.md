@@ -23,6 +23,8 @@ What a license is for does not change (APS-10, owner 2026-10-10): an honesty-bas
 
 `windows-v0.1.0` of `ambysto/ambysto-kit`: a .NET class library, **`Ambysto.Kit.License`**, built from the spec alone (never from the Swift code), in a new `windows/` folder of this repo (suite decision 7, applied by analogy: it puts `macos/` and `windows/` side by side in each app's repository; the Kit's Swift package stays at the root, and `windows/` sits beside it, sharing `docs/spec/`).
 
+> Owner decision 2026-10-16: the release run of `windows-v0.1.0` failed at its last step (the push found no file: a wildcard path on Windows), so no package exists for that tag. Tags are never moved; the first package is **`windows-v0.1.1`**, from the fixed workflow. Earlier `windows-v0.1.0` wording is kept as written.
+
 ### 1. The library
 
 - **Verify** a key text and an `.ambystokey` file, in the spec's order, to either a license or one of the five reasons (malformed, unsupported version, unknown signing key, bad signature, revoked), each with the spec's exact message.
