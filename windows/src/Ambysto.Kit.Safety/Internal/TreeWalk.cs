@@ -20,6 +20,7 @@ internal sealed class TreeFacts
     internal bool HoldsCloudNotFullyLocal { get; set; }
     internal bool HoldsCloudFolder { get; set; }
     internal List<string> Files { get; } = [];
+    internal Dictionary<string, long> Lengths { get; } = new(StringComparer.OrdinalIgnoreCase);
     internal List<string> Folders { get; } = [];
 }
 
@@ -92,15 +93,15 @@ internal static class TreeWalk
     {
         facts.FileCount++;
         facts.Files.Add(path);
+        facts.Lengths[path] = length;
         facts.LogicalBytes += length;
-        facts.AllocatedBytes += Allocated(path);
         if ((attributes & (FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS)) != 0)
         {
-            facts.HoldsCloudNotFullyLocal = true;
+            facts.HoldsCloudNotFullyLocal = true; // refused at step 9; never opened, not even for its allocated size
+            return;
         }
+        facts.AllocatedBytes += Allocated(path);
     }
-
-    internal static long LengthOf(string path) => SizeOf(path);
 
     private static long SizeOf(string path)
     {
@@ -125,11 +126,22 @@ internal static class TreeWalk
         return ((long)high << 32) | low;
     }
 
+    /// <summary>True for a volume mount point, false for a junction to a folder. Measured (2026-10-16): a junction answers
+    /// ERROR_INVALID_PARAMETER and a plain folder ERROR_NOT_A_REPARSE_POINT; any other failure (an offline or unreadable
+    /// volume) counts as a mount point, so the folder is refused (failing closed).</summary>
     private static unsafe bool IsVolumeMountPoint(string path)
     {
         var buffer = stackalloc char[64];
-        return GetVolumeNameForVolumeMountPoint(PathSpelling.Extended(path) + "\\", buffer, 64);
+        if (GetVolumeNameForVolumeMountPoint(PathSpelling.Extended(path) + "\\", buffer, 64))
+        {
+            return true;
+        }
+        var error = Marshal.GetLastPInvokeError();
+        return error is not (ERROR_INVALID_PARAMETER or ERROR_NOT_A_REPARSE_POINT);
     }
+
+    private const int ERROR_INVALID_PARAMETER = 87;
+    private const int ERROR_NOT_A_REPARSE_POINT = 4390;
 
     /// <summary>One folder's entries; a folder that cannot be listed throws (failing closed).</summary>
     private static unsafe List<(string Name, uint Attributes, uint Tag, long Length)> List(string folder)

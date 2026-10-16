@@ -23,7 +23,13 @@ PATTERNS=(
   '\bProcess\.Start\b|\bProcessStartInfo\b|\.Kill\s*\(|\bTerminateProcess\b|\bCreateProcess[A-Za-z]*\b'
   '\bRm(Shutdown|Restart|AddFilter|RemoveFilter)\b'
   '\bCf(HydratePlaceholder|DehydratePlaceholder|SetPinState|SetInSyncState|ConvertToPlaceholder|UpdatePlaceholder|RevertPlaceholder|CreatePlaceholders|Execute|RegisterSyncRoot|UnregisterSyncRoot|ConnectSyncRoot)\b'
-  '\bWriteProcessMemory\b|\bVirtualAllocEx\b|\bCreateRemoteThread\b'
+  '\bWriteProcessMemory\b|\bVirtualAllocEx\b|\bCreateRemoteThread\b|\b(Nt|Zw)TerminateProcess\b'
+  '\b(FILE_GENERIC_(READ|WRITE|EXECUTE)|FILE_ALL_ACCESS|MAXIMUM_ALLOWED|STANDARD_RIGHTS_(WRITE|ALL|REQUIRED)|ACCESS_SYSTEM_SECURITY)\b'
+  '\b(Nt|Zw)(SetInformationFile|WriteFile|CreateFile|OpenFile|DeleteFile|SetSecurityObject|FsControlFile)\b'
+  '\bReg(Set|Create|Delete|Save|Restore|Replace|Load|Unload|Rename|Copy)[A-Za-z]*\b|\bRegistryKeyPermissionCheck\.ReadWrite|\bRegistry\.SetValue\b'
+  '\bSetFileTime\b|\bCreateHardLink[A-Za-z]*\b|\bCreateSymbolicLink[A-Za-z]*\b|\bSet(Named)?SecurityInfo[A-Za-z]*\b|\bSetKernelObjectSecurity\b|\bSetFileSecurity[A-Za-z]*\b'
+  '\b(StreamReader|StreamWriter|BinaryReader|BinaryWriter)\b|\bFile\.ReadLines\b|\bReadFile(Ex|Scatter)?\b|\bMemoryMappedFile\b'
+  '\bSHSetKnownFolderPath\b|\bSHChangeNotify\b|\bShellExecute[A-Za-z]*\b'
 )
 hits=0
 for p in "${PATTERNS[@]}"; do

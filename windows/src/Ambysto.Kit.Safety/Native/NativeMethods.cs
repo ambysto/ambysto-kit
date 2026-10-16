@@ -224,6 +224,7 @@ internal static unsafe partial class CloudMethods
 {
     internal const int CF_PLACEHOLDER_INFO_STANDARD = 1;
     internal const int HRESULT_NOT_A_CLOUD_FILE = unchecked((int)0x80070178);
+    internal const int HRESULT_MORE_DATA = unchecked((int)0x800700EA);
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct CF_PLACEHOLDER_STANDARD_INFO
@@ -273,13 +274,6 @@ internal static unsafe partial class InUseMethods
 
     [LibraryImport("ntdll.dll")]
     internal static partial int NtQueryInformationFile(Microsoft.Win32.SafeHandles.SafeFileHandle handle, out IO_STATUS_BLOCK status, void* buffer, uint length, int infoClass);
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct RM_UNIQUE_PROCESS
-    {
-        public int ProcessId;
-        public long ProcessStartTime;
-    }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     internal struct RM_PROCESS_INFO

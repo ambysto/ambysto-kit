@@ -118,7 +118,7 @@ internal static class GateRun
             }
             foreach (var file in tree.Files)
             {
-                var length = file == canonical ? (stamp.Length ?? 0) : Refusal.Verify("cloud", () => TreeWalk.LengthOf(file));
+                var length = tree.Lengths[file];
                 if (Refusal.Verify("cloud", () => Cloud.NotFullyLocal(file, length)))
                 {
                     throw new Refusal(RefusalReason.CloudFile);
@@ -138,7 +138,11 @@ internal static class GateRun
 
             // 11. Protection: by path, name and identity of the item and every folder above it; then owners in the tree.
             var ancestors = Refusal.Verify("owner", () => Ancestors(canonical, volumeRoot));
-            CheckProtected(context, canonical, volumeRoot, ancestors, tree, itemIsDirectory: (tagAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
+            if (ancestors[0].Identity != stamp.Identity)
+            {
+                throw new Refusal(RefusalReason.ChangedSinceScan); // replaced while the gate ran
+            }
+            CheckProtected(context, canonical, volumeRoot, ancestors, tree, itemIsDirectory: (tagAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, alsoContains: true);
             foreach (var path in tree.Files.Concat(tree.Folders))
             {
                 if (path != canonical && Protection.OwnedByWindows(Refusal.Verify("owner", () => OwnerOf(path))))
@@ -239,10 +243,10 @@ internal static class GateRun
         }
     }
 
-    private static void CheckProtected(SafetyContext context, string canonical, string volumeRoot, List<Ancestor> ancestors, TreeFacts? tree, bool itemIsDirectory)
+    private static void CheckProtected(SafetyContext context, string canonical, string volumeRoot, List<Ancestor> ancestors, TreeFacts? tree, bool itemIsDirectory, bool alsoContains)
     {
         var protectedEntries = context.NeverTouchFolders.Concat(context.SystemLocations).ToList();
-        if (Protection.Hits(canonical, protectedEntries, alsoContains: true) || Protection.IsVolumeRootName(canonical, volumeRoot))
+        if (Protection.Hits(canonical, protectedEntries, alsoContains) || Protection.IsVolumeRootName(canonical, volumeRoot))
         {
             throw new Refusal(RefusalReason.Protected);
         }
@@ -293,7 +297,7 @@ internal static class GateRun
             }
         });
         return new ItemFacts(canonical, context.ProfileFolder, context.ProfilesFolder, volumeSerial, profileSerial,
-            ancestors.Select(a => a.Owner).ToList(), isSystemLocation: false);
+            ancestors.Select(a => a.Owner).ToList(), isSystemLocation: false); // an item in a system location never reaches the rule
     }
 
     /// <summary>Putting back (docs/spec/safety.md): environment first, then the destination's spelling, existence, folder,
@@ -386,7 +390,9 @@ internal static class GateRun
         {
             throw new Refusal(RefusalReason.Protected);
         }
-        CheckProtected(context, parent, volumeRoot, ancestors, tree: null, itemIsDirectory: true);
+        // The destination does not exist yet: only "inside" counts. A parent that merely holds a never-touch entry (the
+        // profile holds .ssh, a drive root holds Windows) is a normal place to put an item back.
+        CheckProtected(context, parent, volumeRoot, ancestors, tree: null, itemIsDirectory: true, alsoContains: false);
         var facts = Facts(context, parent, parentStamp.Identity.VolumeSerial, ancestors);
         var decision = rule.EvaluateRestore(facts);
         if (!decision.IsAllowed)

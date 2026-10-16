@@ -133,7 +133,7 @@ internal static class InUse
         {
             for (var i = 0; i < files.Count; i += 100)
             {
-                var batch = files.GetRange(i, Math.Min(100, files.Count - i)).ConvertAll(PathSpelling.Extended).ToArray();
+                var batch = files.GetRange(i, Math.Min(100, files.Count - i)).ConvertAll(f => f.Length < 260 ? f : PathSpelling.Extended(f)).ToArray();
                 rc = RmRegisterResources(session, (uint)batch.Length, batch, 0, IntPtr.Zero, 0, IntPtr.Zero);
                 if (rc != 0)
                 {

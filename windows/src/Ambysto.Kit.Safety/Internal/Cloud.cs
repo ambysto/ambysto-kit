@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using static Ambysto.Kit.Safety.Native.CloudMethods;
 using static Ambysto.Kit.Safety.Native.NativeMethods;
 
+
 namespace Ambysto.Kit.Safety.Internal;
 
 /// <summary>Windows step 9 (docs/spec/safety.md, "Windows: recoverable moves"): cloud placeholders that are not fully on
@@ -25,8 +26,14 @@ internal static class Cloud
         }
         using (probe)
         {
+            // The fixed part is all this reads; a long file identity only makes the call report "more data", which still
+            // fills the fixed part (ERROR_MORE_DATA is therefore accepted).
             var buffer = stackalloc byte[4096];
             var hr = CfGetPlaceholderInfo(probe.Handle, CF_PLACEHOLDER_INFO_STANDARD, buffer, 4096, out _);
+            if (hr == HRESULT_MORE_DATA)
+            {
+                hr = 0;
+            }
             if (hr == HRESULT_NOT_A_CLOUD_FILE || hr == HRESULT_INVALID_FUNCTION)
             {
                 return false;
