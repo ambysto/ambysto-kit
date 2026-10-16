@@ -1,5 +1,5 @@
 ---
-status: draft   # draft → approved → planned → building → verified → shipped (PR #n)
+status: approved   # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Pro Suite: the toolbox jobs, placed in the seven apps
 
@@ -114,3 +114,16 @@ The "Free RAM" button is not a row here: Smart RAM's job is covered by Optimer's
 4. **Shutdown in Power** (B7). Power's position is that it never changes how the Mac sleeps on its own. A timer the user starts follows the keep-awake model. Confirm, and confirm that shutdown and restart are in, not only sleep.
 5. **Landing.** Add a "Clean the registry, shred files" line to "What we won't do"?
 6. **Order.** Suggested, cheapest reversible work first: Lean B4 + B5 → Tune B1 (Mac) → Lean B6 → Power B7 → Tune B3 → B8 (after decision 1) → Tune B2 (with Tune's Windows version).
+
+## Decisions (owner, 2026-10-16)
+
+The owner approved the intent as written ("đồng ý với intent PR #52"), which takes each recommendation above:
+
+1. **Suite hub: allowed** as a launcher plus the apps' glances, read only; every change happens in the owner app. It gets its own intent, and B8 (system information) lives there. The mock is ambysto-assets#1.
+2. **Tune on Windows:** entries that need an administrator are listed read-only in Tune's first Windows version.
+3. **Default apps on Mac (B3):** in, as written: LaunchServices' public API, with macOS's own confirmation prompt.
+4. **Power (B7):** in, as written: sleep, shut down and restart, as one-shots the user starts.
+5. **Landing refusal line:** the intent made no recommendation, so this stays open. It does not block any B row.
+6. **Order:** Lean B4 + B5 → Tune B1 (Mac) → Lean B6 → Power B7 → Tune B3 → B8 with the hub → Tune B2 (with Tune's Windows version).
+
+Next: each B row gets its own intent and ticket in its owner's repo and Plane project (criterion 2), in the order of decision 6.
