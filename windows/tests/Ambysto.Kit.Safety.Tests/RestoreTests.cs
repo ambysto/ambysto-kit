@@ -24,6 +24,53 @@ public sealed class RestoreTests
     [TestCleanup]
     public void Delete() => folder.Dispose();
 
+    /// <summary>Spec "Putting back": protection is "by path and by identity of every existing folder above it" and
+    /// refuses what is *inside* a protected entry or system location. The profile folder holds never-touch entries
+    /// (`.ssh`, the hives) but is not one itself: a put-back directly into it is approved, the app's restore rule
+    /// consulted once. Nothing is created at the destination.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ADestinationDirectlyInTheProfileFolderIsApproved()
+    {
+        var recording = new RecordingRule();
+        var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var destination = Path.Combine(profile, "ambysto-restore-" + Guid.NewGuid().ToString("N") + ".txt");
+        Assert.IsFalse(File.Exists(destination));
+        var approved = Expect.Approved(Gates.Seamed(recording).CheckRestoreDestination(destination));
+        Assert.AreEqual(Win32.FinalPath(profile), approved.Facts.CanonicalPath);
+        Assert.HasCount(1, recording.RestoreEvaluated);
+        Assert.IsEmpty(recording.Evaluated);
+        Assert.IsFalse(File.Exists(destination), "the gate writes nothing");
+    }
+
+    /// <summary>The root of a fixed drive holds system locations (`$Recycle.Bin`, `System Volume Information`): a
+    /// put-back into a folder the test made at that root, and one directly into the root, are approved, since only a
+    /// destination inside a protected entry refuses (the root is a system location's parent, not a system location).</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ADestinationAtTheRootOfAFixedDriveIsApproved()
+    {
+        Volumes.RequireSecondNtfs();
+        var recording = new RecordingRule();
+        var rootFolder = Path.Combine(Volumes.SecondNtfs, "ambysto-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(rootFolder);
+        try
+        {
+            var approvedInFolder = Expect.Approved(Gates.Seamed(recording).CheckRestoreDestination(Path.Combine(rootFolder, "x.txt")));
+            Assert.AreEqual(Win32.FinalPath(rootFolder), approvedInFolder.Facts.CanonicalPath);
+            var directlyInRoot = Path.Combine(Volumes.SecondNtfs, "ambysto-restore-" + Guid.NewGuid().ToString("N") + ".txt");
+            var approvedInRoot = Expect.Approved(Gates.Seamed(recording).CheckRestoreDestination(directlyInRoot));
+            Assert.AreEqual(Win32.FinalPath(Volumes.SecondNtfs), approvedInRoot.Facts.CanonicalPath);
+            Assert.IsFalse(File.Exists(directlyInRoot), "the gate writes nothing");
+            Assert.HasCount(2, recording.RestoreEvaluated);
+            Assert.IsEmpty(recording.Evaluated);
+        }
+        finally
+        {
+            Directory.Delete(rootFolder, recursive: true);
+        }
+    }
+
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void ADestinationWhoseFolderExistsIsApprovedWithTheParentsFacts()
