@@ -18,7 +18,7 @@ Refused at selection **and** immediately before every move, including everything
 | `Library/Mail`, `Library/Messages` | mail and messages | `%LOCALAPPDATA%\Microsoft\Outlook`, any `*.pst` / `*.ost`, Thunderbird profiles |
 | `Library/Mobile Documents`, `Library/CloudStorage` | iCloud Drive and other cloud drives (deleting there deletes in the cloud) | every cloud-sync root: the sync roots registered with the system for this user, `%OneDrive%`, `%OneDriveConsumer%`, `%OneDriveCommercial%`, and these folders directly in the profile: `Dropbox`, `Google Drive`, `My Drive`, `OneDrive`, `OneDrive - *`, `Box`, `Box Sync`, `pCloud Drive`, `iCloudDrive`, `iCloud Drive` |
 | `Library/Calendars`, `Library/Accounts`, `Library/Application Support/AddressBook` | personal data | Outlook data (above) |
-| `Library/Application Support/MobileSync/Backup`, `Backups.backupdb`, `*.backupbundle` | device and Time Machine backups | `%APPDATA%\Apple Computer\MobileSync\Backup`, `%USERPROFILE%\Apple\MobileSync\Backup`, File History, `WindowsImageBackup` |
+| `Library/Application Support/MobileSync/Backup`, `Backups.backupdb`, `*.backupbundle` | device and Time Machine backups | `%APPDATA%\Apple Computer\MobileSync\Backup`, `%USERPROFILE%\Apple\MobileSync\Backup`, File History (`%LOCALAPPDATA%\Microsoft\Windows\FileHistory`, and any `FileHistory` folder at a volume root), any `WindowsImageBackup` folder |
 | `Library/Application Support/com.apple.TCC` | the privacy database | none |
 | main browser profiles (Safari, Chrome, Arc, Firefox, Brave, Edge) | browsing data | Chrome, Edge, Brave under `%LOCALAPPDATA%`, Firefox under `%APPDATA%\Mozilla`, Arc under `%LOCALAPPDATA%\Packages` |
 | any child of `Library/Containers`, `Library/Group Containers` or `Library/Application Support` named `com.apple.*` or `group.com.apple.*` | Apple app data | Store app data: `%LOCALAPPDATA%\Packages` |
@@ -63,21 +63,24 @@ Windows note: the order on Windows, the first failure refusing the item:
 Measured on Windows 11 (2026-10-16): moving an item to the Recycle Bin through the shell can delete it for good while the shell reports success. So the gate refuses, before the move:
 - an item not on a fixed local NTFS or ReFS volume (removable and network items are deleted for good);
 - an item on a volume whose Recycle Bin is off for this user or disallowed by policy (an absent setting means the system default; a setting that cannot be read refuses);
-- an item larger than the Recycle Bin's whole size on that volume ("too large"); otherwise an item larger than the room left in it **without** purging older items ("Recycle Bin full": the shell silently deletes older items for good to make room);
+- an item larger than the Recycle Bin's whole size on that volume ("too large"); otherwise an item larger than the room left in it **without** purging older items ("Recycle Bin full": the shell silently deletes older items for good to make room). Measured: sizes are logical lengths (not the space on disk), the size setting is in MiB, and the Recycle Bin and its room are this user's own. When the size setting is absent, the shell writes its default on its first query of that volume's Recycle Bin; the gate lets it do so and reads the value, and a value still absent after that refuses;
 - an item with any path in its tree of 260 characters or more, measured on the canonical path (step 4). Measured: such a tree is deleted for good, short files included, on a volume without short names, and on any volume when the moving process is long-path-aware with long paths turned on; elsewhere it was kept through its short names. It is refused everywhere: the gate cannot know how the mover will run;
 - an online-only or partially downloaded cloud file, and a folder holding one (recycling the folder would download it first; an online-only file is deleted for good). Two signals, either refuses: the "recall on data access" or "recall on open" attributes, and fewer bytes on disk than the file's length;
 - an item inside, or containing, a cloud-sync root (Never touch): deleting there deletes on every device.
 
-Inside a folder, a link, junction or mount point is never entered, and a folder holding one is refused ("contains a link or special file") until it is shown that recycling the folder leaves the link's target untouched; a folder holding a compressed (WOF) file is refused the same way until its recycle is shown to be recoverable (a WOF file on its own is already refused at step 3).
+Inside a folder, a link, junction or mount point is never entered. Measured (2026-10-16): recycling a folder that holds a junction or a symbolic link leaves the target untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is allowed. A folder holding a **volume mount point** is refused ("contains a link or special file"): the Recycle Bin counts the mounted volume's whole capacity as part of the folder, so the folder is deleted for good. A compressed (WOF) file, on its own or in a folder, recycles and comes back intact and is allowed; Windows shows it to a standard user as a plain file.
 
 Within step 8 the checks run in this order, the first failure refusing: the Recycle Bin off or disallowed; a link or special file inside (below); a path of 260 characters or more; too large; Recycle Bin full.
 
 What the gate cannot close (between the gate and the move another process may fill the Recycle Bin, or a cloud provider may free the file's space) is the consumer's duty:
 - run the gate immediately before each single item, never for a batch;
+- to keep a cloud provider from freeing a file's space during the move, hold the file open through the Cloud Files oplock open while moving it (measured: it makes the provider's free-up fail, "cloud file in use", and the recycle still lands; an attributes-only handle does not);
 - abort the shell's delete whenever any pre-delete callback, the item's or a descendant's, does not say "recycle if possible";
 - after the move, open the item the shell reports in the Recycle Bin and compare volume serial, file id and size with the approved item; when they do not match, or the shell reports none, the item is treated as not recovered and the session stops.
 
 ## Windows: failing closed
+
+The gate writes nothing. The one side effect it allows is the shell's own: asking for a volume's Recycle Bin size may make the shell create that user's Recycle Bin folder and size setting on the volume.
 
 Every check that cannot establish its fact (an error, access denied, an unknown file system or reparse kind, an unreadable setting) refuses the item with "Could not verify: <check>". No check passes on an error.
 
