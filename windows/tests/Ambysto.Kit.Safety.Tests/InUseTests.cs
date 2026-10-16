@@ -87,6 +87,23 @@ public sealed class InUseTests
         Assert.IsTrue(named.ImageName?.Contains("powershell", StringComparison.OrdinalIgnoreCase), "image name where readable: " + named.ImageName);
     }
 
+    /// <summary>Spec "In use", Windows note: the per-file process query **and** the Restart Manager both name a holder
+    /// that has a file open without delete sharing. The values of <see cref="InUseHolder.Method"/> are not documented
+    /// on the public surface, so the test asserts that at least two different methods named the holder's process, and
+    /// that one of them is the Restart Manager (by name) when the methods are named at all.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AFileOpenWithoutDeleteSharingIsNamedByTheRestartManagerToo()
+    {
+        var file = folder.File("open-rm.bin", 4096);
+        using var holder = HolderProcess.Start(HoldKind.OpenNoDeleteSharing, file);
+        var result = Check(file);
+        HolderNamed(result, holder.ProcessId);
+        var methods = result.Holders.Where(h => h.ProcessId == holder.ProcessId).Select(h => h.Method).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        Assert.IsTrue(methods.Count >= 2, "only one method named the holder: " + string.Join(", ", methods));
+        Assert.IsTrue(methods.Any(m => m.Contains("Restart", StringComparison.OrdinalIgnoreCase)), "no method names the Restart Manager: " + string.Join(", ", methods));
+    }
+
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void AFileOpenWithDeleteSharingIsInUse()
