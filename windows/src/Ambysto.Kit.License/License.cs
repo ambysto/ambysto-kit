@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Ambysto.Kit.Licensing;
 
 /// <summary>
-/// A verified license. Only <c>LicenseVerifier</c> creates one. The license key id is its identity:
+/// A verified license. Only <see cref="LicenseVerifier"/> creates one. The license key id is its identity:
 /// two licenses are equal exactly when their key ids are equal (docs/spec/license.md, "Signature").
 /// It exposes no key text, signature or hash of them, because several texts can carry the same license.
 /// </summary>

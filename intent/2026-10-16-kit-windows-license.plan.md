@@ -20,7 +20,7 @@ This plan is self-contained with the intent and the spec. HARD (verifier, parsin
 
 `internal` plus `InternalsVisibleTo` is a name-based compile-time boundary, not a security one: anyone can ship code that reflects into the library. That fits the honesty model (APS-10: a deterrent, not protection); the point is that no app can trust the test key by accident.
 
-`TrustedKeys` (internal): `Production` (empty dictionary today), `Test` (id 0, the published key), `internal TrustedKeys(IReadOnlyDictionary<byte, string> rawHex)`, which validates each key once (64 bytes, a point on P-256) and throws if a compiled-in key is broken (a build defect, caught by the pin test). `Revocations.All` (internal, empty). The production data is written in one fixed literal form so `scripts/check-key-sets.py` can read it (below).
+`TrustedKeys` (internal): `Production` (empty dictionary today) and `internal TrustedKeys(IReadOnlyDictionary<byte, string> rawHex)`, which validates each key once (64 bytes, a point on P-256) and throws if a compiled-in key is broken (a build defect, caught by the pin test). **The published test key (id 0) is not in the library at all** (changed while building group 3): it lives in the test project, which builds its verifiers through the internal constructor. Windows CNG reports some invalid points as `PlatformNotSupportedException`, not `CryptographicException`; the constructor turns both into `ArgumentException`. `Revocations.All` (internal, empty). The production data is written in one fixed literal form so `scripts/check-key-sets.py` can read it (below).
 
 **Days.** Day *d* is `new DateOnly(2026, 1, 1).AddDays(d)`; `updatesUntil` 0 → `null`.
 
@@ -79,10 +79,10 @@ The intent's `status` moves to `building` with group 1's commit, `verified` afte
 | The two key copies drift (the intent's MAJOR) | `check-key-sets.py` in the workflow and in `CLAUDE.md`'s Verify list |
 | The vectors file moves or the test cannot find it, and the tests pass without vectors | group 1: missing file fails; group 3 asserts 35 vectors were read |
 | A tag pushed by someone else publishes a package | tag protection (owner step), the workflow runs only on `windows-v*` tags |
-| A test-key trust leaks into a release | `TrustedKeys.Test` is `internal`; criterion 5's default-trust test; review |
+| A test-key trust leaks into a release | the test key is not in the library; criterion 5's default-trust test and the production pin; review |
 | `dotnet` in the VM resolves to the machine-wide .NET 8 | `global.json` pins 10.0.402; the VM calls the user-installed `dotnet.exe` by full path |
 
-**Mutation checks** (break on purpose, see a test fail, restore; recorded in the review log): (a) accept any `char.IsLetterOrDigit` in step 1 → the Arabic-Indic digit test fails; (b) check revocation before the signature → the "tampered and revoked" vector fails; (c) skip the unused-bits check → its test fails; (d) read the file with `File.ReadAllText` → the UTF-16 BOM test fails; (e) build `LicenseVerifier()` on `TrustedKeys.Test` → the criterion 5 default-trust test fails; (f) change `Length > 4096` to `>= 4096` → the exactly-4096-bytes test fails; (g) in `check-key-sets.py`, skip the leftover check → the "unrecognised form" fixtures pass and their test fails.
+**Mutation checks** (break on purpose, see a test fail, restore; recorded in the review log): (a) accept any `char.IsLetterOrDigit` in step 1 → the Arabic-Indic digit test fails; (b) check revocation before the signature → the "tampered and revoked" vector fails; (c) skip the unused-bits check → its test fails; (d) read the file with `File.ReadAllText` → the UTF-16 BOM test fails; (e) put the test key into the production literal → the criterion 5 default-trust test and the production pin fail; (f) change `Length > 4096` to `>= 4096` → the exactly-4096-bytes test fails; (g) in `check-key-sets.py`, skip the leftover check → the "unrecognised form" fixtures pass and their test fails.
 
 ## Proof (what "done" means)
 
