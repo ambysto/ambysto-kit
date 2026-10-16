@@ -102,7 +102,7 @@ Not run here: anything on macOS (out of scope on this machine). Waiting for the 
 
 - ~~A tag ruleset so only the owner can create `windows-v*` tags.~~ Done 2026-10-16: ruleset `windows-release-tags` (creation, update and deletion restricted; bypass: repository admin).
 - A `read:packages` token in the VM's user NuGet config for criterion 12 (never in a repo).
-- Push `windows-v0.1.0` on `main` after this PR merges.
+- ~~Push `windows-v0.1.0` on `main` after this PR merges.~~ Done 2026-10-16; its run failed at the push, so it has no package (#57). Push `windows-v0.1.1` on `main`.
 - Optional: a software licence for the repository (none today); until then the package carries none.
 
 ## Review log
