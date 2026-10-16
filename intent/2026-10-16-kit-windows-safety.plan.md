@@ -153,3 +153,32 @@ Not run here: anything on macOS (out of scope on this machine).
 5. NIT: `RECALL_ON_OPEN` is the one exception to the strict order. Fixed: recorded.
 6. NIT: the loopback share carries the local file's identity. Fixed.
 7. NIT: Defender copy and friendly names belong to the app. Fixed.
+
+**Acceptance tests (plan group 3; written by a separate agent on Fable 5.1 before any implementation).** hard-reviewer: round 1 FAIL (3 MAJOR: a profile picked that is a junction; deny ACEs that do not make an item unreadable for its owner; no descendant *directory* of 260+ characters), round 2 PASS. 196 tests at the end of group 3; all failed with `NotImplementedException` against the stubs (one named helper self-check passed; two ignored with measured facts: a `RECALL_ON_OPEN` item cannot be produced, nor a placeholder query that fails for a real reason). Later test changes were made by the same agent, each naming the spec line it follows; the writer never read the implementation.
+
+**Questions the loop raised and how they were settled (2026-10-16).** The test writer's questions went to the main session, not the owner: partial hydration and recall-on-open (fixture extended; recall-on-open stays ignored), step 10 moved right after step 5 (a path check: a drive or profile is never walked; reported to the owner), Pictures redirection in tests, restore reasons (`RestoreDestinationExists`, `RestoreFolderMissing`), a sync root inside an item is a cloud file (spec order), WOF fixtures by the administrator.
+
+**Spec changes found during the build** (each its own HARD commit, reviewed with the code): 5b, measured before group 4 (links and WOF inside folders allowed, mount points refused, Recycle Bin sizes); an unknown special file inside a folder refuses like a mount point; cloud-sync roots asked per item (a classic Cloud Files registration is in no list); restore order (exists, cloud-sync root, folder gone); an owner above the item that cannot be read is unknown and not the user's, while a folder above that cannot be opened refuses. None loosens a decision of the owner.
+
+**Code review (hard-reviewer: Fable 5.1, 2026-10-16).** Round 1 FAIL: 1 MAJOR (put-back applied the delete-side "contains" rule to the destination's parent, refusing every put-back into the profile or a drive root), 6 MINOR, 3 NIT; all fixed in `c8cd06e`, the mount-point check reworked in `c92cf55` after measuring that junctions answer 87, 206 and other codes. Round 2 PASS with 1 MINOR (placeholder info read without checking the returned length), fixed in `f6c4f02`, and 1 NIT (three test commits named `wip(5b)`, already pushed; left as they are).
+
+**Deviations from this plan.** Group 5b ran before group 4 (the probes were done during the test review). Groups 4–8 are one commit (`e64121d`): the code grew through the same files. The SFC backstop accepts the measured codes for "not protected" (access denied, insufficient buffer for paths of about 250+) instead of "anything but file-not-found", which would refuse every user file; the files Windows Resource Protection covers lie in system locations, which step 11 refuses first. The release workflow runs one command per step (found while writing group 9).
+
+## Proof record (2026-10-16, Windows 11 VM, standard user unless noted)
+
+| Criterion | Result |
+|---|---|
+| 1 | All suites green on a clean build, `f6c4f02` (STRYKER-RUN-PENDING); Stryker.NET: STRYKER-RESULT-PENDING. Hand mutations: (b) trusting the given spelling → `AMappedDriveResolvesToANetworkPathAndIsRefused`; (c) no long-path check → 6 long-path tests; (d) allocated instead of logical size → `TheLogicalLengthCountsNotTheSpaceOnDisk`; (e) no INTERACTIVE-SID check → `ASessionAboveZeroWithoutTheInteractiveSidIsRefusedAsNotInteractive`; (f) the rule before protection → 17 protection tests; (g) `FILE_READ_DATA` → the choke-point tripwire; review fix 1 reverted → `ADestinationDirectlyInTheProfileFolderIsApproved`. Not demonstrable: (a) a placeholder query error read as "not a placeholder" (no real condition makes the query fail; its test is ignored with the facts) and the item-swap check of review item 6 (a race inside one call; defence in depth that can only add a refusal) |
+| 2 | Removable (F:), network (loopback share), bin off, `NoRecycleFiles` (admin setup), over quota, purge needed, 260+ in the tree, online-only, partly downloaded, a folder holding an online-only file, FAT32 (F:) and exFAT (G:): each refused before any move with its reason; settings restored by each test |
+| 3 | The cloud fixture's fetch log stays empty across every gate and `FileFacts` call |
+| 4 | 8.3, case, `subst`, mapped drive, hard link: one identity through `FileFacts.Read`; junction, symbolic link, mount point, UNC, stream, trailing dot or space: refused |
+| 5 | Seam tests, plus the real environment: the standard user over SSH refused as not interactive, the administrator over SSH refused as elevated, the standard user in the console approved |
+| 6 | Open file (with and without delete sharing), loaded DLL, read-only and read-write mapped views, current-directory folder, image, command line, an elevated (SYSTEM) holder: in use, named by the per-file query and the Restart Manager |
+| 7 | Never-touch rows through known folders and the environment; a redirected Pictures folder still protected |
+| 8 | An allow-everything rule cannot pass a never-touch item and is not even asked; `Administrators`-owned folders are not the user's |
+| 9 | 0 warnings; no package reference in the library |
+| 10 | `git diff main -- Sources Tests Package.swift windows/src/Ambysto.Kit.License`: empty |
+| 11 | Not run yet: needs the owner's `windows-v0.2.0` tag; a local-feed rehearsal is the next step |
+| Choke points | `scripts/windows-choke-points.sh` passes on the library; 36 of 36 seeded fail fixtures fail |
+
+Not run: anything on macOS (out of scope on this machine).
