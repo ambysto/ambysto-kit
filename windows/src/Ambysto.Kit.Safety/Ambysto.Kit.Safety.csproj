@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The file-safety gate for Windows: docs/spec/safety.md. It decides; it never changes anything. No package references. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>Ambysto.Kit.Safety</AssemblyName>
+    <RootNamespace>Ambysto.Kit.Safety</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- The real version comes only from a windows-vX.Y.Z tag (-p:Version in .github/workflows/windows-release.yml). -->
+    <Version>0.0.0-dev</Version>
+    <PackageId>Ambysto.Kit.Safety</PackageId>
+    <Authors>Ambysto</Authors>
+    <Description>The file-safety gate for Ambysto apps on Windows: decides whether an item may be moved to the Recycle Bin (recoverable moves only, never-touch list, identity, cloud files, in-use check). It never changes anything.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ambysto/ambysto-kit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- GitHub's NuGet registry takes no .snupkg symbol packages: the symbols travel inside the one .nupkg. -->
+    <DebugType>embedded</DebugType>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ambysto.Kit.Safety.Tests" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

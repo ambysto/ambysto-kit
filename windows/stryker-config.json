@@ -1,0 +1,13 @@
+{
+  "stryker-config": {
+    "project": "Ambysto.Kit.Safety.csproj",
+    "test-projects": [ "Ambysto.Kit.Safety.Tests.csproj" ],
+    "test-case-filter": "TestCategory=Session0",
+    "concurrency": 1,
+    "mutation-level": "Standard",
+    "coverage-analysis": "perTest",
+    "reporters": [ "json", "html", "cleartext" ],
+    "thresholds": { "high": 90, "low": 75, "break": 0 },
+    "additional-timeout": 20000
+  }
+}

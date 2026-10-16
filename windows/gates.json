@@ -1,0 +1,45 @@
+{
+  "solution": "windows/Ambysto.Kit.slnx",
+  "suites": [
+    {
+      "name": "license",
+      "context": "session0",
+      "filter": "FullyQualifiedName~Ambysto.Kit.Licensing"
+    },
+    {
+      "name": "safety",
+      "context": "session0",
+      "filter": "TestCategory=Session0"
+    },
+    {
+      "name": "safety-console",
+      "context": "console",
+      "filter": "TestCategory=Console"
+    },
+    {
+      "name": "safety-real-ssh",
+      "context": "session0",
+      "filter": "TestCategory=RealEnvironmentSsh"
+    },
+    {
+      "name": "safety-real-admin",
+      "context": "admin",
+      "filter": "TestCategory=RealEnvironmentAdmin"
+    },
+    {
+      "name": "safety-admin-setup",
+      "context": "session0",
+      "filter": "TestCategory=AdminSetup",
+      "setup": "windows/tests/admin/setup.ps1",
+      "teardown": "windows/tests/admin/teardown.ps1"
+    }
+  ],
+  "host_checks": [
+    "scripts/windows-choke-points.sh",
+    "scripts/windows-choke-points-fixtures.sh"
+  ],
+  "mutation": {
+    "project": "windows/tests/Ambysto.Kit.Safety.Tests",
+    "config": "windows/stryker-config.json"
+  }
+}
