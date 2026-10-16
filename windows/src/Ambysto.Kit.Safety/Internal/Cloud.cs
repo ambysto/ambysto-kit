@@ -29,7 +29,8 @@ internal static class Cloud
             // The fixed part is all this reads; a long file identity only makes the call report "more data", which still
             // fills the fixed part (ERROR_MORE_DATA is therefore accepted).
             var buffer = stackalloc byte[4096];
-            var hr = CfGetPlaceholderInfo(probe.Handle, CF_PLACEHOLDER_INFO_STANDARD, buffer, 4096, out _);
+            new Span<byte>(buffer, 4096).Clear(); // explicit: nothing read below may come from an earlier use of the stack
+            var hr = CfGetPlaceholderInfo(probe.Handle, CF_PLACEHOLDER_INFO_STANDARD, buffer, 4096, out var returned);
             if (hr == HRESULT_MORE_DATA)
             {
                 hr = 0;
@@ -41,6 +42,10 @@ internal static class Cloud
             if (hr < 0)
             {
                 Marshal.ThrowExceptionForHR(hr);
+            }
+            if (returned < sizeof(long))
+            {
+                throw new InvalidOperationException("placeholder info shorter than its on-disk size field"); // fails closed
             }
             var info = (CF_PLACEHOLDER_STANDARD_INFO*)buffer;
             return info->OnDiskDataSize < length;
