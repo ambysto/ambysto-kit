@@ -1,5 +1,5 @@
 ---
-status: building  # draft → approved → planned → building → verified → shipped (PR #n)
+status: verified  # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit for Windows 0.2 — the file-safety gate (.NET)
 
@@ -126,7 +126,7 @@ Approved by the owner on 2026-10-16.
 
 ## Open questions
 
-_None for the owner._ Decided on 2026-10-16 (see Problem). Defaults set by this intent, for review: the check order, the never-touch rows, the conservative long-path and in-use rules, mutation testing in criterion 1. All cited facts have saved probe outputs (re-checked 2026-10-16).
+_None for the owner._ Decided on 2026-10-16 (see Problem). Verified 2026-10-16 except the Stryker run (see the plan's proof record), merged on the owner's request. Defaults set by this intent, for review: the check order, the never-touch rows, the conservative long-path and in-use rules, mutation testing in criterion 1. All cited facts have saved probe outputs (re-checked 2026-10-16).
 
 ## Review log
 
