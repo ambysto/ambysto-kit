@@ -8,3 +8,6 @@ CLAUDE.local.md
 .claude/worktrees/
 .vercel/
 
+windows/**/bin/
+windows/**/obj/
+windows/**/TestResults/

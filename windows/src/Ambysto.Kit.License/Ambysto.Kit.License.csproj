@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Offline license keys, format 1: docs/spec/license.md. No package references: the runtime only. -->
+  <PropertyGroup>
+    <AssemblyName>Ambysto.Kit.License</AssemblyName>
+    <RootNamespace>Ambysto.Kit.Licensing</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ambysto.Kit.License.Tests" />
+  </ItemGroup>
+</Project>
