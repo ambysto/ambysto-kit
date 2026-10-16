@@ -46,12 +46,12 @@ Immediately before every move, in this order; the first failure refuses the item
 
 Windows note: the order on Windows, the first failure refusing the item:
 1. **Environment**: not elevated, not SYSTEM, an interactive session (the counterpart of the macOS Full Disk Access check).
-2. **Exists**, read without opening first (the spelling rules of step 4 are applied to the given path even before this, so a network path to a missing file is refused for its form, not as gone); an item marked "recall on open" is never opened and goes straight to the cloud refusal (step 9), the one exception to this order. Otherwise it is opened for attributes only, never for data.
+2. **Exists**, read without opening first (the spelling rules of step 4 are applied to the given path after step 1 and before this step, so a network path to a missing file is refused for its form, not as gone); an item marked "recall on open" is never opened and goes straight to the cloud refusal (step 9), the one exception to this order. Otherwise it is opened for attributes only, never for data.
 3. **Not a link or special file**: the item has no reparse point, or a cloud one (step 9); any other kind (symbolic link, junction, mount point, app execution alias, compression, deduplication, projection, unknown) is refused.
-4. **Spelling**: network (UNC), device and stream paths and names ending in a dot or a space are refused, on the given path before anything else and again on the canonical path (a mapped drive resolves to a network path). The canonical path is the plain form with short (8.3) names expanded and no `\\?\` prefix.
+4. **Spelling**: network (UNC), device and stream paths and names ending in a dot or a space are refused, on the given path before step 2 and again on the canonical path (a mapped drive resolves to a network path). The canonical path is the plain form with short (8.3) names expanded and no `\\?\` prefix.
 5. **Volume**: a fixed local NTFS or ReFS volume, compared by volume serial, never by drive letter; removable and network volumes are refused (the Recycle Bin does not keep their items), and FAT and exFAT are refused (no stable file identity).
 6. **Unchanged since shown**: same volume serial and 128-bit file id, same last-write time, and for files the same length.
-7. **Measure** the item now, walking a folder without entering reparse points and without opening any file for data.
+7. **Measure** the item now, walking a folder without entering reparse points and without opening any file for data. A cloud-tagged folder inside the item is not entered either, and the item is refused as a cloud file (step 9).
 8. **Recoverable**: see "Windows: recoverable moves".
 9. **Cloud**: see "Windows: recoverable moves".
 10. Not a volume root, the profile folder, the profiles folder, another user's profile, `Public` or `Default`.
@@ -68,7 +68,9 @@ Measured on Windows 11 (2026-10-16): moving an item to the Recycle Bin through t
 - an online-only or partially downloaded cloud file, and a folder holding one (recycling the folder would download it first; an online-only file is deleted for good). Two signals, either refuses: the "recall on data access" or "recall on open" attributes, and fewer bytes on disk than the file's length;
 - an item inside, or containing, a cloud-sync root (Never touch): deleting there deletes on every device.
 
-Inside a folder, a link, junction or mount point is never entered, and a folder holding one is refused ("contains a link or special file") until it is shown that recycling the folder leaves the link's target untouched; a compressed (WOF) file, or a folder holding one, is refused the same way until its recycle is shown to be recoverable.
+Inside a folder, a link, junction or mount point is never entered, and a folder holding one is refused ("contains a link or special file") until it is shown that recycling the folder leaves the link's target untouched; a folder holding a compressed (WOF) file is refused the same way until its recycle is shown to be recoverable (a WOF file on its own is already refused at step 3).
+
+Within step 8 the checks run in this order, the first failure refusing: the Recycle Bin off or disallowed; a link or special file inside (below); a path of 260 characters or more; too large; Recycle Bin full.
 
 What the gate cannot close (between the gate and the move another process may fill the Recycle Bin, or a cloud provider may free the file's space) is the consumer's duty:
 - run the gate immediately before each single item, never for a batch;
