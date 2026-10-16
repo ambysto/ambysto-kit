@@ -4,6 +4,8 @@
 Reads the four literals and compares them. It fails closed: each declaration must be found exactly once, and its
 whole literal body must be consumed by a strict grammar (`<id>: "<128 hex>"` in Swift, `[<id>] = "<128 hex>"` in C#,
 `"<16 hex>"` for revocations, with commas, whitespace and // comments). Anything left over is a failure, never "empty".
+Nothing may be chained onto a literal, and in C# each field is read once, exactly as the source of its frozen set.
+It is a guard against drift, not a proof: the key PR and every revocation PR are still HARD-reviewed.
 
 Usage: scripts/check-key-sets.py [swift-trusted swift-revocations cs-trusted cs-revocations]
 With no arguments it reads the real sources. Exit 0 = equal, 1 = different or unreadable, 2 = usage.
@@ -29,10 +31,16 @@ ANCHORS = {
     "cs-trusted": (r"Dictionary<byte,\s*string>\s+ProductionHex\s*=\s*new\(\)\s*\{", "{", "}", r"[ \t]*;[ \t]*(//[^\n]*)?(\n|$)"),
     "cs-revocations": (r"string\[\]\s+Ids\s*=\s*\[", "[", "]", r"[ \t]*;[ \t]*(//[^\n]*)?(\n|$)"),
 }
-# In C# a static field can still be changed elsewhere in its class (a static constructor, `.Add`, an indexer).
-# Each name must occur exactly twice in its file: the declaration and the one read that builds the frozen set.
+# In C# a static field can still be changed or wrapped elsewhere in its class (a static constructor, `.Add`, an
+# indexer, `Ids.Concat(...)`). Each name must occur exactly twice in its file: the declaration, and one read that is
+# exactly this text, so nothing can be added on the way into the verifier.
 CS_NAMES = {"cs-trusted": "ProductionHex", "cs-revocations": "Ids"}
-SKIP = r"(?:\s+|//[^\n]*)*"
+CS_READS = {
+    "cs-trusted": r"=\s*new\(\s*ProductionHex\s*\)\s*;",
+    "cs-revocations": r"=\s*Ids\.ToFrozenSet\(\s*StringComparer\.Ordinal\s*\)\s*;",
+}
+# A comment runs to the end of its line: the lookahead stops the regex from ending one early (at a "." inside it).
+SKIP = r"(?:\s+|//[^\n]*(?=\n|\Z))*"
 # re.ASCII: \d and \s mean ASCII digits and whitespace only, as the grammar says.
 TRUSTED_ENTRY = {
     "swift-trusted": re.compile(SKIP + r'(\d{1,3})\s*:\s*"([0-9A-Fa-f]{128})"' + SKIP + r"(,|$)", re.ASCII),
@@ -59,6 +67,8 @@ def body(kind, path):
         uses = len(re.findall(r"\b" + CS_NAMES[kind] + r"\b", text))
         if uses != 2:
             raise Unreadable(f"{kind}: {CS_NAMES[kind]} occurs {uses} times in {path}, expected 2 (declaration and one read)")
+        if len(re.findall(CS_READS[kind], text, re.ASCII)) != 1:
+            raise Unreadable(f"{kind}: {CS_NAMES[kind]} is not read exactly as the frozen set's source in {path}")
     i, depth = found[0].end(), 1
     start = i
     while i < len(text):
@@ -77,7 +87,13 @@ def body(kind, path):
         elif c == closing:
             depth -= 1
             if depth == 0:
-                if not re.match(after, text[i + 1:], re.ASCII):
+                rest = text[i + 1:]
+                tail = re.match(after, rest, re.ASCII)
+                if not tail:
+                    raise Unreadable(f"{kind}: unexpected text after the literal in {path}")
+                # Swift continues an expression on the next line with a leading dot (`.union(...)`): the next
+                # meaningful character after the literal's line must not be one.
+                if re.match(SKIP + r"\.", rest[tail.end():], re.ASCII):
                     raise Unreadable(f"{kind}: unexpected text after the literal in {path}")
                 return text[start:i]
         i += 1
