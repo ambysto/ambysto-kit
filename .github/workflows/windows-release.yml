@@ -1,4 +1,4 @@
-# APS-23: publishes the Ambysto.Kit.License NuGet package to GitHub Packages, from windows-vX.Y.Z tags on main only.
+# APS-23, APS-24: publishes the Ambysto.Kit.License and Ambysto.Kit.Safety NuGet packages to GitHub Packages, from windows-vX.Y.Z tags on main only.
 # Tags are the owner's: the ruleset "windows-release-tags" lets only a repository admin create, move or delete them.
 name: Windows release
 
@@ -53,11 +53,20 @@ jobs:
         working-directory: windows
         run: dotnet test -c Release --no-build tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj
 
-      - name: Pack
+      # One command per step: a multi-line pwsh step reports only its last command's exit code, so a failed first pack
+      # or push would pass unseen and release one package without the other.
+      - name: Pack (license)
         working-directory: windows
         run: dotnet pack src/Ambysto.Kit.License/Ambysto.Kit.License.csproj -c Release -p:Version=${{ env.VERSION }} -o ../artifacts
 
-      - name: Push to GitHub Packages
-        # The exact file, not a wildcard: on Windows `dotnet nuget push "artifacts/*.nupkg"` finds no file
-        # (windows-v0.1.0's run failed here; reproduced in the VM).
+      - name: Pack (safety)
+        working-directory: windows
+        run: dotnet pack src/Ambysto.Kit.Safety/Ambysto.Kit.Safety.csproj -c Release -p:Version=${{ env.VERSION }} -o ../artifacts
+
+      # The exact files, not a wildcard: on Windows `dotnet nuget push "artifacts/*.nupkg"` finds no file
+      # (windows-v0.1.0's run failed here; reproduced in the VM).
+      - name: Push to GitHub Packages (license)
         run: dotnet nuget push "artifacts/Ambysto.Kit.License.${{ env.VERSION }}.nupkg" --source https://nuget.pkg.github.com/ambysto/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --no-symbols
+
+      - name: Push to GitHub Packages (safety)
+        run: dotnet nuget push "artifacts/Ambysto.Kit.Safety.${{ env.VERSION }}.nupkg" --source https://nuget.pkg.github.com/ambysto/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --no-symbols
