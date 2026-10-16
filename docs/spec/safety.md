@@ -29,7 +29,7 @@ Apps **add** their own data folders (for example Space's journal folder) to this
 
 Windows note: a virtual-machine disk (`*.vhdx`, `*.vhd`) in an app's allowed root is not protected, like a VM image on macOS.
 
-Windows note, the facts an allowed-root rule may use: the item's canonical path, the profile folder, the profiles folder, the item's volume and the profile's volume, whether the item is in a system location, and for the item and every folder above it its owner and whether that owner is the current user. "Owned by the current user" means the user's own account only: a folder owned by `Administrators` (made from an elevated prompt or by an installer) is not.
+Windows note, the facts an allowed-root rule may use: the item's canonical path, the profile folder, the profiles folder, the item's volume and the profile's volume, whether the item is in a system location, and for the item and every folder above it its owner and whether that owner is the current user (the owner of a folder above the item that the user may not read, such as `Public`, is reported as unknown and never as the current user's; the item's own owner, and its contents', must be readable). "Owned by the current user" means the user's own account only: a folder owned by `Administrators` (made from an elevated prompt or by an installer) is not.
 
 ## The gate
 
@@ -114,7 +114,7 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 
 A destination that does not exist yet passes: its folder exists; protection (step 7, by path and by identity of every existing folder above it); and the app's separate restore rule (a restore is judged differently from a delete: the item is not there yet).
 
-Windows note: putting back is a move too, so the environment check (Windows step 1) runs first; identity is volume serial + file id. A destination that already exists is refused ("destination exists"), and so is one whose folder is gone ("destination folder gone"); a destination inside a cloud-sync root is refused as a cloud-sync folder. The restore move itself is the app's, never the shell's restore, which blocks on a dialog when the destination is taken.
+Windows note: putting back is a move too, so the environment check (Windows step 1) runs first; identity is volume serial + file id. A destination that already exists is refused ("destination exists"); then a destination inside a cloud-sync root is refused as a cloud-sync folder, even when its folder is gone; then one whose folder is gone ("destination folder gone"). The restore move itself is the app's, never the shell's restore, which blocks on a dialog when the destination is taken.
 
 ## In use
 
