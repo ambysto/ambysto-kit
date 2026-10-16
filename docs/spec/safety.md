@@ -29,7 +29,7 @@ Apps **add** their own data folders (for example Space's journal folder) to this
 
 Windows note: a virtual-machine disk (`*.vhdx`, `*.vhd`) in an app's allowed root is not protected, like a VM image on macOS.
 
-Windows note, the facts an allowed-root rule may use: the item's canonical path, the profile folder, the profiles folder, the item's volume and the profile's volume, whether the item is in a system location, and for the item and every folder above it its owner and whether that owner is the current user (the owner of a folder above the item that the user may not read, such as `Public`, is reported as unknown and never as the current user's; the item's own owner, and its contents', must be readable). "Owned by the current user" means the user's own account only: a folder owned by `Administrators` (made from an elevated prompt or by an installer) is not.
+Windows note, the facts an allowed-root rule may use: the item's canonical path, the profile folder, the profiles folder, the item's volume and the profile's volume, whether the item is in a system location, and for the item and every folder above it its owner and whether that owner is the current user (the owner of a folder above the item that the user may open but whose owner it may not read is reported as unknown and never as the current user's; the item's own owner, and its contents', must be readable; a folder above the item that cannot be opened at all, as `C:\Users\Public` for a standard user, refuses with "Could not verify": its identity is compared too). "Owned by the current user" means the user's own account only: a folder owned by `Administrators` (made from an elevated prompt or by an installer) is not.
 
 ## The gate
 
