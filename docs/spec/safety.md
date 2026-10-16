@@ -47,7 +47,7 @@ Immediately before every move, in this order; the first failure refuses the item
 Windows note: the order on Windows, the first failure refusing the item:
 1. **Environment**: not elevated, not SYSTEM, an interactive session (the counterpart of the macOS Full Disk Access check).
 2. **Exists**, read without opening first (the spelling rules of step 4 are applied to the given path after step 1 and before this step, so a network path to a missing file is refused for its form, not as gone); an item marked "recall on open" is never opened and goes straight to the cloud refusal (step 9), the one exception to this order. Otherwise it is opened for attributes only, never for data.
-3. **Not a link or special file**: the item has no reparse point, or a cloud one (step 9); any other kind (symbolic link, junction, mount point, app execution alias, compression, deduplication, projection, unknown) is refused.
+3. **Not a link or special file**: the item has no reparse point, or a cloud one (step 9); any other kind (symbolic link, junction, mount point, app execution alias, deduplication, projection, unknown) is refused. A compressed (WOF) file is not refused, whether or not Windows shows its tag (see "Windows: recoverable moves").
 4. **Spelling**: network (UNC), device and stream paths and names ending in a dot or a space are refused, on the given path before step 2 and again on the canonical path (a mapped drive resolves to a network path). The canonical path is the plain form with short (8.3) names expanded and no `\\?\` prefix.
 5. **Volume**: a fixed local NTFS or ReFS volume, compared by volume serial, never by drive letter; removable and network volumes are refused (the Recycle Bin does not keep their items), and FAT and exFAT are refused (no stable file identity).
 6. **Unchanged since shown**: same volume serial and 128-bit file id, same last-write time, and for files the same length.
@@ -68,7 +68,7 @@ Measured on Windows 11 (2026-10-16): moving an item to the Recycle Bin through t
 - an online-only or partially downloaded cloud file, and a folder holding one (recycling the folder would download it first; an online-only file is deleted for good). Two signals, either refuses: the "recall on data access" or "recall on open" attributes, and fewer bytes on disk than the file's length;
 - an item inside, or containing, a cloud-sync root (Never touch): deleting there deletes on every device.
 
-Inside a folder, a link, junction or mount point is never entered. Measured (2026-10-16): recycling a folder that holds a junction or a symbolic link leaves the target untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is allowed. A folder holding a **volume mount point** is refused ("contains a link or special file"): the Recycle Bin counts the mounted volume's whole capacity as part of the folder, so the folder is deleted for good. A compressed (WOF) file, on its own or in a folder, recycles and comes back intact and is allowed; Windows shows it to a standard user as a plain file.
+Inside a folder, a link, junction or mount point is never entered. Measured (2026-10-16): recycling a folder that holds a junction or a symbolic link leaves the target untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is allowed. A folder holding a **volume mount point** is refused ("contains a link or special file"): the Recycle Bin counts the mounted volume's whole capacity as part of the folder, so the folder can be deleted for good. A compressed (WOF) file, on its own or in a folder, recycles and comes back intact and is allowed; Windows shows it to a standard user as a plain file.
 
 Within step 8 the checks run in this order, the first failure refusing: the Recycle Bin off or disallowed; a link or special file inside (below); a path of 260 characters or more; too large; Recycle Bin full.
 
@@ -92,7 +92,7 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 | elevated or SYSTEM | "Moving is off while running as administrator." |
 | gone | "Already gone" |
 | link or special file | "A link or special file: never followed." |
-| contains a link or special file | "Holds a link or special file: not moved until that is known to be safe." |
+| contains a link or special file | "Holds a mounted drive: the Recycle Bin could not keep it." |
 | path form | "Network, device and stream paths are not supported." |
 | volume | "Only fixed NTFS or ReFS drives are supported." |
 | changed | "Changed since the scan" |

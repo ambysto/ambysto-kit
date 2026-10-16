@@ -14,7 +14,7 @@ public enum RefusalReason
     AlreadyGone,
     /// <summary>A link, junction, mount point or other special file.</summary>
     LinkOrSpecialFile,
-    /// <summary>A folder that holds a link, junction, mount point or compressed (WOF) file.</summary>
+    /// <summary>A folder that holds a volume mount point (the Recycle Bin would count the mounted volume; junctions, symbolic links and WOF files inside a folder are allowed).</summary>
     ContainsLinkOrSpecialFile,
     /// <summary>A network, device or stream path, or a name ending in a dot or a space.</summary>
     UnsupportedPathForm,
