@@ -50,11 +50,11 @@ Parsing uses **ASCII only**:
 1. Remove `-`, space, tab, CR and LF.
 2. Remove a leading `AMB` in any case. (Format-1 data always starts with `0`, so this is unambiguous.)
 3. Every remaining character must be an ASCII letter or digit. Upper-case it; read `O` as `0` and `I`, `L` as `1`; `U` and anything else is malformed.
-4. A length whose remainder modulo 8 is 1, 3 or 6 is malformed. The unused bits of the last symbol must be zero, otherwise malformed.
+4. No symbols left (an empty text, or one that held only separators and `AMB`) is malformed. A length whose remainder modulo 8 is 1, 3 or 6 is malformed. The unused bits of the last symbol must be zero, otherwise malformed.
 
 ## File
 
-An `.ambystokey` file holds the text in UTF-8, optionally followed by a newline, at most **4096 bytes**; a leading UTF-8 byte order mark (`EF BB BF`) is ignored; a file that is not valid UTF-8 is malformed. Uniform type identifier `com.ambysto.license-key`, conforming to `public.data`. Apps declare it as an imported type and as a document type. With several Ambysto apps installed, the system opens the file with one of them; that app explains which apps the key covers if it does not cover itself. A suite key activates only the app it was opened in; each app is activated separately.
+An `.ambystokey` file holds the text in UTF-8, optionally followed by a newline, at most **4096 bytes**; a leading UTF-8 byte order mark (`EF BB BF`) is ignored; a file that is not valid UTF-8 is malformed. The 4096 bytes are counted on the raw file, the byte order mark included. A file that is larger or missing, or that cannot be read, is malformed too; so is a UTF-16 byte order mark, which is not valid UTF-8. Uniform type identifier `com.ambysto.license-key`, conforming to `public.data`. Apps declare it as an imported type and as a document type. With several Ambysto apps installed, the system opens the file with one of them; that app explains which apps the key covers if it does not cover itself. A suite key activates only the app it was opened in; each app is activated separately.
 
 ## Verification order
 
@@ -103,7 +103,7 @@ Published on purpose so other implementations can test against the vectors. **Re
 
 ## Windows note
 
-.NET: `ECDsa.Create()`, then `ImportParameters` with `Curve = ECCurve.NamedCurves.nistP256` and `Q.X`, `Q.Y` = the two halves of the raw public key; verify with `VerifyData(message, signature, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)`. Decode the licensee with `new UTF8Encoding(false, true)` so invalid bytes throw instead of being replaced. Days count in UTC.
+.NET: `ECDsa.Create()`, then `ImportParameters` with `Curve = ECCurve.NamedCurves.nistP256` and `Q.X`, `Q.Y` = the two halves of the raw public key; verify with `VerifyData(message, signature, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)`. Decode the licensee with `new UTF8Encoding(false, true)` so invalid bytes throw instead of being replaced. Read an `.ambystokey` file as raw bytes, never through a reader that detects the encoding. Days count in UTC. Library `Ambysto.Kit.License` (NuGet package of the same name, from `windows-v*` tags).
 
 ## macOS note
 
