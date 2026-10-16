@@ -103,6 +103,8 @@ public sealed class VerifierTests
     {
         Assert.ThrowsExactly<ArgumentException>(() => new TrustedKeys(new Dictionary<byte, string> { [1] = new string('0', 128) }));
         Assert.ThrowsExactly<ArgumentException>(() => new TrustedKeys(new Dictionary<byte, string> { [1] = TestKey.PublicHex[..126] }));
+        Assert.ThrowsExactly<ArgumentException>(() => new TrustedKeys(new Dictionary<byte, string> { [1] = "zz" + TestKey.PublicHex[2..] }));
+        Assert.ThrowsExactly<ArgumentException>(() => new TrustedKeys(new Dictionary<byte, string> { [1] = TestKey.PublicHex[..127] }));
         // A point off the curve: the test key's x twice.
         Assert.ThrowsExactly<ArgumentException>(() => new TrustedKeys(new Dictionary<byte, string> { [1] = TestKey.PublicHex[..64] + TestKey.PublicHex[..64] }));
         Assert.HasCount(1, new TrustedKeys(new Dictionary<byte, string> { [7] = TestKey.PublicHex }).Ids);

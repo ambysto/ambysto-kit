@@ -4,4 +4,6 @@ internal static class Revocations
     [
         RevokedIds.First,
     ];
+
+    internal static FrozenSet<string> All { get; } = Ids.ToFrozenSet(StringComparer.Ordinal);
 }

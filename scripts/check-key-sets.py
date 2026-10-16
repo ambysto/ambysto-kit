@@ -20,19 +20,25 @@ DEFAULTS = [
     ROOT / "windows/src/Ambysto.Kit.License/Revocations.cs",
 ]
 
-# Where each literal starts (the opening bracket is the last character of the match) and which bracket closes it.
+# Where each literal starts (the opening bracket is the last character of the match), which bracket closes it,
+# and what must follow the closing bracket on the same line: nothing may be chained onto the literal
+# (for example `].merging(...)` or `.union(...)`), so the literal is the whole value.
 ANCHORS = {
-    "swift-trusted": (r"static\s+let\s+production\s*=\s*TrustedKeys\(\s*rawHex:\s*\[", "[", "]"),
-    "swift-revocations": (r"static\s+let\s+all\s*:\s*Set<String>\s*=\s*\[", "[", "]"),
-    "cs-trusted": (r"Dictionary<byte,\s*string>\s+ProductionHex\s*=\s*new\(\)\s*\{", "{", "}"),
-    "cs-revocations": (r"string\[\]\s+Ids\s*=\s*\[", "[", "]"),
+    "swift-trusted": (r"static\s+let\s+production\s*=\s*TrustedKeys\(\s*rawHex:\s*\[", "[", "]", r"[ \t]*\)[ \t]*(//[^\n]*)?(\n|$)"),
+    "swift-revocations": (r"static\s+let\s+all\s*:\s*Set<String>\s*=\s*\[", "[", "]", r"[ \t]*(//[^\n]*)?(\n|$)"),
+    "cs-trusted": (r"Dictionary<byte,\s*string>\s+ProductionHex\s*=\s*new\(\)\s*\{", "{", "}", r"[ \t]*;[ \t]*(//[^\n]*)?(\n|$)"),
+    "cs-revocations": (r"string\[\]\s+Ids\s*=\s*\[", "[", "]", r"[ \t]*;[ \t]*(//[^\n]*)?(\n|$)"),
 }
+# In C# a static field can still be changed elsewhere in its class (a static constructor, `.Add`, an indexer).
+# Each name must occur exactly twice in its file: the declaration and the one read that builds the frozen set.
+CS_NAMES = {"cs-trusted": "ProductionHex", "cs-revocations": "Ids"}
 SKIP = r"(?:\s+|//[^\n]*)*"
+# re.ASCII: \d and \s mean ASCII digits and whitespace only, as the grammar says.
 TRUSTED_ENTRY = {
-    "swift-trusted": re.compile(SKIP + r'(\d{1,3})\s*:\s*"([0-9A-Fa-f]{128})"' + SKIP + r"(,|$)"),
-    "cs-trusted": re.compile(SKIP + r'\[\s*(\d{1,3})\s*\]\s*=\s*"([0-9A-Fa-f]{128})"' + SKIP + r"(,|$)"),
+    "swift-trusted": re.compile(SKIP + r'(\d{1,3})\s*:\s*"([0-9A-Fa-f]{128})"' + SKIP + r"(,|$)", re.ASCII),
+    "cs-trusted": re.compile(SKIP + r'\[\s*(\d{1,3})\s*\]\s*=\s*"([0-9A-Fa-f]{128})"' + SKIP + r"(,|$)", re.ASCII),
 }
-REVOKED_ENTRY = re.compile(SKIP + r'"([0-9A-Fa-f]{16})"' + SKIP + r"(,|$)")
+REVOKED_ENTRY = re.compile(SKIP + r'"([0-9A-Fa-f]{16})"' + SKIP + r"(,|$)", re.ASCII)
 
 
 class Unreadable(Exception):
@@ -45,10 +51,14 @@ def body(kind, path):
         text = path.read_text(encoding="utf-8")
     except OSError as e:
         raise Unreadable(f"{kind}: cannot read {path}: {e.strerror}")
-    pattern, opening, closing = ANCHORS[kind]
-    found = list(re.finditer(pattern, text))
+    pattern, opening, closing, after = ANCHORS[kind]
+    found = list(re.finditer(pattern, text, re.ASCII))
     if len(found) != 1:
         raise Unreadable(f"{kind}: declaration found {len(found)} times in {path}, expected once")
+    if kind in CS_NAMES:
+        uses = len(re.findall(r"\b" + CS_NAMES[kind] + r"\b", text))
+        if uses != 2:
+            raise Unreadable(f"{kind}: {CS_NAMES[kind]} occurs {uses} times in {path}, expected 2 (declaration and one read)")
     i, depth = found[0].end(), 1
     start = i
     while i < len(text):
@@ -67,6 +77,8 @@ def body(kind, path):
         elif c == closing:
             depth -= 1
             if depth == 0:
+                if not re.match(after, text[i + 1:], re.ASCII):
+                    raise Unreadable(f"{kind}: unexpected text after the literal in {path}")
                 return text[start:i]
         i += 1
     raise Unreadable(f"{kind}: literal not closed in {path}")
@@ -74,14 +86,14 @@ def body(kind, path):
 
 def entries(kind, text, entry):
     """Consumes the whole body entry by entry; anything the grammar does not take is a failure."""
-    stripped = re.fullmatch(SKIP + r"(:)?" + SKIP, text)
+    stripped = re.fullmatch(SKIP + r"(:)?" + SKIP, text, re.ASCII)
     if stripped:  # empty: "", whitespace, comments, or Swift's "[:]"
         if stripped.group(1) and kind != "swift-trusted":
             raise Unreadable(f"{kind}: unexpected ':' in an empty literal")
         return []
     found, pos = [], 0
     while pos < len(text):
-        if re.fullmatch(SKIP, text[pos:]):  # after a trailing comma: only whitespace and comments left
+        if re.fullmatch(SKIP, text[pos:], re.ASCII):  # after a trailing comma: only whitespace and comments left
             break
         m = entry.match(text, pos)
         if not m or m.end() == pos:

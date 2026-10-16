@@ -32,6 +32,10 @@ check fail-unrecognised-cs 1 "cs-trusted: unrecognised entry"
 check fail-unrecognised-revocation 1 "cs-revocations: unrecognised entry"
 check fail-missing-declaration 1 "cs-revocations: declaration found 0 times"
 check fail-twice 1 "swift-trusted: declaration found 2 times"
+check fail-chained-swift 1 "swift-trusted: unexpected text after the literal"
+check fail-chained-revocation-swift 1 "swift-revocations: unexpected text after the literal"
+check fail-cs-static-constructor 1 "cs-trusted: ProductionHex occurs 3 times"
+check fail-unicode-digit 1 "swift-trusted: unrecognised entry"
 
 # The real sources, the usage error and a missing file.
 python3 -I "$CHECK" >/dev/null 2>&1 && echo "PASS real-sources (exit 0)" || { echo "FAIL real-sources"; bad=1; }

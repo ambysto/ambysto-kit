@@ -27,7 +27,15 @@ internal sealed class TrustedKeys
         var keys = new Dictionary<byte, ECParameters>();
         foreach (var (id, hex) in rawHex)
         {
-            var raw = Convert.FromHexString(hex);
+            byte[] raw;
+            try
+            {
+                raw = Convert.FromHexString(hex);
+            }
+            catch (FormatException e)
+            {
+                throw new ArgumentException($"Trusted signing key {id} is not hex.", nameof(rawHex), e);
+            }
             if (raw.Length != 64)
             {
                 throw new ArgumentException($"Trusted signing key {id} is not 64 bytes.", nameof(rawHex));
