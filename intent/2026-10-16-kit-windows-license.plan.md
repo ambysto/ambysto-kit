@@ -20,12 +20,12 @@ This plan is self-contained with the intent and the spec. HARD (verifier, parsin
 
 `internal` plus `InternalsVisibleTo` is a name-based compile-time boundary, not a security one: anyone can ship code that reflects into the library. That fits the honesty model (APS-10: a deterrent, not protection); the point is that no app can trust the test key by accident.
 
-`TrustedKeys` (internal): `Production` (empty dictionary today), `Test` (id 0, the published key), `internal TrustedKeys(IReadOnlyDictionary<byte, string> rawHex)`, which validates each key once (64 bytes, a point on P-256) and throws if a compiled-in key is broken (a build defect, caught by the pin test). `Revocations.All` (internal, empty). The production data is written in one fixed literal form so `scripts/check-key-sets.py` can read it (below).
+`TrustedKeys` (internal): `Production` (empty dictionary today) and `internal TrustedKeys(IReadOnlyDictionary<byte, string> rawHex)`, which validates each key once (64 bytes, a point on P-256) and throws if a compiled-in key is broken (a build defect, caught by the pin test). **The published test key (id 0) is not in the library at all** (changed while building group 3): it lives in the test project, which builds its verifiers through the internal constructor. Windows CNG reports some invalid points as `PlatformNotSupportedException`, not `CryptographicException`; the constructor turns both into `ArgumentException`. `Revocations.All` (internal, empty). The production data is written in one fixed literal form so `scripts/check-key-sets.py` can read it (below).
 
 **Days.** Day *d* is `new DateOnly(2026, 1, 1).AddDays(d)`; `updatesUntil` 0 → `null`.
 
 **Verification order** (`Verify`), each step returning at once:
-1. **Text → bytes** (`CrockfordText.Decode`, ASCII only, no `char.IsLetterOrDigit`, no `ToUpperInvariant`, which maps `ı` U+0131 to `I`): drop `-`, space, tab, CR, LF; drop a leading `AMB` in any ASCII case; every remaining char must be in `0-9`, `A-Z`, `a-z` (compared as code units); upper-case by arithmetic; `O`→`0`, `I`/`L`→`1`; `U` → malformed; length mod 8 ∈ {1, 3, 6} → malformed; the unused low bits of the last symbol must be zero. A text with no symbols left after the separators and the `AMB` prefix are dropped (`""`, `AMB`, `-- --`, `AMB-`) → malformed; see "Spec gap" below.
+1. **Text → bytes** (`CrockfordText.Decode`, ASCII only, no `char.IsLetterOrDigit`, no culture or Unicode casing): drop `-`, space, tab, CR, LF; drop a leading `AMB` in any ASCII case; every remaining char must be in `0-9`, `A-Z`, `a-z` (compared as code units); upper-case by arithmetic; `O`→`0`, `I`/`L`→`1`; `U` → malformed; length mod 8 ∈ {1, 3, 6} → malformed; the unused low bits of the last symbol must be zero. A text with no symbols left after the separators and the `AMB` prefix are dropped (`""`, `AMB`, `-- --`, `AMB-`) → malformed; see "Spec gap" below.
 2. **Version**: `bytes[0] == 1`, else unsupported version.
 3. **Length**: `bytes.Length >= 20`, `n = bytes[19]` in 1…64, `bytes.Length == 20 + n + 64`; else malformed. (Steps 2 and 3 in this order: a one-byte key with version 2 is "unsupported version", as the spec orders it.)
 4. **Licensee**: `new UTF8Encoding(false, true).GetString(bytes, 20, n)`; `DecoderFallbackException` → malformed. Never normalised.
@@ -72,17 +72,17 @@ The intent's `status` moves to `building` with group 1's commit, `verified` afte
 | Risk | Caught by |
 |---|---|
 | Windows CNG refuses high-S signatures, so vector "high S" fails | criterion 1 in the VM. If it happens: stop and ask; the spec says high-S is valid and cannot change here |
-| Unicode traps in parsing (`IsLetterOrDigit`, `ToUpperInvariant('ı')`, full-width digits) accept a non-ASCII key | group 2 tests, plus the mutation check below |
+| Unicode traps in parsing (`IsLetterOrDigit`, culture casing, full-width digits) accept a non-ASCII key | group 2 tests, plus the mutation check below |
 | `Encoding.UTF8` replaces invalid bytes instead of failing | the vectors' invalid-UTF-8 licensee case; the strict decoder |
 | `File.ReadAllText` decodes a UTF-16 file and verifies it | group 4 UTF-16 BOM tests |
 | A shared `ECDsa` used from two threads | per-call instances; a test verifies 1,000 keys on 8 threads in parallel and compares the results |
 | The two key copies drift (the intent's MAJOR) | `check-key-sets.py` in the workflow and in `CLAUDE.md`'s Verify list |
 | The vectors file moves or the test cannot find it, and the tests pass without vectors | group 1: missing file fails; group 3 asserts 35 vectors were read |
 | A tag pushed by someone else publishes a package | tag protection (owner step), the workflow runs only on `windows-v*` tags |
-| A test-key trust leaks into a release | `TrustedKeys.Test` is `internal`; criterion 5's default-trust test; review |
+| A test-key trust leaks into a release | the test key is not in the library; criterion 5's default-trust test and the production pin; review |
 | `dotnet` in the VM resolves to the machine-wide .NET 8 | `global.json` pins 10.0.402; the VM calls the user-installed `dotnet.exe` by full path |
 
-**Mutation checks** (break on purpose, see a test fail, restore; recorded in the review log): (a) accept any `char.IsLetterOrDigit` in step 1 → the Arabic-Indic digit test fails; (b) check revocation before the signature → the "tampered and revoked" vector fails; (c) skip the unused-bits check → its test fails; (d) read the file with `File.ReadAllText` → the UTF-16 BOM test fails; (e) build `LicenseVerifier()` on `TrustedKeys.Test` → the criterion 5 default-trust test fails; (f) change `Length > 4096` to `>= 4096` → the exactly-4096-bytes test fails; (g) in `check-key-sets.py`, skip the leftover check → the "unrecognised form" fixtures pass and their test fails.
+**Mutation checks** (break on purpose, see a test fail, restore; recorded in the review log): (a) accept any `char.IsLetterOrDigit` in step 1 → the Arabic-Indic digit test fails; (b) check revocation before the signature → the "tampered and revoked" vector fails; (c) skip the unused-bits check → its test fails; (d) read the file with `File.ReadAllText` → the UTF-16 BOM test fails; (e) put the test key into the production literal → the criterion 5 default-trust test and the production pin fail; (f) change `Length > 4096` to `>= 4096` → the exactly-4096-bytes test fails; (g) in `check-key-sets.py`, skip the leftover check → the "unrecognised form" fixtures pass and their test fails.
 
 ## Proof (what "done" means)
 
@@ -114,3 +114,23 @@ Not run here: anything on macOS (out of scope on this machine). Waiting for the 
 4. MINOR: `.snupkg` is not accepted by GitHub's registry; the tag was not checked to be on `main`. Fixed: embedded symbols, `--no-symbols`, the `merge-base` check.
 5. MINOR: criterion 8 lacked `dotnet list package`. Fixed.
 6. NIT: confirm the SDK version (10.0.402 is the one installed); `Products` as a `FrozenSet`. Fixed.
+
+**Code review (hard-reviewer: Fable 5.1, 2026-10-16), groups 2–6: PASS** with 1 MINOR and 3 NIT, then three fix rounds on the key-set check, each re-checked by the same reviewer:
+1. MINOR: `check-key-sets.py` ignored text after a literal (a chained `].merging(...)` / `.union(...)`, a C# static constructor). Round 1 (`a728361`): a terminator right after the bracket, each C# field named exactly twice. Re-check: two more bypasses (a next-line `.union`, a wrapped C# read). Round 2 (`3081fcf`): no leading dot after the literal, the C# read must be exact; comments anchored to the end of their line. Re-check: a block comment or `#if` before a leading dot still passed. Round 3 (owner's go-ahead, `f238925`): an allow-list after each literal (`}`, a letter, `_`, `@` or end of file). **CONFIRMED**: every form tried (16) fails closed; CRLF files read correctly; fixtures 25 of 25.
+2. NIT: the grammar is ASCII-only (`re.ASCII`). Fixed.
+3. NIT: a non-hex compiled-in key is an `ArgumentException`. Fixed, with tests.
+4. NIT: a key file another program holds open for writing is malformed. Kept: within the spec ("cannot be read").
+
+## Proof record (2026-10-16, Windows 11 VM unless noted)
+
+| Criterion | Result |
+|---|---|
+| 1–8 | `dotnet test -c Release`: 45 of 45; 35 vectors read, all to their documented result on CNG (high-S included); default verifier: exactly 20 vectors reach step 5, all `UnknownSigningKey`; 100,000 random strings and 4,320 single-byte changes refused; 10,000 mutated texts never throw; median verify 1.27–1.45 ms; 8 threads equal a sequential run; references: runtime only, no `System.Net` |
+| 8 (also) | `dotnet list … package`: no package |
+| 9 | `dotnet build -c Release`: 0 warnings, 0 errors |
+| 10 | `check-key-sets.py`: PASS (host); `check-key-sets-fixtures.sh`: 25 of 25 (host) |
+| 11 | `git diff main -- Sources Tests Package.swift`: empty; `docs/spec` only the two spec commits of the intent PR |
+| 12 | Rehearsed with a local feed: the package installs into a console app outside the repo, a valid test-key vector is `UnknownSigningKey` with the spec's message, the DLL embeds its PDB, no `.snupkg`. **Open:** the real feed after the owner's `windows-v0.1.0` tag |
+| Mutation checks | (a) Unicode parsing, (b) revocation before signature, (c) no unused-bits check, (d) `File.ReadAllText`, (e) test key in production, (f) `>= 4096`, (g) leftovers ignored: each fails its tests |
+
+Not run: anything on macOS (out of scope on this machine).

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ambysto.Kit.License/Ambysto.Kit.License.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj" />
+  </Folder>
+</Solution>

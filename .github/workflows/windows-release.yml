@@ -1,0 +1,54 @@
+# APS-23: publishes the Ambysto.Kit.License NuGet package to GitHub Packages, from windows-vX.Y.Z tags on main only.
+# Tags are the owner's: the ruleset "windows-release-tags" lets only a repository admin create, move or delete them.
+name: Windows release
+
+on:
+  push:
+    tags: ['windows-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Version from the tag
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#windows-v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag $GITHUB_REF_NAME is not windows-vX.Y.Z"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: The tagged commit is on main
+        shell: bash
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: windows/global.json
+
+      - name: Swift and .NET key sets are equal
+        run: python -I scripts/check-key-sets.py
+
+      - name: Test
+        working-directory: windows
+        run: dotnet test -c Release Ambysto.Kit.slnx
+
+      - name: Pack
+        working-directory: windows
+        run: dotnet pack src/Ambysto.Kit.License/Ambysto.Kit.License.csproj -c Release -p:Version=${{ env.VERSION }} -o ../artifacts
+
+      - name: Push to GitHub Packages
+        run: dotnet nuget push "artifacts/*.nupkg" --source https://nuget.pkg.github.com/ambysto/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --no-symbols
