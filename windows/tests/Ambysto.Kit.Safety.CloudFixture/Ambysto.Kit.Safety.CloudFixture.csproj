@@ -1,9 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Test-only Cloud Files provider (placeholders and a fetch log) for the cloud rules; filled in plan group 3. Never shipped. -->
+  <!-- Test-only Cloud Files provider for the cloud rules of docs/spec/safety.md: registers a sync root, creates
+       online-only / pinned / partly and fully downloaded placeholders, serves or denies downloads and logs every fetch
+       with the reader's process. Ported from the test machine's provider, which passed an independent review with a
+       two-session self-test. Never shipped. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Ambysto.Kit.Safety.CloudFixture</AssemblyName>
   </PropertyGroup>
 </Project>

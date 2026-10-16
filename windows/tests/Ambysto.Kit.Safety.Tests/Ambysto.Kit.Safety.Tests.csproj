@@ -1,10 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- MSTest (Microsoft's own), test project only (APS-23 decision). The acceptance tests arrive in plan group 3. -->
+  <!-- MSTest (Microsoft's own), test project only (APS-23 decision). The acceptance tests of plan group 3: the contract
+       docs/spec/safety.md and the intent's criteria, written before the implementation. Fixtures are real files, real
+       registry values of the test user and the test cloud provider; every setting a test changes is restored. -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <RootNamespace>Ambysto.Kit.Safety.Tests</RootNamespace>
+    <!-- Test-side P/Invoke (LibraryImport) for fixtures: reparse points, subst, mapped drives, the Recycle Bin. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.4.1" />
