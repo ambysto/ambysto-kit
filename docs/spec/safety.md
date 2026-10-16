@@ -68,7 +68,7 @@ Measured on Windows 11 (2026-10-16): moving an item to the Recycle Bin through t
 - an online-only or partially downloaded cloud file, and a folder holding one (recycling the folder would download it first; an online-only file is deleted for good). Two signals, either refuses: the "recall on data access" or "recall on open" attributes, and fewer bytes on disk than the file's length;
 - an item inside, or containing, a cloud-sync root (Never touch): deleting there deletes on every device.
 
-Inside a folder, a link, junction or mount point is never entered. Measured (2026-10-16): recycling a folder that holds a junction or a symbolic link leaves the target untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is allowed. A folder holding a **volume mount point** is refused ("contains a link or special file"): the Recycle Bin counts the mounted volume's whole capacity as part of the folder, so the folder can be deleted for good. A compressed (WOF) file, on its own or in a folder, recycles and comes back intact and is allowed; Windows shows it to a standard user as a plain file.
+Inside a folder, a link, junction or mount point is never entered. Measured (2026-10-16): recycling a folder that holds a junction or a symbolic link leaves the target untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is allowed. A folder holding a **volume mount point** is refused ("contains a link or special file"): the Recycle Bin counts the mounted volume's whole capacity as part of the folder, so the folder can be deleted for good. A compressed (WOF) file, on its own or in a folder, recycles and comes back intact and is allowed; Windows shows it to a standard user as a plain file. Any other special file inside a folder (a reparse kind that is not a link, junction, mount point, cloud placeholder or WOF file) refuses the folder the same way as a mount point: what the Recycle Bin does with it is not known.
 
 Within step 8 the checks run in this order, the first failure refusing: the Recycle Bin off or disallowed; a link or special file inside (below); a path of 260 characters or more; too large; Recycle Bin full.
 
@@ -92,7 +92,7 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 | elevated or SYSTEM | "Moving is off while running as administrator." |
 | gone | "Already gone" |
 | link or special file | "A link or special file: never followed." |
-| contains a link or special file | "Holds a mounted drive: the Recycle Bin could not keep it." |
+| contains a link or special file | "Holds a mounted drive or a special file the Recycle Bin may not keep." |
 | path form | "Network, device and stream paths are not supported." |
 | volume | "Only fixed NTFS or ReFS drives are supported." |
 | changed | "Changed since the scan" |
