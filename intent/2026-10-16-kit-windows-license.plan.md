@@ -25,7 +25,7 @@ This plan is self-contained with the intent and the spec. HARD (verifier, parsin
 **Days.** Day *d* is `new DateOnly(2026, 1, 1).AddDays(d)`; `updatesUntil` 0 → `null`.
 
 **Verification order** (`Verify`), each step returning at once:
-1. **Text → bytes** (`CrockfordText.Decode`, ASCII only, no `char.IsLetterOrDigit`, no `ToUpperInvariant`, which maps `ı` U+0131 to `I`): drop `-`, space, tab, CR, LF; drop a leading `AMB` in any ASCII case; every remaining char must be in `0-9`, `A-Z`, `a-z` (compared as code units); upper-case by arithmetic; `O`→`0`, `I`/`L`→`1`; `U` → malformed; length mod 8 ∈ {1, 3, 6} → malformed; the unused low bits of the last symbol must be zero. A text with no symbols left after the separators and the `AMB` prefix are dropped (`""`, `AMB`, `-- --`, `AMB-`) → malformed; see "Spec gap" below.
+1. **Text → bytes** (`CrockfordText.Decode`, ASCII only, no `char.IsLetterOrDigit`, no culture or Unicode casing): drop `-`, space, tab, CR, LF; drop a leading `AMB` in any ASCII case; every remaining char must be in `0-9`, `A-Z`, `a-z` (compared as code units); upper-case by arithmetic; `O`→`0`, `I`/`L`→`1`; `U` → malformed; length mod 8 ∈ {1, 3, 6} → malformed; the unused low bits of the last symbol must be zero. A text with no symbols left after the separators and the `AMB` prefix are dropped (`""`, `AMB`, `-- --`, `AMB-`) → malformed; see "Spec gap" below.
 2. **Version**: `bytes[0] == 1`, else unsupported version.
 3. **Length**: `bytes.Length >= 20`, `n = bytes[19]` in 1…64, `bytes.Length == 20 + n + 64`; else malformed. (Steps 2 and 3 in this order: a one-byte key with version 2 is "unsupported version", as the spec orders it.)
 4. **Licensee**: `new UTF8Encoding(false, true).GetString(bytes, 20, n)`; `DecoderFallbackException` → malformed. Never normalised.
@@ -72,7 +72,7 @@ The intent's `status` moves to `building` with group 1's commit, `verified` afte
 | Risk | Caught by |
 |---|---|
 | Windows CNG refuses high-S signatures, so vector "high S" fails | criterion 1 in the VM. If it happens: stop and ask; the spec says high-S is valid and cannot change here |
-| Unicode traps in parsing (`IsLetterOrDigit`, `ToUpperInvariant('ı')`, full-width digits) accept a non-ASCII key | group 2 tests, plus the mutation check below |
+| Unicode traps in parsing (`IsLetterOrDigit`, culture casing, full-width digits) accept a non-ASCII key | group 2 tests, plus the mutation check below |
 | `Encoding.UTF8` replaces invalid bytes instead of failing | the vectors' invalid-UTF-8 licensee case; the strict decoder |
 | `File.ReadAllText` decodes a UTF-16 file and verifies it | group 4 UTF-16 BOM tests |
 | A shared `ECDsa` used from two threads | per-call instances; a test verifies 1,000 keys on 8 threads in parallel and compares the results |
