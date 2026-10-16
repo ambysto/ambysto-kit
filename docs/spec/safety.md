@@ -29,6 +29,8 @@ Apps **add** their own data folders (for example Space's journal folder) to this
 
 Windows note: a virtual-machine disk (`*.vhdx`, `*.vhd`) in an app's allowed root is not protected, like a VM image on macOS.
 
+Windows note, the facts an allowed-root rule may use: the item's canonical path, the profile folder, the profiles folder, the item's volume and the profile's volume, whether the item is in a system location, and for the item and every folder above it its owner and whether that owner is the current user. "Owned by the current user" means the user's own account only: a folder owned by `Administrators` (made from an elevated prompt or by an installer) is not.
+
 ## The gate
 
 Immediately before every move, in this order; the first failure refuses the item with its reason:
@@ -44,10 +46,10 @@ Immediately before every move, in this order; the first failure refuses the item
 
 Windows note: the order on Windows, the first failure refusing the item:
 1. **Environment**: not elevated, not SYSTEM, an interactive session (the counterpart of the macOS Full Disk Access check).
-2. **Exists**, read without opening first; an item marked "recall on open" is never opened and goes straight to the cloud refusal (step 9), the one exception to this order. Otherwise it is opened for attributes only, never for data.
+2. **Exists**, read without opening first (the spelling rules of step 4 are applied to the given path even before this, so a network path to a missing file is refused for its form, not as gone); an item marked "recall on open" is never opened and goes straight to the cloud refusal (step 9), the one exception to this order. Otherwise it is opened for attributes only, never for data.
 3. **Not a link or special file**: the item has no reparse point, or a cloud one (step 9); any other kind (symbolic link, junction, mount point, app execution alias, compression, deduplication, projection, unknown) is refused.
-4. **Spelling**: network (UNC), device and stream paths and names ending in a dot or a space are refused, before opening and again on the canonical path (a mapped drive resolves to a network path).
-5. **Volume**: a fixed local NTFS or ReFS volume, compared by volume serial, never by drive letter; FAT and exFAT have no stable file identity and are refused.
+4. **Spelling**: network (UNC), device and stream paths and names ending in a dot or a space are refused, on the given path before anything else and again on the canonical path (a mapped drive resolves to a network path). The canonical path is the plain form with short (8.3) names expanded and no `\\?\` prefix.
+5. **Volume**: a fixed local NTFS or ReFS volume, compared by volume serial, never by drive letter; removable and network volumes are refused (the Recycle Bin does not keep their items), and FAT and exFAT are refused (no stable file identity).
 6. **Unchanged since shown**: same volume serial and 128-bit file id, same last-write time, and for files the same length.
 7. **Measure** the item now, walking a folder without entering reparse points and without opening any file for data.
 8. **Recoverable**: see "Windows: recoverable moves".
@@ -61,12 +63,12 @@ Windows note: the order on Windows, the first failure refusing the item:
 Measured on Windows 11 (2026-10-16): moving an item to the Recycle Bin through the shell can delete it for good while the shell reports success. So the gate refuses, before the move:
 - an item not on a fixed local NTFS or ReFS volume (removable and network items are deleted for good);
 - an item on a volume whose Recycle Bin is off for this user or disallowed by policy (an absent setting means the system default; a setting that cannot be read refuses);
-- an item larger than the room left in the Recycle Bin **without** purging older items (the shell silently deletes older items for good to make room);
-- an item with any path in its tree of 260 characters or more (such a tree is deleted for good, short files included);
+- an item larger than the Recycle Bin's whole size on that volume ("too large"); otherwise an item larger than the room left in it **without** purging older items ("Recycle Bin full": the shell silently deletes older items for good to make room);
+- an item with any path in its tree of 260 characters or more, measured on the canonical path (step 4). Measured: such a tree is deleted for good, short files included, on a volume without short names, and on any volume when the moving process is long-path-aware with long paths turned on; elsewhere it was kept through its short names. It is refused everywhere: the gate cannot know how the mover will run;
 - an online-only or partially downloaded cloud file, and a folder holding one (recycling the folder would download it first; an online-only file is deleted for good). Two signals, either refuses: the "recall on data access" or "recall on open" attributes, and fewer bytes on disk than the file's length;
 - an item inside, or containing, a cloud-sync root (Never touch): deleting there deletes on every device.
 
-Inside a folder, a link, junction or mount point is never entered, and a folder holding one is refused until it is shown that recycling the folder leaves the link's target untouched; a compressed (WOF) file is refused until its recycle is shown to be recoverable.
+Inside a folder, a link, junction or mount point is never entered, and a folder holding one is refused ("contains a link or special file") until it is shown that recycling the folder leaves the link's target untouched; a compressed (WOF) file, or a folder holding one, is refused the same way until its recycle is shown to be recoverable.
 
 What the gate cannot close (between the gate and the move another process may fill the Recycle Bin, or a cloud provider may free the file's space) is the consumer's duty:
 - run the gate immediately before each single item, never for a batch;
@@ -85,14 +87,15 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 | elevated or SYSTEM | "Moving is off while running as administrator." |
 | gone | "Already gone" |
 | link or special file | "A link or special file: never followed." |
+| contains a link or special file | "Holds a link or special file: not moved until that is known to be safe." |
 | path form | "Network, device and stream paths are not supported." |
-| volume | "Not on a fixed local drive with a Recycle Bin." |
+| volume | "Only fixed NTFS or ReFS drives are supported." |
 | changed | "Changed since the scan" |
 | Recycle Bin off | "The Recycle Bin is off for this drive." |
-| Recycle Bin full | "The Recycle Bin is full: empty it or raise its size, then try again." |
+| Recycle Bin full | "The Recycle Bin is full: make room in it or raise its size, then try again." |
 | too large | "Too large for the Recycle Bin on this drive." |
 | path too long | "A path inside is 260 characters or longer; the Recycle Bin would not keep it." |
-| cloud file | "Not on this PC: an online-only cloud file." |
+| cloud file | "Not fully on this PC: a cloud file that is online only or partly downloaded, or a folder holding one." |
 | cloud-sync folder | "Inside a cloud-synced folder: deleting here deletes on every device." |
 | root or profile | "A drive, a profile or the profiles folder itself is never moved." |
 | protected | "Protected location" |

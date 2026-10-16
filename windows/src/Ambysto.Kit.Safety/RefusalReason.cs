@@ -14,17 +14,19 @@ public enum RefusalReason
     AlreadyGone,
     /// <summary>A link, junction, mount point or other special file.</summary>
     LinkOrSpecialFile,
+    /// <summary>A folder that holds a link, junction, mount point or compressed (WOF) file.</summary>
+    ContainsLinkOrSpecialFile,
     /// <summary>A network, device or stream path, or a name ending in a dot or a space.</summary>
     UnsupportedPathForm,
-    /// <summary>Not on a fixed local NTFS or ReFS volume.</summary>
+    /// <summary>Not on a fixed local NTFS or ReFS volume (removable, network, FAT, exFAT).</summary>
     UnsupportedVolume,
     /// <summary>Identity, last-write time or length differ from what was shown.</summary>
     ChangedSinceScan,
     /// <summary>The volume's Recycle Bin is off for this user or disallowed by policy.</summary>
     RecycleBinOff,
-    /// <summary>Moving the item would make the Recycle Bin purge older items.</summary>
+    /// <summary>The item fits the Recycle Bin's size but not the room left in it: moving it would purge older items.</summary>
     RecycleBinFull,
-    /// <summary>The item is larger than the Recycle Bin of its volume can hold.</summary>
+    /// <summary>The item is larger than the Recycle Bin's whole size on its volume.</summary>
     TooLargeForRecycleBin,
     /// <summary>A path in the item's tree is 260 characters or longer.</summary>
     PathTooLong,
