@@ -42,6 +42,20 @@ internal sealed class FileProbe : IDisposable
         return (new FileProbe(handle), 0);
     }
 
+    /// <summary>Opens what a link points to (following it), for attributes only: a folder, never data.</summary>
+    internal static (FileProbe? Probe, int Error) OpenTarget(string plain)
+    {
+        var handle = CreateFile(PathSpelling.Extended(plain), FILE_READ_ATTRIBUTES, FILE_SHARE_ALL, IntPtr.Zero, OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero);
+        if (handle.IsInvalid)
+        {
+            var error = System.Runtime.InteropServices.Marshal.GetLastPInvokeError();
+            handle.Dispose();
+            return (null, error);
+        }
+        return (new FileProbe(handle), 0);
+    }
+
     internal unsafe (uint Attributes, uint Tag) AttributeTag()
     {
         FILE_ATTRIBUTE_TAG_INFO info;
@@ -76,7 +90,9 @@ internal sealed class FileProbe : IDisposable
     }
 
     /// <summary>The final path from the handle, as returned (<c>\\?\C:\...</c> or <c>\\?\UNC\...</c>).</summary>
-    internal unsafe string FinalPath()
+    internal string FinalPath() => FinalPath(VOLUME_NAME_DOS);
+
+    internal unsafe string FinalPath(uint volumeName)
     {
         var size = 1024u;
         while (true)
@@ -85,7 +101,7 @@ internal sealed class FileProbe : IDisposable
             uint length;
             fixed (char* b = buffer)
             {
-                length = GetFinalPathNameByHandle(Handle, b, size, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+                length = GetFinalPathNameByHandle(Handle, b, size, FILE_NAME_NORMALIZED | volumeName);
             }
             if (length == 0)
             {

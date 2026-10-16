@@ -126,9 +126,11 @@ internal static class TreeWalk
         return ((long)high << 32) | low;
     }
 
-    /// <summary>True for a volume mount point, false for a junction to a folder. Measured (2026-10-16): a junction answers
-    /// ERROR_INVALID_PARAMETER and a plain folder ERROR_NOT_A_REPARSE_POINT; any other failure (an offline or unreadable
-    /// volume) counts as a mount point, so the folder is refused (failing closed).</summary>
+    /// <summary>True for a volume mount point (or anything that cannot be shown not to be one), false for a junction to a
+    /// folder. The volume-name query alone is not enough (measured 2026-10-16: junctions answer 87, 206 or other codes), so
+    /// a failed query is settled by opening the link's target for attributes and asking whether that target is a volume
+    /// root. A link Windows refuses to follow for anyone (ERROR_UNTRUSTED_MOUNT_POINT, a standard user's junction) cannot be
+    /// walked by the shell either. Any other failure counts as a mount point: the folder is refused (failing closed).</summary>
     private static unsafe bool IsVolumeMountPoint(string path)
     {
         var buffer = stackalloc char[64];
@@ -136,12 +138,28 @@ internal static class TreeWalk
         {
             return true;
         }
-        var error = Marshal.GetLastPInvokeError();
-        return error is not (ERROR_INVALID_PARAMETER or ERROR_NOT_A_REPARSE_POINT);
+        var (target, error) = FileProbe.OpenTarget(path);
+        if (target is null)
+        {
+            return error != ERROR_UNTRUSTED_MOUNT_POINT;
+        }
+        using (target)
+        {
+            try
+            {
+                var guidPath = target.FinalPath(VOLUME_NAME_GUID); // \\?\Volume{...}\ for a volume root
+                var rest = guidPath[(guidPath.IndexOf('}', StringComparison.Ordinal) + 1)..];
+                return guidPath.StartsWith(@"\\?\Volume{", StringComparison.OrdinalIgnoreCase) ? rest.Trim('\\').Length == 0 : true;
+            }
+            catch (Win32Exception)
+            {
+                return true;
+            }
+        }
     }
 
-    private const int ERROR_INVALID_PARAMETER = 87;
-    private const int ERROR_NOT_A_REPARSE_POINT = 4390;
+    private const int ERROR_UNTRUSTED_MOUNT_POINT = 448;
+    private const uint VOLUME_NAME_GUID = 0x1;
 
     /// <summary>One folder's entries; a folder that cannot be listed throws (failing closed).</summary>
     private static unsafe List<(string Name, uint Attributes, uint Tag, long Length)> List(string folder)
