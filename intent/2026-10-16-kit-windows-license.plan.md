@@ -114,3 +114,23 @@ Not run here: anything on macOS (out of scope on this machine). Waiting for the 
 4. MINOR: `.snupkg` is not accepted by GitHub's registry; the tag was not checked to be on `main`. Fixed: embedded symbols, `--no-symbols`, the `merge-base` check.
 5. MINOR: criterion 8 lacked `dotnet list package`. Fixed.
 6. NIT: confirm the SDK version (10.0.402 is the one installed); `Products` as a `FrozenSet`. Fixed.
+
+**Code review (hard-reviewer: Fable 5.1, 2026-10-16), groups 2–6: PASS** with 1 MINOR and 3 NIT, then three fix rounds on the key-set check, each re-checked by the same reviewer:
+1. MINOR: `check-key-sets.py` ignored text after a literal (a chained `].merging(...)` / `.union(...)`, a C# static constructor). Round 1 (`a728361`): a terminator right after the bracket, each C# field named exactly twice. Re-check: two more bypasses (a next-line `.union`, a wrapped C# read). Round 2 (`3081fcf`): no leading dot after the literal, the C# read must be exact; comments anchored to the end of their line. Re-check: a block comment or `#if` before a leading dot still passed. Round 3 (owner's go-ahead, `f238925`): an allow-list after each literal (`}`, a letter, `_`, `@` or end of file). **CONFIRMED**: every form tried (16) fails closed; CRLF files read correctly; fixtures 25 of 25.
+2. NIT: the grammar is ASCII-only (`re.ASCII`). Fixed.
+3. NIT: a non-hex compiled-in key is an `ArgumentException`. Fixed, with tests.
+4. NIT: a key file another program holds open for writing is malformed. Kept: within the spec ("cannot be read").
+
+## Proof record (2026-10-16, Windows 11 VM unless noted)
+
+| Criterion | Result |
+|---|---|
+| 1–8 | `dotnet test -c Release`: 45 of 45; 35 vectors read, all to their documented result on CNG (high-S included); default verifier: exactly 20 vectors reach step 5, all `UnknownSigningKey`; 100,000 random strings and 4,320 single-byte changes refused; 10,000 mutated texts never throw; median verify 1.27–1.45 ms; 8 threads equal a sequential run; references: runtime only, no `System.Net` |
+| 8 (also) | `dotnet list … package`: no package |
+| 9 | `dotnet build -c Release`: 0 warnings, 0 errors |
+| 10 | `check-key-sets.py`: PASS (host); `check-key-sets-fixtures.sh`: 25 of 25 (host) |
+| 11 | `git diff main -- Sources Tests Package.swift`: empty; `docs/spec` only the two spec commits of the intent PR |
+| 12 | Rehearsed with a local feed: the package installs into a console app outside the repo, a valid test-key vector is `UnknownSigningKey` with the spec's message, the DLL embeds its PDB, no `.snupkg`. **Open:** the real feed after the owner's `windows-v0.1.0` tag |
+| Mutation checks | (a) Unicode parsing, (b) revocation before signature, (c) no unused-bits check, (d) `File.ReadAllText`, (e) test key in production, (f) `>= 4096`, (g) leftovers ignored: each fails its tests |
+
+Not run: anything on macOS (out of scope on this machine).
