@@ -50,7 +50,7 @@ Parsing uses **ASCII only**:
 1. Remove `-`, space, tab, CR and LF.
 2. Remove a leading `AMB` in any case. (Format-1 data always starts with `0`, so this is unambiguous.)
 3. Every remaining character must be an ASCII letter or digit. Upper-case it; read `O` as `0` and `I`, `L` as `1`; `U` and anything else is malformed.
-4. A length whose remainder modulo 8 is 1, 3 or 6 is malformed. The unused bits of the last symbol must be zero, otherwise malformed.
+4. No symbols left (an empty text, or one that held only separators and `AMB`) is malformed. A length whose remainder modulo 8 is 1, 3 or 6 is malformed. The unused bits of the last symbol must be zero, otherwise malformed.
 
 ## File
 
