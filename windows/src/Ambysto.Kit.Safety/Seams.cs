@@ -1,5 +1,7 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Security.Principal;
+using Ambysto.Kit.Safety.Native;
 
 namespace Ambysto.Kit.Safety;
 
@@ -19,17 +21,57 @@ internal interface IRecycleBinPolicy
     bool? NoRecycleFiles { get; }
 }
 
+/// <summary>The real environment. Measured (2026-10-16): an SSH administrator's token is elevated although its elevation
+/// type is "default", so elevation is read as TokenIsElevated; the INTERACTIVE SID is present only in a desktop session.</summary>
 internal sealed class SystemEnvironmentFacts : IEnvironmentFacts
 {
     internal static readonly SystemEnvironmentFacts Instance = new();
-    public bool IsElevated => throw new NotImplementedException();
-    public bool IsSystem => throw new NotImplementedException();
-    public int SessionId => throw new NotImplementedException();
-    public bool HasInteractiveSid => throw new NotImplementedException();
+
+    private const string InteractiveSid = "S-1-5-4";
+
+    public bool IsElevated
+    {
+        get
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            if (!TokenMethods.GetTokenInformation(identity.AccessToken, TokenMethods.TokenElevation, out var elevated, sizeof(int), out _))
+            {
+                throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "token elevation");
+            }
+            return elevated != 0;
+        }
+    }
+
+    public bool IsSystem
+    {
+        get
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            return identity.IsSystem;
+        }
+    }
+
+    public int SessionId
+    {
+        get
+        {
+            using var process = System.Diagnostics.Process.GetCurrentProcess();
+            return process.SessionId;
+        }
+    }
+
+    public bool HasInteractiveSid
+    {
+        get
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            return identity.Groups?.Any(g => string.Equals(g.Value, InteractiveSid, StringComparison.Ordinal)) == true;
+        }
+    }
 }
 
 internal sealed class SystemRecycleBinPolicy : IRecycleBinPolicy
 {
     internal static readonly SystemRecycleBinPolicy Instance = new();
-    public bool? NoRecycleFiles => throw new NotImplementedException();
+    public bool? NoRecycleFiles => Internal.RecycleBin.NoRecycleFilesPolicy();
 }

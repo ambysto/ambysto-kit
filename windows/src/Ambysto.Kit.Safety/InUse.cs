@@ -31,5 +31,11 @@ public sealed class InUseChecker
     /// <summary>Checks every file and folder in the approved item's tree.</summary>
     /// <param name="item">An item the gate approved.</param>
     /// <returns>The holders found.</returns>
-    public InUseResult Check(ApprovedItem item) => throw new NotImplementedException();
+#pragma warning disable CA1822 // the public API is an instance method (APS-24 plan, Design)
+    public InUseResult Check(ApprovedItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return Internal.InUse.Check(item);
+    }
+#pragma warning restore CA1822
 }
