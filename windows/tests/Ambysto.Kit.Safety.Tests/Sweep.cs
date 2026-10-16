@@ -21,9 +21,80 @@ public sealed class AssemblySweep
     [AssemblyInitialize]
     public static void Sweep(TestContext _)
     {
-        RestorePicturesLeftRedirected();
-        UnregisterSyncRootsLeftUnderTheTestFolder();
-        TempFolder.DeleteTree(TempFolder.ProfileRoot);
+        // A leftover the sweep cannot remove (an item a killed fail-closed test left under an OWNER RIGHTS deny, which
+        // only an administrator can take back: windows/tests/admin/teardown.ps1 does) must never abort a suite: every
+        // step is guarded, and every test uses a fresh folder of its own anyway.
+        Guarded("Pictures redirect", RestorePicturesLeftRedirected);
+        Guarded("sync roots", UnregisterSyncRootsLeftUnderTheTestFolder);
+        Guarded("profile test folder", () => DeleteTreeOrLeave(TempFolder.ProfileRoot));
+        Guarded("test data folder", SweepTestDataFolder);
+    }
+
+    private static void Guarded(string what, Action step)
+    {
+        try
+        {
+            step();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            Console.WriteLine($"sweep: {what} left as it is: {e.Message}");
+        }
+    }
+
+    /// <summary>Deletes the tree; what the standard user cannot delete (see above) is left for the administrator's script.</summary>
+    private static void DeleteTreeOrLeave(string root)
+    {
+        if (!Directory.Exists(root))
+        {
+            return;
+        }
+        try
+        {
+            TempFolder.DeleteTree(root);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            var info = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+            foreach (var a in new[] { "/c", "rmdir", "/s", "/q", @"\\?\" + root })
+            {
+                info.ArgumentList.Add(a);
+            }
+            using var process = Process.Start(info)!;
+            process.StandardOutput.ReadToEnd();
+            process.StandardError.ReadToEnd();
+            process.WaitForExit(60000);
+            if (Directory.Exists(root))
+            {
+                Console.WriteLine($"sweep: {root} still holds items this user cannot delete: {e.Message}");
+            }
+        }
+    }
+
+    /// <summary>The tests' own folders under %AMBYSTO_TESTDATA% (named "hint-xxxxxxxx" by TempFolder), left by a
+    /// killed run; the folder itself and anything else in it stay.</summary>
+    private static void SweepTestDataFolder()
+    {
+        var testData = Environment.GetEnvironmentVariable("AMBYSTO_TESTDATA");
+        if (string.IsNullOrEmpty(testData) || !Directory.Exists(testData))
+        {
+            return;
+        }
+        foreach (var directory in Directory.EnumerateDirectories(testData))
+        {
+            if (TempFolder.IsTestFolderName(Path.GetFileName(directory)))
+            {
+                TempFolder.DeleteTree(directory);
+            }
+        }
+    }
+
+    private static bool IsUnderTestFolders(string path)
+    {
+        var testData = Environment.GetEnvironmentVariable("AMBYSTO_TESTDATA");
+        return path.StartsWith(TempFolder.ProfileRoot + "\\", StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrEmpty(testData) && path.StartsWith(testData.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase)
+                && TempFolder.IsTestFolderName(path[(testData.TrimEnd('\\').Length + 1)..].Split('\\')[0]));
     }
 
     /// <summary>A Pictures redirect into the tests' folder is a leftover: back to the default location.</summary>
@@ -53,7 +124,7 @@ public sealed class AssemblySweep
             }
             foreach (var valueName in roots.GetValueNames())
             {
-                if (roots.GetValue(valueName) is string path && path.StartsWith(TempFolder.ProfileRoot + "\\", StringComparison.OrdinalIgnoreCase))
+                if (roots.GetValue(valueName) is string path && IsUnderTestFolders(path))
                 {
                     Unregister(path);
                 }

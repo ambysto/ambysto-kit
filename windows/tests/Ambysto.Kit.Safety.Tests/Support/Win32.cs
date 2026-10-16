@@ -33,6 +33,25 @@ internal static unsafe partial class Win32
 
     private const uint FsctlSetReparsePoint = 0x000900A4;
     private const uint FsctlDeleteReparsePoint = 0x000900AC;
+    private const uint FsctlSetSparse = 0x000900C4;
+
+    /// <summary>A sparse file of the given logical length that uses (almost) no space on disk: the spec's Recycle Bin
+    /// sizes are logical lengths, so it counts in full.</summary>
+    public static void CreateSparseFile(string path, long length)
+    {
+        using (var stream = new System.IO.FileStream(path, System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite, System.IO.FileShare.None))
+        {
+            if (!DeviceIoControl(stream.SafeFileHandle, FsctlSetSparse, null, 0, null, 0, out _, IntPtr.Zero))
+            {
+                throw LastError("FSCTL_SET_SPARSE " + path);
+            }
+            stream.SetLength(length);
+        }
+        if (new System.IO.FileInfo(path).Length != length)
+        {
+            throw new InvalidOperationException("sparse file length not set: " + path);
+        }
+    }
     private const uint FsctlSetCompression = 0x0009C040;
     private const int FileIdInfoClass = 18;
 

@@ -45,15 +45,21 @@ public sealed class LinkTests
         Expect.Refused(Gates.CheckWith(junction, Gates.AnyStamp), RefusalReason.LinkOrSpecialFile);
     }
 
+    /// <summary>Spec, recoverable moves: "recycling a folder that holds a junction or a symbolic link leaves the target
+    /// untouched, the link lands in the Recycle Bin as a link and comes back with its target; so such a folder is
+    /// allowed". The junction is never entered: the target's content is not in the measured size.</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
-    public void AFolderHoldingAJunctionIsRefusedAsContainingALink()
+    public void AFolderHoldingAJunctionIsApprovedWithoutEnteringIt()
     {
         var parent = folder.Dir("parent");
         folder.File(@"parent\plain.txt", 10);
-        Expect.Approved(Gates.Check(parent), Win32.FinalPath(parent));
-        Junction(@"parent\sub\junction", folder.Dir("target"));
-        Expect.Refused(Gates.Check(parent), RefusalReason.ContainsLinkOrSpecialFile);
+        var target = folder.Dir("target");
+        folder.File(@"target\big.bin", 2 << 20);
+        Junction(@"parent\sub\junction", target);
+        var approved = Expect.Approved(Gates.Check(parent), Win32.FinalPath(parent));
+        Assert.AreEqual(1, approved.FileCount, "the junction's target was entered");
+        Assert.AreEqual(10, approved.LogicalBytes, "the junction's target was counted");
     }
 
     [TestMethod]
@@ -67,6 +73,9 @@ public sealed class LinkTests
         Expect.Refused(Gates.CheckWith(file, Gates.AnyStamp), RefusalReason.LinkOrSpecialFile);
     }
 
+    /// <summary>Owner decision (spec, next base): an unknown special file inside a folder (a reparse kind that is not a
+    /// link, junction, mount point, cloud placeholder or WOF) refuses the folder as "contains a link or special
+    /// file"; the message comes from the spec table.</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void AFolderHoldingAnUnknownReparseFileIsRefusedAsContaining()

@@ -46,19 +46,25 @@ public sealed class RecycleBinTests
         Expect.Approved(Gates.Check(onC), Win32.FinalPath(onC));
     }
 
-    /// <summary>"An absent setting means the system default."</summary>
+    /// <summary>Spec (measured): "When the size setting is absent, the shell writes its default on its first query of
+    /// that volume's Recycle Bin; the gate lets it do so and reads the value". The default leaves room for 1 MiB, and
+    /// after the gate's check the value exists again, both with the value deleted and with the whole key deleted.</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
-    public void AnAbsentSettingMeansTheSystemDefault()
+    public void AnAbsentSizeSettingIsTheShellsDefaultWrittenOnTheGatesQuery()
     {
         using var settings = new RecycleBinVolumeSettings(Volumes.System);
+        var file = folder.File("item.bin", MiB);
         settings.DeleteValue(RecycleBinVolumeSettings.MaxCapacityName);
         settings.DeleteValue(RecycleBinVolumeSettings.NukeOnDeleteName);
-        var file = folder.File("item.bin", MiB);
+        Assert.IsFalse(settings.ValueExists(RecycleBinVolumeSettings.MaxCapacityName), "precondition: the size setting is gone");
         Expect.Approved(Gates.Check(file), Win32.FinalPath(file));
+        Assert.IsTrue(settings.ValueExists(RecycleBinVolumeSettings.MaxCapacityName), "the shell's default was not written by the gate's query");
+
         settings.DeleteKey();
         Assert.IsFalse(settings.KeyExists, "precondition: the volume's key is gone");
         Expect.Approved(Gates.Check(file), Win32.FinalPath(file));
+        Assert.IsTrue(settings.ValueExists(RecycleBinVolumeSettings.MaxCapacityName), "the shell's default was not written when the key was absent");
     }
 
     /// <summary>"A setting that cannot be read refuses."</summary>
@@ -98,12 +104,15 @@ public sealed class RecycleBinTests
     public void WithoutAPolicyTheRealReaderReportsAllowed()
         => Assert.AreEqual(false, SystemRecycleBinPolicy.Instance.NoRecycleFiles);
 
-    /// <summary>Too large (more than the bin's whole size) against full (fits the size, not the room left without
-    /// purging): the room is made real by recycling one of the test's own files first. Sizes keep a margin wide
-    /// enough for MaxCapacity in MB or MiB.</summary>
+    private const long Margin = 64 * 1024;
+
+    /// <summary>Spec (measured): "sizes are logical lengths (not the space on disk), the size setting is in MiB, and the
+    /// Recycle Bin and its room are this user's own". Too large is more than the whole size; full is more than the room
+    /// left without purging, the room made real by recycling one of the test's own files first. Margins are 64 KiB
+    /// around the exact MiB arithmetic (the bin's own bookkeeping files).</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
-    public void TooLargeIsTheBinsWholeSizeAndFullIsTheRoomLeftWithoutPurging()
+    public void TooLargeIsTheBinsWholeSizeInMiBAndFullIsTheRoomLeftWithoutPurging()
     {
         using var settings = new RecycleBinVolumeSettings(Volumes.System);
         using var recycled = RecycledFixture.Recycle(folder.File("eight.bin", 8 * MiB));
@@ -111,48 +120,65 @@ public sealed class RecycleBinTests
         var capacity = (int)((used + 3 * MiB) / MiB);
         Assert.IsTrue(capacity <= 300, $"this user's Recycle Bin on C: holds {used} bytes; empty it before this test can size the bin");
         settings.SetMaxCapacityMegabytes(capacity);
+        var whole = capacity * MiB;
+        var room = whole - used;
+        Assert.IsTrue(room > 2 * MiB && room <= 3 * MiB, $"room {room}");
 
-        var fits = folder.File("one.bin", MiB);
-        var full = folder.File("four.bin", 4 * MiB);
-        var tooLarge = folder.File("huge.bin", capacity * MiB + MiB);
-        var fullFolder = folder.Dir("four-in-two");
-        folder.File(@"four-in-two\a.bin", 2 * MiB);
-        folder.File(@"four-in-two\b.bin", 2 * MiB);
-        var fitsFolder = folder.Dir("one-in-one");
-        folder.File(@"one-in-one\a.bin", MiB);
+        var fits = folder.File("fits.bin", room - Margin);
+        var full = folder.File("full.bin", room + Margin);
+        var atWhole = folder.File("at-whole.bin", whole);
+        var tooLarge = folder.File("too-large.bin", whole + 1);
+        var fullFolder = folder.Dir("full-in-two");
+        folder.File(@"full-in-two\a.bin", room / 2);
+        folder.File(@"full-in-two\b.bin", room / 2 + Margin);
+        var fitsFolder = folder.Dir("fits-in-two");
+        folder.File(@"fits-in-two\a.bin", room / 2 - Margin);
+        folder.File(@"fits-in-two\b.bin", room / 2 - Margin);
 
         Expect.Approved(Gates.Check(fits), Win32.FinalPath(fits));
         Expect.Refused(Gates.Check(full), RefusalReason.RecycleBinFull);
+        Expect.Refused(Gates.Check(atWhole), RefusalReason.RecycleBinFull);
         Expect.Refused(Gates.Check(tooLarge), RefusalReason.TooLargeForRecycleBin);
         Expect.Refused(Gates.Check(fullFolder), RefusalReason.RecycleBinFull);
         var approved = Expect.Approved(Gates.Check(fitsFolder), Win32.FinalPath(fitsFolder));
-        Assert.AreEqual(MiB, approved.LogicalBytes);
-        Assert.AreEqual(1, approved.FileCount);
+        Assert.AreEqual(room - 2 * Margin, approved.LogicalBytes);
+        Assert.AreEqual(2, approved.FileCount);
     }
 
+    /// <summary>"Sizes are logical lengths (not the space on disk)": a sparse file and an NTFS-compressed file whose
+    /// lengths exceed the room are refused although they use little disk space; one beyond the whole size is too large.</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
-    public void TheBinOffIsDecidedBeforeAContainedLink()
+    public void TheLogicalLengthCountsNotTheSpaceOnDisk()
     {
         using var settings = new RecycleBinVolumeSettings(Volumes.System);
-        var parent = folder.Dir("parent");
-        Win32.SetJunction(folder.Dir(@"parent\junction"), folder.Dir("target"));
-        settings.SetNukeOnDelete(true);
-        Expect.Refused(Gates.Check(parent), RefusalReason.RecycleBinOff);
-        settings.SetNukeOnDelete(false);
-        Expect.Refused(Gates.Check(parent), RefusalReason.ContainsLinkOrSpecialFile);
+        using var recycled = RecycledFixture.Recycle(folder.File("eight.bin", 8 * MiB));
+        var used = Win32.RecycleBinBytes(Volumes.System);
+        var capacity = (int)((used + 3 * MiB) / MiB);
+        settings.SetMaxCapacityMegabytes(capacity);
+        var whole = capacity * MiB;
+        var room = whole - used;
+
+        var sparseFull = folder.Combine("sparse-full.bin");
+        Win32.CreateSparseFile(sparseFull, room + Margin);
+        var sparseTooLarge = folder.Combine("sparse-too-large.bin");
+        Win32.CreateSparseFile(sparseTooLarge, whole + 1);
+        var sparseFits = folder.Combine("sparse-fits.bin");
+        Win32.CreateSparseFile(sparseFits, room - Margin);
+        var compressed = folder.File("compressed.bin", room + Margin, fill: 0);
+        Win32.SetNtfsCompression(compressed);
+        Assert.AreEqual(Win32.AttrCompressed, Win32.Attributes(compressed) & Win32.AttrCompressed, "the file was not compressed");
+
+        var approved = Expect.Approved(Gates.Check(sparseFits), Win32.FinalPath(sparseFits));
+        Assert.AreEqual(room - Margin, approved.LogicalBytes, "the logical length");
+        Assert.IsTrue(approved.AllocatedBytes < MiB, "a sparse file uses little disk space: " + approved.AllocatedBytes);
+        Expect.Refused(Gates.Check(sparseFull), RefusalReason.RecycleBinFull);
+        Expect.Refused(Gates.Check(sparseTooLarge), RefusalReason.TooLargeForRecycleBin);
+        Expect.Refused(Gates.Check(compressed), RefusalReason.RecycleBinFull);
     }
 
-    [TestMethod]
-    [TestCategory(Cat.Session0)]
-    public void AContainedLinkIsDecidedBeforeALongPath()
-    {
-        var parent = folder.Dir("parent");
-        LongPaths.CreateFile(Win32.FinalPath(parent), 260);
-        Expect.Refused(Gates.Check(parent), RefusalReason.PathTooLong);
-        Win32.SetJunction(folder.Dir(@"parent\junction"), folder.Dir("target"));
-        Expect.Refused(Gates.Check(parent), RefusalReason.ContainsLinkOrSpecialFile);
-    }
+    // The orderings "bin off before a contained special file" and "contained special file before a long path" need a
+    // volume mount point (the only special file a folder is still refused for): AdminSetupTests.
 
     [TestMethod]
     [TestCategory(Cat.Session0)]

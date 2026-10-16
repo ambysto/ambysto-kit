@@ -367,7 +367,9 @@ internal static class Commands
         long offset = long.Parse(o.Get("offset") ?? "0");
         long length = long.Parse(o.Need("length"));
         var full = Path.Combine(root, rel);
-        var srv = Server.ConnectQuiet(root, out int connectHr, deny: false);
+        // --log records every fetch during this connection, so a second reader (a scanner) that hydrates more is named.
+        using var log = o.Get("log") is { } logPath ? new EventLog(Path.GetFullPath(logPath)) : null;
+        var srv = Server.ConnectQuiet(root, out int connectHr, deny: false, log: log);
         if (connectHr < 0)
             throw new CfException("CfConnectSyncRoot (hydrate-range must run as the provider; is `serve` still running? stop it first)", connectHr);
         try

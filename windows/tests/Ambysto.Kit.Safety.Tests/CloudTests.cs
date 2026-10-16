@@ -31,12 +31,16 @@ public sealed class CloudTests
     /// <summary>A second root with partial hydration (population stays always-full: a file placeholder cannot be
     /// created under partial population, 0x801F0005): a partly downloaded file lives here.</summary>
     private static CloudRoot partial = null!;
+    /// <summary>A registered root with nothing in it but a plain file: the sync-root rule alone, no placeholder before it.</summary>
+    private static CloudRoot empty = null!;
     private static SafetyContext context = null!;
 
     [ClassInitialize]
     public static void RegisterAndServe(TestContext _)
     {
-        folder = TempFolder.InProfile("cloud");
+        // Under the Defender-excluded test data folder: elsewhere Defender reads a freshly hydrated range and that
+        // read hydrates the rest of the file, which destroys the partly-downloaded state.
+        folder = TempFolder.InTestData("cloud");
         partial = CloudRoot.Register(folder.Combine("partial-root"), folder.Combine("partial-fetch.log"), "partial", "always-full");
         partial.Populate((PartialFile, PartialSize));
         partial.HydrateRange(PartialFile, 0, PartialBytes);
@@ -51,6 +55,8 @@ public sealed class CloudTests
         File.WriteAllText(cloud.Combine(PlainFile), "not a placeholder");
         Directory.CreateDirectory(cloud.Combine("wrap"));
         Directory.Move(cloud.Combine(PlaceholderFolder), cloud.Combine(@"wrap\" + PlaceholderFolder));
+        empty = CloudRoot.Register(folder.Combine(@"holder\empty-root"), folder.Combine("empty-fetch.log"));
+        File.WriteAllText(empty.Combine("plain.txt"), "a plain file inside a registered root");
         // Resolved after registration, as an app resolves its context once per session.
         context = SafetyContext.ForCurrentUser([]);
     }
@@ -60,6 +66,7 @@ public sealed class CloudTests
     {
         cloud?.Dispose();
         partial?.Dispose();
+        empty?.Dispose();
         folder?.Dispose();
     }
 
@@ -132,10 +139,31 @@ public sealed class CloudTests
         Expect.Refused(Check(PlainFile), RefusalReason.CloudSyncFolder);
     }
 
+    /// <summary>Spec: "a cloud-sync root is also what the system reports per item" (measured: a root registered through
+    /// the classic Cloud Files API leaves no listable entry; only asking about a path finds it). So the context lists
+    /// only the listable roots (%OneDrive% when set), and the gate finds the fixture's root per item: the root itself
+    /// and an item inside it are refused as inside a cloud-sync folder; a sibling outside passes. A folder containing
+    /// the root is refused as a cloud file, because the registered root folder itself carries a cloud tag and the
+    /// order decides: step 7 ("A cloud-tagged folder inside the item is not entered either, and the item is refused as
+    /// a cloud file") and step 9 ("... is checked before the cloud-sync roots").</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]
-    public void TheRegisteredRootIsASyncRootOfTheContext()
-        => Expect.ContainsPath(context.SyncRoots, Win32.FinalPath(cloud.Root), "registered sync roots");
+    public void ARegisteredRootIsFoundPerItemNotListed()
+    {
+        var oneDrive = Environment.GetEnvironmentVariable("OneDrive");
+        if (!string.IsNullOrEmpty(oneDrive) && Directory.Exists(oneDrive))
+        {
+            Expect.ContainsPath(context.SyncRoots, Win32.FinalPath(oneDrive), "the listable %OneDrive% root");
+        }
+        var inside = empty.Combine("plain.txt");
+        var containing = folder.Combine("holder");
+        var sibling = folder.File(@"holder-sibling\outside.txt", 10);
+        Expect.Refused(Gates.Check(empty.Root, context: context), RefusalReason.CloudSyncFolder);
+        Expect.Refused(Gates.Check(inside, context: context), RefusalReason.CloudSyncFolder);
+        Expect.Refused(Gates.Check(containing, context: context), RefusalReason.CloudFile);
+        Expect.Approved(Gates.Check(sibling, context: context), Win32.FinalPath(sibling));
+        Expect.Refused(Gates.Seamed(context: context).CheckRestoreDestination(empty.Combine("restored.txt")), RefusalReason.CloudSyncFolder);
+    }
 
     [TestMethod]
     [TestCategory(Cat.Session0)]
@@ -210,7 +238,10 @@ public sealed class CloudTests
     {
         var status = partial.Status(PartialFile);
         Assert.IsTrue(status.IsPlaceholder, "not a placeholder");
-        Assert.IsTrue(status.OnDisk > 0 && status.OnDisk < status.Size, $"the file is not partly on disk: {status.OnDisk} of {status.Size} bytes ({status.Hydration})");
+        // The provider-side range hydration ran before serve started, so every fetch in the log came from someone
+        // else (a scanner such as Defender); name it when the file is no longer partial.
+        Assert.IsTrue(status.OnDisk > 0 && status.OnDisk < status.Size,
+            $"the file is not partly on disk: {status.OnDisk} of {status.Size} bytes ({status.Hydration}); fetches since serve started: [{string.Join(" | ", partial.Fetches())}]");
         Expect.Refused(Gates.Check(partial.Combine(PartialFile), context: context), RefusalReason.CloudFile);
         Expect.Refused(Gates.Check(partial.Combine("partial"), context: context), RefusalReason.CloudFile);
         partial.AssertNoFetch("gate on a partly downloaded file");

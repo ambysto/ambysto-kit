@@ -51,6 +51,20 @@ public sealed class ContextTests
         }
     }
 
+    /// <summary>Never touch: "File History (`%LOCALAPPDATA%\Microsoft\Windows\FileHistory`, ...)": listed, and refused
+    /// when the folder exists on this machine (the volume-root form is in AdminSetupTests).</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void FileHistoryUnderLocalAppDataIsProtected()
+    {
+        var fileHistory = Path.Combine(Local, @"Microsoft\Windows\FileHistory");
+        Expect.ContainsPath(Gates.Context.NeverTouchFolders, fileHistory, "File History configuration folder");
+        if (Directory.Exists(fileHistory))
+        {
+            Expect.Refused(Gates.Check(fileHistory), RefusalReason.Protected);
+        }
+    }
+
     /// <summary>Browser profiles and Thunderbird: the spec names the vendor locations, not their exact depth, so an
     /// entry must cover (equal or be above) the profile data folder.</summary>
     [TestMethod]

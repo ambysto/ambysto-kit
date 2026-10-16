@@ -67,6 +67,13 @@ internal sealed class RecycleBinVolumeSettings : IDisposable
         }
     }
 
+    /// <summary>Whether the named value exists right now (the shell writes MaxCapacity on its first query).</summary>
+    public bool ValueExists(string name)
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(keyPath, writable: false);
+        return key?.GetValue(name) is not null;
+    }
+
     private void Set(string name, int value)
     {
         using var key = Registry.CurrentUser.CreateSubKey(keyPath, writable: true);

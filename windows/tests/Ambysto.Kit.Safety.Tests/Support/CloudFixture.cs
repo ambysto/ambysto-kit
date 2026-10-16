@@ -207,7 +207,11 @@ internal sealed class CloudRoot : IDisposable
     /// test machine's notes and a probe show a 64 KiB read by PowerShell fetching the whole file under every policy.</summary>
     public void HydrateRange(string relative, long offset, long length)
     {
-        Run("hydrate-range", "--root", Root, "--path", relative, "--offset", offset.ToString(CultureInfo.InvariantCulture), "--length", length.ToString(CultureInfo.InvariantCulture));
+        // The provider's log records the fetches during this connection too (the range itself, and any other reader
+        // that hydrates more, such as a scanner); they are the baseline for AssertNoFetch.
+        Run("hydrate-range", "--root", Root, "--path", relative, "--offset", offset.ToString(CultureInfo.InvariantCulture),
+            "--length", length.ToString(CultureInfo.InvariantCulture), "--log", LogPath);
+        MarkFetchBaseline();
     }
 
     private void ReadThroughPowerShell(string relative, long expectedBytes, string command)

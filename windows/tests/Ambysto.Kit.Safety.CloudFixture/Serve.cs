@@ -95,11 +95,12 @@ internal sealed class Server
 
     public int Disconnect() => Native.CfDisconnectSyncRoot(_conn);
 
-    /// <summary>Connect without a log: used by commands that must run as the connected provider. <paramref name="deny"/>
-    /// false serves fetches (hydrate-range needs its own fetch answered), true fails them (dehydrate needs none).</summary>
-    public static Server ConnectQuiet(string root, out int hr, bool deny = true)
+    /// <summary>Connect for a command that must run as the connected provider. <paramref name="deny"/> false serves
+    /// fetches (hydrate-range needs its own fetch answered), true fails them (dehydrate needs none); with a
+    /// <paramref name="log"/> every callback during the connection is recorded like `serve` does (who else read).</summary>
+    public static Server ConnectQuiet(string root, out int hr, bool deny = true, EventLog? log = null)
     {
-        var srv = new Server(root, deny, null);
+        var srv = new Server(root, deny, log);
         hr = srv.Connect(root);
         return srv;
     }

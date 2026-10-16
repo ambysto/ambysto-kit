@@ -30,6 +30,24 @@ internal sealed class TempFolder : IDisposable
 
     public static string ProfileRoot => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), RootName);
 
+    /// <summary>Whether a folder name is one this class makes ("hint-xxxxxxxx"): what a sweep may delete under %AMBYSTO_TESTDATA%.</summary>
+    public static bool IsTestFolderName(string name)
+    {
+        var dash = name.LastIndexOf('-');
+        if (dash <= 0 || name.Length - dash - 1 != 8)
+        {
+            return false;
+        }
+        foreach (var c in name.AsSpan(dash + 1))
+        {
+            if (!char.IsAsciiHexDigitLower(c) && !char.IsAsciiDigit(c))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public string Path { get; }
 
     private TempFolder(string parent, string hint)
