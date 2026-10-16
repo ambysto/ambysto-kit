@@ -36,17 +36,16 @@ internal sealed class CloudRoot : IDisposable
 
     private static string FindExe()
     {
-        var project = Path.Combine(RepoFiles.Root, "windows", "tests", "Ambysto.Kit.Safety.CloudFixture", "bin");
+        // One exact path (configuration, framework, runtime of the fixture project): a stale build elsewhere under bin/
+        // must never stand in for the current one.
         var configuration = AppContext.BaseDirectory.Contains(@"\Release\", StringComparison.OrdinalIgnoreCase) ? "Release" : "Debug";
-        var candidates = Directory.Exists(project)
-            ? Directory.EnumerateFiles(project, "Ambysto.Kit.Safety.CloudFixture.exe", SearchOption.AllDirectories).ToList()
-            : [];
-        var preferred = candidates.FirstOrDefault(c => c.Contains("\\" + configuration + "\\", StringComparison.OrdinalIgnoreCase)) ?? candidates.FirstOrDefault();
-        if (preferred is null)
+        var exe = Path.Combine(RepoFiles.Root, "windows", "tests", "Ambysto.Kit.Safety.CloudFixture", "bin", configuration,
+            "net10.0-windows", "win-x64", "Ambysto.Kit.Safety.CloudFixture.exe");
+        if (!File.Exists(exe))
         {
-            Assert.Fail("the cloud fixture executable was not built: " + project);
+            Assert.Fail("the cloud fixture executable was not built: " + exe);
         }
-        return preferred!;
+        return exe;
     }
 
     /// <summary>Registers <paramref name="root"/> (created if needed) as a sync root of the test provider; the policies
