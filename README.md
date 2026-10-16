@@ -10,7 +10,7 @@ Shared foundation of the **Ambysto Pro Suite**, a set of native utilities that *
 
 This repo holds:
 
-- **The Kit:** a Swift package (a .NET library for Windows follows later) with license verification, brand tokens, the floating mini bar framework, suite discovery and the merged mini bar.
+- **The Kit:** a Swift package with license verification, brand tokens, the floating mini bar framework, suite discovery and the merged mini bar; and for Windows, in `windows/`, the .NET library `Ambysto.Kit.License` (license verification only so far, a NuGet package from `windows-v*` tags).
 - **Suite-level docs:** strategy intents (`intent/`), the platform-neutral license spec, customer policies and market research.
 
 Platform order: **every utility ships on macOS first, then Windows.**

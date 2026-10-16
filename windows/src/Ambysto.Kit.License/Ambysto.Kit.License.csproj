@@ -5,7 +5,21 @@
     <RootNamespace>Ambysto.Kit.Licensing</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- The real version comes only from a windows-vX.Y.Z tag (-p:Version in .github/workflows/windows-release.yml). -->
+    <Version>0.0.0-dev</Version>
+    <PackageId>Ambysto.Kit.License</PackageId>
+    <Authors>Ambysto</Authors>
+    <Description>Offline verification of Ambysto license keys (format 1): AMB- key texts and .ambystokey files, ECDSA P-256, no network.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ambysto/ambysto-kit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- GitHub's NuGet registry takes no .snupkg symbol packages: the symbols travel inside the one .nupkg. -->
+    <DebugType>embedded</DebugType>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Ambysto.Kit.License.Tests" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>
