@@ -1,5 +1,5 @@
 ---
-status: planned  # draft → approved → planned → building → verified → shipped (PR #n)
+status: building  # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit for Windows 0.2 — the file-safety gate (.NET)
 

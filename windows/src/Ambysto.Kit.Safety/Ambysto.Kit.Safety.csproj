@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The file-safety gate for Windows: docs/spec/safety.md. It decides; it never changes anything. No package references. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>Ambysto.Kit.Safety</AssemblyName>
+    <RootNamespace>Ambysto.Kit.Safety</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- The real version comes only from a windows-vX.Y.Z tag; packing is added in plan group 9. -->
+    <Version>0.0.0-dev</Version>
+    <IsPackable>false</IsPackable>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ambysto.Kit.Safety.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+{ "solution": "windows/Ambysto.Kit.slnx",
+  "suites": [
+    { "name": "license", "context": "session0", "filter": "FullyQualifiedName~Ambysto.Kit.Licensing" }
+  ],
+  "host_checks": [] }

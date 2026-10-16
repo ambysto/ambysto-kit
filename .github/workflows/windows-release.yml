@@ -42,9 +42,16 @@ jobs:
       - name: Swift and .NET key sets are equal
         run: python -I scripts/check-key-sets.py
 
-      - name: Test
+      - name: Build everything
         working-directory: windows
-        run: dotnet test -c Release Ambysto.Kit.slnx
+        run: dotnet build -c Release Ambysto.Kit.slnx
+
+      # APS-24: only the license tests run here. The safety tests need the Windows test machine (a standard user in an
+      # interactive session, removable, network and exFAT volumes, a cloud-files fixture); windows-latest runs as an
+      # administrator in a service session, where the gate refuses by design. They run in the VM before every tag.
+      - name: Test (license)
+        working-directory: windows
+        run: dotnet test -c Release --no-build tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj
 
       - name: Pack
         working-directory: windows
