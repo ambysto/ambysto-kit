@@ -10,6 +10,6 @@ public readonly record struct FileIdentity(ulong VolumeSerial, UInt128 FileId);
 
 /// <summary>What an app recorded about an item when it showed it, and what the gate compares before a move.</summary>
 /// <param name="Identity">Volume serial and file id.</param>
-/// <param name="LastWriteTimeUtcTicks">Last-write time, UTC, in 100 ns ticks.</param>
+/// <param name="LastWriteTimeUtcTicks">Last-write time as a Windows FILETIME: 100 ns intervals since 1601-01-01 UTC.</param>
 /// <param name="Length">The file's length in bytes; null for a folder.</param>
 public readonly record struct FileStamp(FileIdentity Identity, long LastWriteTimeUtcTicks, long? Length);

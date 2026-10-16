@@ -40,6 +40,10 @@ public enum RefusalReason
     Protected,
     /// <summary>Owned by TrustedInstaller or SYSTEM, or protected by Windows Resource Protection.</summary>
     SystemOwned,
+    /// <summary>Putting back: something already exists at the original location.</summary>
+    RestoreDestinationExists,
+    /// <summary>Putting back: the original folder no longer exists or moved.</summary>
+    RestoreFolderMissing,
     /// <summary>The app's allowed-root rule refused it.</summary>
     NotAllowed,
     /// <summary>A check could not establish its fact (failing closed).</summary>

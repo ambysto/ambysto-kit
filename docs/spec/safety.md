@@ -53,8 +53,8 @@ Windows note: the order on Windows, the first failure refusing the item:
 6. **Unchanged since shown**: same volume serial and 128-bit file id, same last-write time, and for files the same length.
 7. **Measure** the item now, walking a folder without entering reparse points and without opening any file for data. A cloud-tagged folder inside the item is not entered either, and the item is refused as a cloud file (step 9).
 8. **Recoverable**: see "Windows: recoverable moves".
-9. **Cloud**: see "Windows: recoverable moves".
-10. Not a volume root, the profile folder, the profiles folder, another user's profile, `Public` or `Default`.
+9. **Cloud**: see "Windows: recoverable moves"; an online-only or partly downloaded file (or a folder holding one) is checked before the cloud-sync roots.
+10. Not a volume root, the profile folder, the profiles folder, another user's profile, `Public` or `Default`. This is a check on the canonical path alone and runs **right after step 5**, so a drive or a profile is never walked; the steps keep their numbers.
 11. **Protection**: as step 7 above, by path and by identity (volume serial + file id) of the item and every folder above it; neither the item nor anything in it owned by TrustedInstaller or SYSTEM or protected by Windows Resource Protection.
 12. **Allowed roots**: as step 8 above.
 
@@ -102,6 +102,8 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 | root or profile | "A drive, a profile or the profiles folder itself is never moved." |
 | protected | "Protected location" |
 | system-owned | "Owned by Windows" |
+| destination exists | "Something already exists at the original location" |
+| destination folder gone | "The original folder no longer exists or moved" |
 | not allowed | the app's own text |
 | could not verify | "Could not verify: <check>" |
 
@@ -109,7 +111,7 @@ Every check that cannot establish its fact (an error, access denied, an unknown 
 
 A destination that does not exist yet passes: its folder exists; protection (step 7, by path and by identity of every existing folder above it); and the app's separate restore rule (a restore is judged differently from a delete: the item is not there yet).
 
-Windows note: putting back is a move too, so the environment check (Windows step 1) runs first; identity is volume serial + file id. The restore move itself is the app's, never the shell's restore, which blocks on a dialog when the destination is taken.
+Windows note: putting back is a move too, so the environment check (Windows step 1) runs first; identity is volume serial + file id. A destination that already exists is refused ("destination exists"), and so is one whose folder is gone ("destination folder gone"); a destination inside a cloud-sync root is refused as a cloud-sync folder. The restore move itself is the app's, never the shell's restore, which blocks on a dialog when the destination is taken.
 
 ## In use
 

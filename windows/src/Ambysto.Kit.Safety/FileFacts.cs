@@ -30,6 +30,9 @@ public static class FileFacts
 {
     /// <summary>Reads the canonical path and stamp of a file or folder.</summary>
     /// <param name="path">A drive-letter path (also <c>\\?\</c> drive paths and mapped drives); network and device spellings are refused.</param>
+    /// <remarks>Refused, with the gate's reason: network and device spellings (<see cref="RefusalReason.UnsupportedPathForm"/>),
+    /// a link, junction, mount point or other non-cloud reparse point (<see cref="RefusalReason.LinkOrSpecialFile"/>, no stamp is read through it),
+    /// FAT and exFAT volumes (<see cref="RefusalReason.UnsupportedVolume"/>: no stable identity), a gone item (<see cref="RefusalReason.AlreadyGone"/>).</remarks>
     /// <returns>The facts, or why none were read.</returns>
     public static FileFactsResult Read(string path) => throw new NotImplementedException();
 }
