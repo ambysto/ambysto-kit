@@ -1,5 +1,5 @@
 ---
-status: verified  # draft → approved → planned → building → verified → shipped (PR #n)
+status: shipped (PR #55)  # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit for Windows 0.1 — offline license keys (.NET)
 
