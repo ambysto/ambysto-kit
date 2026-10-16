@@ -1,5 +1,5 @@
 ---
-status: draft  # draft → approved → planned → building → verified → shipped (PR #n)
+status: approved  # draft → approved → planned → building → verified → shipped (PR #n)
 ---
 # Ambysto Kit for Windows 0.2 — the file-safety gate (.NET)
 
@@ -121,6 +121,8 @@ Conditions can change between the gate and the move: another process fills the b
 - Other volumes than the system volume as allowed roots; removable and network volumes are refused, not supported.
 - Cloud-sync roots as allowed roots (decision 4).
 - ARM64 builds; Windows 10.
+
+Approved by the owner on 2026-10-16.
 
 ## Open questions
 
