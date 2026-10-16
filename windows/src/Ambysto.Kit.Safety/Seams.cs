@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>Facts about the calling process's environment (Windows step 1). Internal seam: only the Kit's tests replace it.</summary>

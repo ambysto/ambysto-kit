@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>The owner of one folder or file on an item's path.</summary>

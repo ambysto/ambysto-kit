@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>A process that holds something inside an item.</summary>

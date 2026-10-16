@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>What the app showed: the path and the stamp it recorded at scan time.</summary>

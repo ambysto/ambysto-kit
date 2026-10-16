@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>The result of <see cref="FileFacts.Read(string)"/>.</summary>

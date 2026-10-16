@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>Why the gate refused an item (docs/spec/safety.md, "Windows: refusal reasons").</summary>

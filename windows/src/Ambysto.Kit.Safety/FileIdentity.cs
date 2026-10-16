@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ambysto.Kit.Safety;
 
 /// <summary>A file or folder's identity on Windows: the volume serial and the 128-bit file id (docs/spec/safety.md, "Unchanged since shown").</summary>
