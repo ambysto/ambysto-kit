@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- MSTest (Microsoft's own), test project only: owner decision 2026-10-16 (APS-23). -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Ambysto.Kit.Licensing.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="4.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ambysto.Kit.License/Ambysto.Kit.License.csproj" />
+  </ItemGroup>
+</Project>
