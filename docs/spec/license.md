@@ -54,7 +54,7 @@ Parsing uses **ASCII only**:
 
 ## File
 
-An `.ambystokey` file holds the text in UTF-8, optionally followed by a newline, at most **4096 bytes**; a leading UTF-8 byte order mark (`EF BB BF`) is ignored; a file that is not valid UTF-8 is malformed. The 4096 bytes are counted on the raw file, the byte order mark included. A file that is larger, missing or cannot be read is malformed too; so is a UTF-16 byte order mark, which is not valid UTF-8. Uniform type identifier `com.ambysto.license-key`, conforming to `public.data`. Apps declare it as an imported type and as a document type. With several Ambysto apps installed, the system opens the file with one of them; that app explains which apps the key covers if it does not cover itself. A suite key activates only the app it was opened in; each app is activated separately.
+An `.ambystokey` file holds the text in UTF-8, optionally followed by a newline, at most **4096 bytes**; a leading UTF-8 byte order mark (`EF BB BF`) is ignored; a file that is not valid UTF-8 is malformed. The 4096 bytes are counted on the raw file, the byte order mark included. A file that is larger or missing, or that cannot be read, is malformed too; so is a UTF-16 byte order mark, which is not valid UTF-8. Uniform type identifier `com.ambysto.license-key`, conforming to `public.data`. Apps declare it as an imported type and as a document type. With several Ambysto apps installed, the system opens the file with one of them; that app explains which apps the key covers if it does not cover itself. A suite key activates only the app it was opened in; each app is activated separately.
 
 ## Verification order
 

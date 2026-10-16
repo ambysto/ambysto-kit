@@ -21,16 +21,16 @@ What a license is for does not change (APS-10, owner 2026-10-10): an honesty-bas
 
 ## Outcome
 
-`windows-v0.1.0` of `ambysto/ambysto-kit`: a .NET class library, **`Ambysto.Kit.License`**, built from the spec alone (never from the Swift code), in a new `windows/` folder of this repo (suite decision 7: one repository, `windows/` beside the macOS code, sharing `docs/spec/`).
+`windows-v0.1.0` of `ambysto/ambysto-kit`: a .NET class library, **`Ambysto.Kit.License`**, built from the spec alone (never from the Swift code), in a new `windows/` folder of this repo (suite decision 7, applied by analogy: it puts `macos/` and `windows/` side by side in each app's repository; the Kit's Swift package stays at the root, and `windows/` sits beside it, sharing `docs/spec/`).
 
 ### 1. The library
 
 - **Verify** a key text and an `.ambystokey` file, in the spec's order, to either a license or one of the five reasons (malformed, unsupported version, unknown signing key, bad signature, revoked), each with the spec's exact message.
 - **The license:** licensee, products, license key id (16 lowercase hex characters), issued day, updates-until day (none = updates for life), seats, signing key id; "covers this product" and "allows updates for a build made on this day". Days are UTC dates.
-- **Identity** (spec, "Signature"): the license key id is the identity. The public license type exposes no key text, signature or hash of them, and two licenses are equal exactly when their key ids are equal.
+- **Identity** (spec, "Signature"): the license key id is the identity. The public license type exposes no key text, signature or hash of them, and two licenses are equal exactly when their key ids are equal. This differs on purpose from the Swift type, which compares every field; the spec makes the key id the identity.
 - **Products:** the spec's fixed bit table (bit 2 `space` is shown as "Ambysto Lean", bit 6 is `gate`, "Ambysto Gate"); bits the library does not know are ignored.
 - **Trusted keys and revocations** compiled in. The production set is **empty** until the owner's key PR, exactly like the Swift Kit, and a test pins it. The published test key (id 0) is reachable only from the library's own tests; apps cannot construct a trusted set or a test key (the .NET counterpart of Swift's `package` access).
-- **One key list, two copies.** The Swift and .NET builds each compile in the production set and the revocations. They must never differ, or every paying Windows user gets "unknown signing key" (or a withdrawn key keeps working on one platform). So: `scripts/check-key-sets.py` compares the ids and public keys of both production sets and both revocation lists and fails on any difference; the owner's key PR and every revocation PR edit **both** copies and both pin tests; no `windows-v*` or `v*` tag is cut while the check fails.
+- **One key list, two copies.** The Swift and .NET builds each compile in the production set and the revocations. They must never differ, or every paying Windows user gets "unknown signing key" (or a withdrawn key keeps working on one platform). So: `scripts/check-key-sets.py` compares the ids and public keys of both production sets and both revocation lists and fails on any difference; the owner's key PR and every revocation PR edit **both** copies and both pin tests; no `windows-v*` or `v*` tag is cut while the check fails. The key PR (and a revocation PR) has two commits, one per copy: only the Swift commit is cherry-picked onto `release/0.2` (the release line in `CLAUDE.md`), and the Windows commit stays on `main`, where `windows-v*` tags are cut.
 - `System.Security.Cryptography` only (ECDSA P-256, SHA-256, IEEE P1363 signatures), as the spec's Windows note says. Strict UTF-8 decoding. Parsing is **ASCII-only**, as the spec requires (not .NET's Unicode letter and digit tests). The file is read as raw bytes and decoded by the spec's rules, never by a reader that guesses the encoding.
 - No network, no file writes, no registry, no device identifier, no telemetry. It reads only the key file it is given (4096 bytes at most).
 
@@ -52,7 +52,7 @@ What a license is for does not change (APS-10, owner 2026-10-10): an honesty-bas
 | # | Criterion | How it is checked |
 |---|---|---|
 | 1 | Every vector in `license-test-vectors.json` verifies to its documented result (fields or reason) | `dotnet test` in the VM |
-| 2 | Nothing throws on any input: at least 100,000 random strings, mutated vector texts and mutated key bytes each end in a license or one of the five reasons | fuzz test in the VM |
+| 2 | Nothing throws on any input, and nothing forged verifies: at least 100,000 random strings and every single-byte change of each valid vector's decoded key bytes are refused with one of the five reasons; mutated vector texts (which may still verify, `0` and `O` being the same symbol) end in a license or a reason without throwing | fuzz test in the VM |
 | 3 | The text form round-trips through lower case, spaces, tabs, line breaks, `O`/`I`/`L`, with or without `AMB`; non-ASCII letters and digits (for example full-width or Arabic-Indic digits) are malformed | tests |
 | 4 | File rules: 4096 raw bytes (a UTF-8 BOM included in the count) accepted and 4097 refused, a leading UTF-8 BOM ignored, one trailing newline accepted, invalid UTF-8 and a UTF-16 BOM malformed; oversize, missing and unreadable files malformed | tests |
 | 5 | A verifier built with the defaults trusts no key: every vector that reaches step 5 of the verification order is "unknown signing key"; the production set is pinned to no ids | tests |
@@ -79,7 +79,7 @@ What a license is for does not change (APS-10, owner 2026-10-10): an honesty-bas
 - Issuing keys on Windows. Keys are issued only on the owner's Mac (`LicenseTool`).
 - The other Kit modules for Windows: suite bar, safety, process reading, theme. Each gets its own intent.
 - Any app adopting the library, and an app's `.ambystokey` file association (each app registers its own).
-- Ambysto Steady's Windows app (Python): it does not consume a .NET library; it verifies from the spec in its own ticket if it ever gets a Pro tier.
+- Ambysto Steady's Windows app (a Python backend, `steady/CLAUDE.md`): it does not consume a .NET library; it verifies from the spec in its own ticket if it ever gets a Pro tier.
 - Online activation, seat enforcement, device binding, anti-cracking (unchanged from APS-10).
 - CI on every PR. Proofs run in the VM.
 
@@ -99,3 +99,12 @@ _None._ Decided by the owner on 2026-10-16: the package feed and the publishing 
 7. MINOR: the test framework was unnamed. Addressed: an open question.
 8. MINOR: CLAUDE.md, README, `.gitignore` and the proofs that wait for the production key were missing. Addressed: section 3 and the production-key paragraph.
 9. NIT: a tag-triggered workflow needs tag protection. Addressed: the publishing decision.
+
+**Round 2 (hard-reviewer: Fable 5.1, PASS, 2026-10-16).** All round-1 items verified in the text; the spec change matches the Swift verifier (`verify(fileAt:)`); `scripts/check-vectors.py` 35 of 35. 3 MINOR and 4 NIT, fixed after the PASS:
+1. MINOR: how the key PR's cherry-pick onto `release/0.2` handles the C# half. Fixed: two commits, only the Swift one is picked; `windows-v*` tags are cut on `main`.
+2. MINOR: criterion 2 did not require that nothing forged verifies. Fixed: random strings and single-byte changes of key bytes must be refused; mutated texts only must not throw.
+3. MINOR: Steady's Python backend had no source. Fixed: `steady/CLAUDE.md`.
+4. NIT: suite decision 7 is about app repositories. Fixed: "applied by analogy".
+5. NIT: equality by key id differs from the Swift type. Fixed: said to be deliberate.
+6. NIT: spec wording "larger, missing or cannot be read". Fixed.
+7. NIT: the Swift tests pin 5000 bytes, not the 4096/4097 boundary the spec now states. Not in this PR (the Swift side is not built on this machine; criterion 11).
