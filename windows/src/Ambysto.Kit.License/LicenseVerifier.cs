@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security;
+using System.Text;
 
 namespace Ambysto.Kit.Licensing;
 
@@ -15,6 +18,7 @@ public sealed class LicenseVerifier
     public const int MaxFileBytes = 4096;
 
     private static readonly byte[] Domain = "AMBYSTO-LICENSE-1"u8.ToArray();
+    private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     private readonly TrustedKeys trusted;
     private readonly FrozenSet<string> revoked;
@@ -74,5 +78,61 @@ public sealed class LicenseVerifier
         }
 
         return LicenseResult.Valid(payload.ToLicense());
+    }
+
+    /// <summary>
+    /// Verifies an <c>.ambystokey</c> file (docs/spec/license.md, "File"): at most 4096 raw bytes, strict UTF-8,
+    /// one leading UTF-8 byte order mark ignored. A larger, missing or unreadable file is malformed.
+    /// The file is read as raw bytes, never through a reader that detects the encoding.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
+    public LicenseResult VerifyFile(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        byte[] bytes;
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            // Length comes first: a device or pipe (for example CON) has none and throws instead of blocking on a read.
+            if (stream.Length > MaxFileBytes)
+            {
+                return LicenseResult.Refused(LicenseReason.Malformed);
+            }
+            // Read one byte more than allowed, so a file that grows while it is read is still refused.
+            bytes = new byte[MaxFileBytes + 1];
+            var total = 0;
+            int read;
+            while (total < bytes.Length && (read = stream.Read(bytes, total, bytes.Length - total)) > 0)
+            {
+                total += read;
+            }
+            if (total > MaxFileBytes)
+            {
+                return LicenseResult.Refused(LicenseReason.Malformed);
+            }
+            Array.Resize(ref bytes, total);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or NotSupportedException
+                                       or ArgumentException or SecurityException)
+        {
+            return LicenseResult.Refused(LicenseReason.Malformed);
+        }
+
+        string text;
+        try
+        {
+            // The whole file must be UTF-8; a UTF-16 byte order mark (FF FE or FE FF) is not.
+            text = StrictUtf8.GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            return LicenseResult.Refused(LicenseReason.Malformed);
+        }
+        // One leading UTF-8 byte order mark (EF BB BF, decoded as U+FEFF) is ignored; any other U+FEFF is malformed in Verify.
+        if (text.StartsWith('\uFEFF'))
+        {
+            text = text[1..];
+        }
+        return Verify(text);
     }
 }
