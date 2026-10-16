@@ -102,7 +102,7 @@ Not run here: anything on macOS (out of scope on this machine). Waiting for the 
 
 - ~~A tag ruleset so only the owner can create `windows-v*` tags.~~ Done 2026-10-16: ruleset `windows-release-tags` (creation, update and deletion restricted; bypass: repository admin).
 - A `read:packages` token in the VM's user NuGet config for criterion 12 (never in a repo).
-- ~~Push `windows-v0.1.0` on `main` after this PR merges.~~ Done 2026-10-16; its run failed at the push, so it has no package (#57). Push `windows-v0.1.1` on `main`.
+- ~~Push `windows-v0.1.0` on `main` after this PR merges.~~ Done 2026-10-16; its run failed at the push, so it has no package (#57). ~~Push `windows-v0.1.1`.~~ Pushed from a commit off `main`; no package. ~~Push `windows-v0.1.2` on `main`.~~ Done: the first package.
 - Optional: a software licence for the repository (none today); until then the package carries none.
 
 ## Review log
@@ -130,10 +130,10 @@ Not run here: anything on macOS (out of scope on this machine). Waiting for the 
 | 9 | `dotnet build -c Release`: 0 warnings, 0 errors |
 | 10 | `check-key-sets.py`: PASS (host); `check-key-sets-fixtures.sh`: 25 of 25 (host) |
 | 11 | `git diff main -- Sources Tests Package.swift`: empty; `docs/spec` only the two spec commits of the intent PR |
-| 12 | Rehearsed with a local feed: the package installs into a console app outside the repo, a valid test-key vector is `UnknownSigningKey` with the spec's message, the DLL embeds its PDB, no `.snupkg`. **Open:** the real feed. `windows-v0.1.0`'s run passed key sets, tests and pack, then failed at the push (`artifacts/*.nupkg` finds no file on Windows; reproduced in the VM, fixed by naming the exact file); the first package is `windows-v0.1.1` |
+| 12 | Rehearsed with a local feed: the package installs into a console app outside the repo, a valid test-key vector is `UnknownSigningKey` with the spec's message, the DLL embeds its PDB, no `.snupkg`. `windows-v0.1.0`'s run passed key sets, tests and pack, then failed at the push (`artifacts/*.nupkg` finds no file on Windows; reproduced in the VM, fixed by naming the exact file, #57). `windows-v0.1.1` pointed off `main` and stopped at that check. **Done with `windows-v0.1.2`** (run 38880623365: on main, key sets equal, 45 of 45 tests on `windows-latest`, packed, pushed): in the VM, as the standard user in its console session, a console app outside the repo restores `Ambysto.Kit.License` 0.1.2 from GitHub Packages (assembly 0.1.2.0), and a valid test-key vector is `UnknownSigningKey` with the spec's message |
 | Rerun as the VM's standard user | Tests never run elevated; on 6187690: build 0 warnings, 45 of 45, median 1.08 ms |
 | Mutation checks | (a) Unicode parsing, (b) revocation before signature, (c) no unused-bits check, (d) `File.ReadAllText`, (e) test key in production, (f) `>= 4096`, (g) leftovers ignored: each fails its tests |
 
 Not run: anything on macOS (out of scope on this machine).
 
-Shipped: #54 (`ca8b9d5`) and #55 (`950188d`) merged 2026-10-16. Criterion 12 on GitHub Packages follows the owner's `windows-v0.1.1` tag (`windows-v0.1.0` has no package; see the intent) and is recorded on APS-23 (#53).
+Shipped: #54 (`ca8b9d5`) and #55 (`950188d`) merged 2026-10-16; the release fix #57 (`f8795af`). Released as `windows-v0.1.2` (the first package; `windows-v0.1.0` and `windows-v0.1.1` have none, see the intent). Criterion 12 passed on that package.

@@ -24,6 +24,8 @@ What a license is for does not change (APS-10, owner 2026-10-10): an honesty-bas
 `windows-v0.1.0` of `ambysto/ambysto-kit`: a .NET class library, **`Ambysto.Kit.License`**, built from the spec alone (never from the Swift code), in a new `windows/` folder of this repo (suite decision 7, applied by analogy: it puts `macos/` and `windows/` side by side in each app's repository; the Kit's Swift package stays at the root, and `windows/` sits beside it, sharing `docs/spec/`).
 
 > Owner decision 2026-10-16: the release run of `windows-v0.1.0` failed at its last step (the push found no file: a wildcard path on Windows), so no package exists for that tag. Tags are never moved; the first package is **`windows-v0.1.1`**, from the fixed workflow. Earlier `windows-v0.1.0` wording is kept as written.
+>
+> Later the same day: `windows-v0.1.1` was cut from a local commit that is not on `main` (a stray amend of #55's merge commit, same tree, without the push fix); its run stopped at "the tagged commit is on main", so it has no package either. The first package is **`windows-v0.1.2`** (owner decision 2026-10-16), tagged on `origin/main` (`9d49a1e`): its run passed every step and pushed `Ambysto.Kit.License` 0.1.2.
 
 ### 1. The library
 
