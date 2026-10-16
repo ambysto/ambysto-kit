@@ -66,6 +66,12 @@ try {
     New-Item -ItemType Directory -Path $withDirLink | Out-Null
     $dirLink = Join-Path $withDirLink 'directory-symlink'
     New-Item -ItemType SymbolicLink -Path $dirLink -Target $targetDir | Out-Null
+    # 2b. A junction made by the administrator: followable by everyone (a standard user's own junction is refused by
+    # Windows as an untrusted mount point), alone in a folder; its target holds inner.txt.
+    $withJunction = Join-Path $dir 'with-admin-junction'
+    New-Item -ItemType Directory -Path $withJunction | Out-Null
+    New-Item -ItemType Junction -Path (Join-Path $withJunction 'junction') -Target $targetDir | Out-Null
+    if (-not (Test-Path -LiteralPath (Join-Path $withJunction 'junction\inner.txt'))) { throw 'the administrator-made junction cannot be followed' }
 
     # 3. Mount points.
     $withMount = Join-Path $dir 'with-mount-point'
@@ -204,6 +210,7 @@ while ($true) { Start-Sleep -Seconds 3600 }
         directorySymlink = $dirLink
         folderWithFileSymlink = $withFileLink
         folderWithDirectorySymlink = $withDirLink
+        folderWithAdminJunction = $withJunction
         mountPoint = $mount
         folderWithMountPoint = $withMount
         folderWithoutMountPoint = $withoutMount

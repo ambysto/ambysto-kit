@@ -150,6 +150,23 @@ public sealed class AdminSetupTests
         Assert.AreEqual(0, approved.LogicalBytes, "the linked folder's content was counted");
     }
 
+    /// <summary>Spec, recoverable moves: "recycling a folder that holds a junction ... leaves the target untouched ...
+    /// so such a folder is allowed". A junction made by the administrator can be followed (unlike the standard user's
+    /// own, which Windows refuses as an untrusted mount point), so this is the case where entering it would count the
+    /// target: the precondition shows the target's file through the junction, the gate must not count it.</summary>
+    [TestMethod]
+    [TestCategory(Cat.AdminSetup)]
+    public void AFolderHoldingAFollowableJunctionIsApprovedWithoutEnteringIt()
+    {
+        var folderWithJunction = Readable(handoff.FolderWithAdminJunction);
+        var junction = Path.Combine(folderWithJunction, "junction");
+        Assert.AreEqual(Win32.AttrReparsePoint, Win32.Attributes(junction) & Win32.AttrReparsePoint, "precondition: a junction");
+        Assert.IsTrue(File.Exists(Path.Combine(junction, "inner.txt")), "precondition: the junction can be followed by this user");
+        var approved = Expect.Approved(Gates.Check(folderWithJunction, policy: Allowed), Win32.FinalPath(folderWithJunction));
+        Assert.AreEqual(0, approved.FileCount, "the junction's target was entered");
+        Assert.AreEqual(0, approved.LogicalBytes, "the junction's target was counted");
+    }
+
     [TestMethod]
     [TestCategory(Cat.AdminSetup)]
     public void AFolderHoldingAMountPointIsRefusedAsContaining()

@@ -62,6 +62,9 @@ internal sealed class AdminHandoff
     /// <summary>A folder holding only the directory symbolic link.</summary>
     public string FolderWithDirectorySymlink => Required("folderWithDirectorySymlink");
 
+    /// <summary>A folder holding only a junction made by the administrator (followable, unlike the standard user's own).</summary>
+    public string FolderWithAdminJunction => Required("folderWithAdminJunction");
+
     /// <summary>A volume mount point (the exFAT volume mounted in a folder).</summary>
     public string MountPoint => Required("mountPoint");
 
