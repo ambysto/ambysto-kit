@@ -1,6 +1,6 @@
 # Plan: Ambysto Kit for Windows 0.2 — the file-safety gate (APS-24)
 
-Intent: [2026-10-16-kit-windows-safety.md](2026-10-16-kit-windows-safety.md) (approved 2026-10-16). Branch `aps-24-kit-windows-safety`. Contract: the intent and `docs/spec/safety.md` (with the Windows notes group 1 adds). Never the Swift code.
+Intent: [2026-10-16-kit-windows-safety.md](2026-10-16-kit-windows-safety.md) (approved 2026-10-16). Plan accepted by the owner 2026-10-16. Branch `aps-24-kit-windows-safety`. Contract: the intent and `docs/spec/safety.md` (with the Windows notes group 1 adds). Never the Swift code.
 
 This plan is self-contained with the intent and the spec. HARD throughout: the main session writes the library; **a separate agent writes the acceptance tests from the spec and the intent before the library exists** (group 3), so the tests are not shaped by the code; hard-reviewer reviews this plan, the tests and the code.
 
