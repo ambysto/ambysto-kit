@@ -91,9 +91,11 @@ def body(kind, path):
                 tail = re.match(after, rest, re.ASCII)
                 if not tail:
                     raise Unreadable(f"{kind}: unexpected text after the literal in {path}")
-                # Swift continues an expression on the next line with a leading dot (`.union(...)`): the next
-                # meaningful character after the literal's line must not be one.
-                if re.match(SKIP + r"\.", rest[tail.end():], re.ASCII):
+                # An allow-list, not a deny-list: after the literal's line, skipping whitespace and // comments, the
+                # next character must close the type (`}`) or start the next declaration (a letter, `_` or `@`),
+                # or the file ends. A leading-dot continuation (`.union(...)`), a block comment, a `#if` or an
+                # attribute in between is refused.
+                if not re.match(SKIP + r"(\}|[A-Za-z_@]|\Z)", rest[tail.end():], re.ASCII):
                     raise Unreadable(f"{kind}: unexpected text after the literal in {path}")
                 return text[start:i]
         i += 1

@@ -40,6 +40,8 @@ check fail-next-line-union-swift 1 "swift-revocations: unexpected text after the
 check fail-cs-wrapped-read-revocations 1 "cs-revocations: Ids is not read exactly as the frozen set's source"
 check fail-cs-wrapped-read-trusted 1 "cs-trusted: ProductionHex is not read exactly as the frozen set's source"
 check fail-commented-key-swift 1 "signing key id 2 is trusted in .NET but not in Swift"
+check fail-block-comment-union-swift 1 "swift-revocations: unexpected text after the literal"
+check fail-directive-union-swift 1 "swift-revocations: unexpected text after the literal"
 
 # The real sources, the usage error and a missing file.
 python3 -I "$CHECK" >/dev/null 2>&1 && echo "PASS real-sources (exit 0)" || { echo "FAIL real-sources"; bad=1; }
