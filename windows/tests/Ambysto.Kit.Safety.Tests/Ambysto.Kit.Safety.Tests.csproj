@@ -15,5 +15,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Ambysto.Kit.Safety/Ambysto.Kit.Safety.csproj" />
+    <!-- Build-only: whoever builds the tests (the gates in Release, Stryker.NET in Debug) builds the cloud fixture in the
+         same configuration, at the one exact path CloudRoot.FindExe expects. Without this, Stryker's Debug build had no
+         fixture, every CloudTest failed in its initial run and was excluded (0 covered, 0 killed). -->
+    <ProjectReference Include="../Ambysto.Kit.Safety.CloudFixture/Ambysto.Kit.Safety.CloudFixture.csproj"
+                      ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 </Project>

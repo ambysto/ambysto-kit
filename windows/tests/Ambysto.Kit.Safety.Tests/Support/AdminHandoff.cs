@@ -65,6 +65,12 @@ internal sealed class AdminHandoff
     /// <summary>A folder holding only a junction made by the administrator (followable, unlike the standard user's own).</summary>
     public string FolderWithAdminJunction => Required("folderWithAdminJunction");
 
+    /// <summary>A folder holding only an administrator-made junction whose target is the root of a fixed drive.</summary>
+    public string FolderWithJunctionToDriveRoot => Required("folderWithJunctionToDriveRoot");
+
+    /// <summary>A folder (readable) holding only an empty sub-folder `system-owned` owned by SYSTEM.</summary>
+    public string FolderWithSystemOwnedSubFolder => Required("folderWithSystemOwnedSubFolder");
+
     /// <summary>A volume mount point (the exFAT volume mounted in a folder).</summary>
     public string MountPoint => Required("mountPoint");
 

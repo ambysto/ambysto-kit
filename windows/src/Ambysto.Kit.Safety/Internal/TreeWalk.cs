@@ -100,21 +100,49 @@ internal static class TreeWalk
             facts.HoldsCloudNotFullyLocal = true; // refused at step 9; never opened, not even for its allocated size
             return;
         }
-        facts.AllocatedBytes += Allocated(path);
+        facts.AllocatedBytes += Allocated(path, attributes, length);
+    }
+
+    /// <summary>Data this small can live inside the file's own record, using no cluster (as Lean's walker reads it).</summary>
+    private const long ResidentLimit = 1024;
+
+    // Defect 7 (2026-10-17): GetCompressedFileSize answers a plain file's length, not the clusters it uses. A file that is
+    // neither compressed nor sparse is asked through its own handle, opened for attributes only; a compressed or sparse
+    // file, and one whose handle reports no clusters for more data than fits in its record (a WOF file), through
+    // GetCompressedFileSize.
+    private static long Allocated(string path, uint attributes, long length)
+    {
+        if ((attributes & (FILE_ATTRIBUTE_COMPRESSED | FILE_ATTRIBUTE_SPARSE_FILE)) == 0)
+        {
+            var (probe, error) = FileProbe.Open(path, readControl: false);
+            if (probe is null)
+            {
+                throw new Win32Exception(error, "allocated size of " + path);
+            }
+            using (probe)
+            {
+                var allocation = probe.AllocationSize();
+                if (allocation > 0 || length <= ResidentLimit)
+                {
+                    return allocation;
+                }
+            }
+        }
+        return CompressedSize(path);
     }
 
     private static long SizeOf(string path)
     {
-        if (!GetFileAttributesEx(PathSpelling.Extended(path), 0, out var data))
+        if (!Faults.Ok(Faults.Query.Size, GetFileAttributesEx(PathSpelling.Extended(path), 0, out var data), path))
         {
             throw new Win32Exception(Marshal.GetLastPInvokeError(), "size of " + path);
         }
         return ((long)data.FileSizeHigh << 32) | data.FileSizeLow;
     }
 
-    private static long Allocated(string path)
+    private static long CompressedSize(string path)
     {
-        var low = GetCompressedFileSize(PathSpelling.Extended(path), out var high);
+        var low = Faults.Value(Faults.Query.AllocatedSize, GetCompressedFileSize(PathSpelling.Extended(path), out var high), INVALID_FILE_SIZE, path);
         if (low == INVALID_FILE_SIZE)
         {
             var error = Marshal.GetLastPInvokeError();
@@ -158,7 +186,6 @@ internal static class TreeWalk
         }
     }
 
-    private const int ERROR_UNTRUSTED_MOUNT_POINT = 448;
     private const uint VOLUME_NAME_GUID = 0x1;
 
     /// <summary>One folder's entries; a folder that cannot be listed throws (failing closed).</summary>
@@ -166,9 +193,14 @@ internal static class TreeWalk
     {
         var entries = new List<(string, uint, uint, long)>();
         var handle = FindFirstFileEx(PathSpelling.Extended(folder) + "\\*", FindExInfoBasic, out var data, FindExSearchNameMatch, IntPtr.Zero, FIND_FIRST_EX_LARGE_FETCH);
-        if (handle == new IntPtr(-1))
+        if (!Faults.Ok(Faults.Query.ListFirst, handle != new IntPtr(-1), folder))
         {
-            throw new Win32Exception(Marshal.GetLastPInvokeError(), "list " + folder);
+            var error = Marshal.GetLastPInvokeError();
+            if (handle != new IntPtr(-1))
+            {
+                FindClose(handle);
+            }
+            throw new Win32Exception(error, "list " + folder);
         }
         try
         {
@@ -177,10 +209,11 @@ internal static class TreeWalk
                 var name = new string(data.FileName);
                 if (name is not "." and not "..")
                 {
-                    var tag = (data.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0 ? data.Reserved0 : 0u;
-                    entries.Add((name, data.FileAttributes, tag, ((long)data.FileSizeHigh << 32) | data.FileSizeLow));
+                    var (attributes, tag) = Faults.Entry(Faults.Query.Listing, folder + "\\" + name, data.FileAttributes,
+                        (data.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0 ? data.Reserved0 : 0u);
+                    entries.Add((name, attributes, tag, ((long)data.FileSizeHigh << 32) | data.FileSizeLow));
                 }
-                if (!FindNextFile(handle, out data))
+                if (!Faults.Ok(Faults.Query.ListNext, FindNextFile(handle, out data), folder))
                 {
                     var error = Marshal.GetLastPInvokeError();
                     if (error != ERROR_NO_MORE_FILES)

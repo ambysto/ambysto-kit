@@ -34,7 +34,7 @@ internal sealed class SystemEnvironmentFacts : IEnvironmentFacts
         get
         {
             using var identity = WindowsIdentity.GetCurrent();
-            if (!TokenMethods.GetTokenInformation(identity.AccessToken, TokenMethods.TokenElevation, out var elevated, sizeof(int), out _))
+            if (!Internal.Faults.Ok(Internal.Faults.Query.TokenElevation, TokenMethods.GetTokenInformation(identity.AccessToken, TokenMethods.TokenElevation, out var elevated, sizeof(int), out _)))
             {
                 throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "token elevation");
             }

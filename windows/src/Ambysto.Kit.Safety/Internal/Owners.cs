@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Security.Principal;
 using Ambysto.Kit.Safety.Native;
 using static Ambysto.Kit.Safety.Native.NativeMethods;
@@ -19,6 +18,11 @@ internal static class Owners
     internal static string OwnerOf(FileProbe probe)
     {
         var rc = GetSecurityInfo(probe.Handle, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, out var owner, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, out var descriptor);
+        if (Faults.Code(Faults.Query.Owner, (int)rc, probe.Path) != 0 && rc == 0)
+        {
+            LocalFree(descriptor);
+            rc = (uint)Faults.InjectedError;
+        }
         if (rc != 0)
         {
             throw new System.ComponentModel.Win32Exception((int)rc, "owner");
@@ -31,36 +35,5 @@ internal static class Owners
         {
             LocalFree(descriptor);
         }
-    }
-
-    /// <summary>The item first, then each folder above it up to and including the volume root.</summary>
-    internal static List<OwnerFact> Chain(string canonical, string volumeRoot)
-    {
-        var facts = new List<OwnerFact>();
-        var current = canonical;
-        while (true)
-        {
-            var (probe, error) = FileProbe.Open(current);
-            if (probe is null)
-            {
-                throw new System.ComponentModel.Win32Exception(error, "owner of " + current);
-            }
-            using (probe)
-            {
-                var sid = OwnerOf(probe);
-                facts.Add(new OwnerFact(current, sid, string.Equals(sid, CurrentUserSid, StringComparison.Ordinal)));
-            }
-            if (string.Equals(current.TrimEnd('\\') + "\\", volumeRoot, StringComparison.OrdinalIgnoreCase) || current.Length <= 3)
-            {
-                break;
-            }
-            var parent = System.IO.Path.GetDirectoryName(current);
-            if (string.IsNullOrEmpty(parent))
-            {
-                break;
-            }
-            current = parent;
-        }
-        return facts;
     }
 }

@@ -104,6 +104,53 @@ public sealed class RecycleBinTests
     public void WithoutAPolicyTheRealReaderReportsAllowed()
         => Assert.AreEqual(false, SystemRecycleBinPolicy.Instance.NoRecycleFiles);
 
+    private const long GiB = 1L << 30;
+
+    /// <summary>G05: sizes of 4 GiB and more are measured in full. With the bin below 4 GiB a sparse file of 4 GiB + 1 MiB
+    /// (no disk space) is too large on its own and as the only file in a folder; with the bin raised above it the folder
+    /// is approved and its LogicalBytes is the exact length.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void SizesOfFourGigabytesAndMoreAreMeasuredInFull()
+    {
+        using var settings = new RecycleBinVolumeSettings(Volumes.System);
+        var length = 4 * GiB + MiB;
+        var alone = folder.Combine("four-gib.bin");
+        Win32.CreateSparseFile(alone, length);
+        var holder = folder.Dir("holder");
+        Win32.CreateSparseFile(folder.Combine(@"holder\four-gib.bin"), length);
+        settings.SetMaxCapacityMegabytes(2048);
+        Expect.Refused(Gates.Check(alone), RefusalReason.TooLargeForRecycleBin);
+        Expect.Refused(Gates.Check(holder), RefusalReason.TooLargeForRecycleBin);
+        settings.SetMaxCapacityMegabytes(8192);
+        var approved = Expect.Approved(Gates.Check(holder), Win32.FinalPath(holder));
+        Assert.AreEqual(length, approved.LogicalBytes, "the exact length above 4 GiB");
+        Assert.AreEqual(1, approved.FileCount);
+        Assert.AreEqual(length, Expect.Approved(Gates.Check(alone), Win32.FinalPath(alone)).LogicalBytes);
+    }
+
+    /// <summary>G35: "an item larger than the room left" refuses, so exactly the room left (the whole size minus the bin's
+    /// use as the shell reports it) is approved and one byte more is full.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ExactlyTheRoomLeftIsNotFullAndOneByteMoreIs()
+    {
+        using var settings = new RecycleBinVolumeSettings(Volumes.System);
+        using var recycled = RecycledFixture.Recycle(folder.File("eight.bin", 8 * MiB));
+        var used = Win32.RecycleBinBytes(Volumes.System);
+        var capacity = (int)((used + 3 * MiB) / MiB);
+        settings.SetMaxCapacityMegabytes(capacity);
+        var room = capacity * MiB - used;
+        Assert.IsTrue(room > MiB, $"room {room}");
+        var exactly = folder.Combine("exactly-the-room.bin");
+        Win32.CreateSparseFile(exactly, room);
+        var oneMore = folder.Combine("one-byte-more.bin");
+        Win32.CreateSparseFile(oneMore, room + 1);
+        Assert.AreEqual(used, Win32.RecycleBinBytes(Volumes.System), "precondition: the bin's use did not change while sizing");
+        Expect.Approved(Gates.Check(exactly), Win32.FinalPath(exactly));
+        Expect.Refused(Gates.Check(oneMore), RefusalReason.RecycleBinFull);
+    }
+
     private const long Margin = 64 * 1024;
 
     /// <summary>Spec (measured): "sizes are logical lengths (not the space on disk), the size setting is in MiB, and the

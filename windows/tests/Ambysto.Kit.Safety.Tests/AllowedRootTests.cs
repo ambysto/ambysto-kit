@@ -8,7 +8,7 @@ namespace Ambysto.Kit.Safety.Tests;
 
 /// <summary>Windows step 12: the app's rule runs last, with the facts the spec lists (intent Outcome 5, criterion 8).</summary>
 [TestClass]
-public sealed class AllowedRootTests
+public sealed partial class AllowedRootTests
 {
     private TempFolder folder = null!;
     private string file = "";
@@ -98,4 +98,31 @@ public sealed class AllowedRootTests
         Assert.IsTrue(approved.AllocatedBytes >= approved.LogicalBytes, "allocated covers the logical bytes of plain files");
         Assert.IsTrue(approved.AllocatedBytes <= approved.LogicalBytes + 3 * 65536, "allocated is at most a cluster per file above");
     }
+
+    /// <summary>Defect 7: allocated bytes are the clusters a plain file uses, not its length: a 5,002-byte file uses two
+    /// 4 KiB clusters (the cluster size read from the volume), and a file small enough to live in its record uses less than one.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AnApprovedPlainFileCountsTheClustersItUses()
+    {
+        var cluster = ClusterSize(Path.GetPathRoot(folder.Path)!);
+        var file = folder.File("plain.bin", 5002);
+        var approved = Expect.Approved(Gates.Check(file), Win32.FinalPath(file));
+        Assert.AreEqual(5002, approved.LogicalBytes);
+        Assert.AreEqual((5002 + cluster - 1) / cluster * cluster, approved.AllocatedBytes, "whole clusters, cluster size " + cluster);
+
+        var tiny = folder.File("tiny.bin", 100);
+        var tinyAllocated = Expect.Approved(Gates.Check(tiny), Win32.FinalPath(tiny)).AllocatedBytes;
+        Assert.IsTrue(tinyAllocated < cluster, "resident in its record (measured 2026-10-17: 104 bytes, the data rounded to 8): " + tinyAllocated);
+    }
+
+    private static long ClusterSize(string root)
+    {
+        Assert.IsTrue(GetDiskFreeSpaceW(root, out var sectorsPerCluster, out var bytesPerSector, out _, out _), "cluster size of " + root);
+        return (long)sectorsPerCluster * bytesPerSector;
+    }
+
+    [System.Runtime.InteropServices.LibraryImport("kernel32.dll", EntryPoint = "GetDiskFreeSpaceW", StringMarshalling = System.Runtime.InteropServices.StringMarshalling.Utf16, SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool GetDiskFreeSpaceW(string root, out uint sectorsPerCluster, out uint bytesPerSector, out uint freeClusters, out uint totalClusters);
 }

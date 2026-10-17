@@ -20,6 +20,8 @@ internal enum HoldKind
     CurrentDirectory,
     /// <summary>Nothing opened: the item's path appears only in the process's command line.</summary>
     CommandLineOnly,
+    /// <summary>An open directory handle on the folder (not its current directory).</summary>
+    DirectoryHandle,
 }
 
 /// <summary>Another process (Windows PowerShell 5.1, always present) that holds a fixture in one of the ways the spec
@@ -30,7 +32,15 @@ internal sealed class HolderProcess : IDisposable
     private const string Script = """
         param([string]$Kind, [string]$Target)
         $ErrorActionPreference = 'Stop'
+        # A target of 'stdin' is read from stdin, so the item's path appears nowhere in this process's command line
+        # (a bare '-' would be taken for a parameter name by powershell.exe -File).
+        if ($Target -eq 'stdin') { $Target = [Console]::In.ReadLine() }
         switch ($Kind) {
+            'DirectoryHandle' {
+                Add-Type -Namespace AmbystoHolder -Name Dir -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern Microsoft.Win32.SafeHandles.SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);'
+                $global:h = [AmbystoHolder.Dir]::CreateFileW($Target, 0x80, 7, [IntPtr]::Zero, 3, 0x02000000, [IntPtr]::Zero)
+                if ($global:h.IsInvalid) { throw "CreateFile on the folder failed: $([System.Runtime.InteropServices.Marshal]::GetLastWin32Error())" }
+            }
             'OpenNoDeleteSharing' { $global:h = [System.IO.File]::Open($Target, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read) }
             'OpenWithDeleteSharing' { $global:h = [System.IO.File]::Open($Target, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, ([System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete)) }
             'LoadedLibrary' {
@@ -67,16 +77,24 @@ internal sealed class HolderProcess : IDisposable
 
     public int ProcessId => process.Id;
 
-    public static HolderProcess Start(HoldKind kind, string target)
+    /// <summary>Starts a holder. With <paramref name="viaStdin"/> the path reaches the holder through its stdin and
+    /// appears nowhere in its command line, image or current directory: only the handle (or mapping) names it.
+    /// With <paramref name="workingDirectory"/> the holder starts there instead of the temp folder (a relative
+    /// <paramref name="target"/> on its command line is then relative to it).</summary>
+    public static HolderProcess Start(HoldKind kind, string target, bool viaStdin = false, string? workingDirectory = null)
     {
         var scriptPath = Path.Combine(Path.GetTempPath(), "ambysto-holder-" + Guid.NewGuid().ToString("N")[..8] + ".ps1");
         File.WriteAllText(scriptPath, Script);
         var info = StartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"));
-        foreach (var a in new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath, kind.ToString(), target })
+        if (workingDirectory is not null)
+        {
+            info.WorkingDirectory = workingDirectory; // H02: a relative argument is resolved against this
+        }
+        foreach (var a in new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath, kind.ToString(), viaStdin ? "stdin" : target })
         {
             info.ArgumentList.Add(a);
         }
-        return Launch(info, scriptPath, kind.ToString());
+        return Launch(info, scriptPath, kind.ToString(), viaStdin ? target : null);
     }
 
     /// <summary>Runs <paramref name="exePath"/>, a copy of cmd.exe the test placed inside the item, as a process whose
@@ -99,10 +117,15 @@ internal sealed class HolderProcess : IDisposable
         WorkingDirectory = Path.GetTempPath(),
     };
 
-    private static HolderProcess Launch(ProcessStartInfo info, string? scriptPath, string what)
+    private static HolderProcess Launch(ProcessStartInfo info, string? scriptPath, string what, string? stdinLine = null)
     {
         var process = Process.Start(info)!;
         var holder = new HolderProcess(process, scriptPath);
+        if (stdinLine is not null)
+        {
+            process.StandardInput.WriteLine(stdinLine);
+            process.StandardInput.Flush();
+        }
         var ready = process.StandardOutput.ReadLine();
         if (ready is null || !ready.Contains("READY", StringComparison.Ordinal))
         {

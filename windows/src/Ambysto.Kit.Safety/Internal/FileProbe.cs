@@ -9,18 +9,21 @@ namespace Ambysto.Kit.Safety.Internal;
 /// <summary>What one open, for attributes and security only, tells about an item. Never opens for data.</summary>
 internal sealed class FileProbe : IDisposable
 {
-    private FileProbe(SafeFileHandle handle) { Handle = handle; }
+    private FileProbe(SafeFileHandle handle, string path) { Handle = handle; Path = path; }
 
     internal SafeFileHandle Handle { get; }
+
+    /// <summary>The plain path it was opened by (for the fault seam).</summary>
+    internal string Path { get; }
 
     public void Dispose() => Handle.Dispose();
 
     /// <summary>The attributes without opening (Windows step 2: an item marked recall-on-open is never opened).</summary>
     internal static (uint Attributes, int Error) Attributes(string plain)
     {
-        if (GetFileAttributesEx(PathSpelling.Extended(plain), 0, out var data))
+        if (Faults.Ok(Faults.Query.AttributesByName, GetFileAttributesEx(PathSpelling.Extended(plain), 0, out var data), plain))
         {
-            return (data.FileAttributes, 0);
+            return (Faults.Entry(Faults.Query.AttributesByName, plain, data.FileAttributes, 0).Attributes, 0);
         }
         return (0, System.Runtime.InteropServices.Marshal.GetLastPInvokeError());
     }
@@ -30,6 +33,7 @@ internal sealed class FileProbe : IDisposable
     /// <summary>Opens for attributes and the security descriptor, never following a reparse point.</summary>
     internal static (FileProbe? Probe, int Error) Open(string plain, bool readControl = true)
     {
+        Faults.Point(Faults.Query.Open, plain);
         var access = FILE_READ_ATTRIBUTES | (readControl ? READ_CONTROL : 0);
         var handle = CreateFile(PathSpelling.Extended(plain), access, FILE_SHARE_ALL, IntPtr.Zero, OPEN_EXISTING,
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, IntPtr.Zero);
@@ -39,12 +43,13 @@ internal sealed class FileProbe : IDisposable
             handle.Dispose();
             return (null, error);
         }
-        return (new FileProbe(handle), 0);
+        return (new FileProbe(handle, plain), 0);
     }
 
     /// <summary>Opens what a link points to (following it), for attributes only: a folder, never data.</summary>
     internal static (FileProbe? Probe, int Error) OpenTarget(string plain)
     {
+        Faults.Point(Faults.Query.Open, plain);
         var handle = CreateFile(PathSpelling.Extended(plain), FILE_READ_ATTRIBUTES, FILE_SHARE_ALL, IntPtr.Zero, OPEN_EXISTING,
             FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero);
         if (handle.IsInvalid)
@@ -53,13 +58,13 @@ internal sealed class FileProbe : IDisposable
             handle.Dispose();
             return (null, error);
         }
-        return (new FileProbe(handle), 0);
+        return (new FileProbe(handle, plain), 0);
     }
 
     internal unsafe (uint Attributes, uint Tag) AttributeTag()
     {
         FILE_ATTRIBUTE_TAG_INFO info;
-        if (!GetFileInformationByHandleEx(Handle, FileInfoClass.FileAttributeTagInfo, &info, (uint)sizeof(FILE_ATTRIBUTE_TAG_INFO)))
+        if (!Faults.Ok(Faults.Query.AttributeTag, GetFileInformationByHandleEx(Handle, FileInfoClass.FileAttributeTagInfo, &info, (uint)sizeof(FILE_ATTRIBUTE_TAG_INFO)), Path))
         {
             throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "attribute tag");
         }
@@ -69,20 +74,31 @@ internal sealed class FileProbe : IDisposable
     internal unsafe FileIdentity Identity()
     {
         FILE_ID_INFO info;
-        if (!GetFileInformationByHandleEx(Handle, FileInfoClass.FileIdInfo, &info, (uint)sizeof(FILE_ID_INFO)))
+        if (!Faults.Ok(Faults.Query.FileId, GetFileInformationByHandleEx(Handle, FileInfoClass.FileIdInfo, &info, (uint)sizeof(FILE_ID_INFO)), Path))
         {
             throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "file id");
         }
         return new FileIdentity(info.VolumeSerialNumber, new UInt128(info.FileIdHigh, info.FileIdLow));
     }
 
+    /// <summary>The clusters the file uses (<c>FILE_STANDARD_INFO.AllocationSize</c>), read from the handle.</summary>
+    internal unsafe long AllocationSize()
+    {
+        FILE_STANDARD_INFO standard = default;
+        if (!Faults.Ok(Faults.Query.AllocatedSize, GetFileInformationByHandleEx(Handle, FileInfoClass.FileStandardInfo, &standard, (uint)sizeof(FILE_STANDARD_INFO)), Path))
+        {
+            throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "allocated size of " + Path);
+        }
+        return standard.AllocationSize;
+    }
+
     internal unsafe FileStamp Stamp()
     {
         var identity = Identity();
         FILE_BASIC_INFO basic;
-        FILE_STANDARD_INFO standard;
-        if (!GetFileInformationByHandleEx(Handle, FileInfoClass.FileBasicInfo, &basic, (uint)sizeof(FILE_BASIC_INFO))
-            || !GetFileInformationByHandleEx(Handle, FileInfoClass.FileStandardInfo, &standard, (uint)sizeof(FILE_STANDARD_INFO)))
+        FILE_STANDARD_INFO standard = default;
+        if (!Faults.Ok(Faults.Query.TimesAndLength, GetFileInformationByHandleEx(Handle, FileInfoClass.FileBasicInfo, &basic, (uint)sizeof(FILE_BASIC_INFO))
+            && GetFileInformationByHandleEx(Handle, FileInfoClass.FileStandardInfo, &standard, (uint)sizeof(FILE_STANDARD_INFO)), Path))
         {
             throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "file times and length");
         }
@@ -103,7 +119,7 @@ internal sealed class FileProbe : IDisposable
             {
                 length = GetFinalPathNameByHandle(Handle, b, size, FILE_NAME_NORMALIZED | volumeName);
             }
-            if (length == 0)
+            if (!Faults.Ok(Faults.Query.FinalPath, length != 0, Path))
             {
                 throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "final path");
             }
@@ -120,7 +136,7 @@ internal sealed class FileProbe : IDisposable
         var name = new char[64];
         fixed (char* n = name)
         {
-            if (!GetVolumeInformationByHandle(Handle, null, 0, out _, out _, out _, n, (uint)name.Length))
+            if (!Faults.Ok(Faults.Query.FileSystem, GetVolumeInformationByHandle(Handle, null, 0, out _, out _, out _, n, (uint)name.Length), Path))
             {
                 throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "file system");
             }
@@ -134,7 +150,7 @@ internal sealed class FileProbe : IDisposable
         var buffer = new char[32768];
         fixed (char* b = buffer)
         {
-            if (!GetVolumePathName(PathSpelling.Extended(plain), b, (uint)buffer.Length))
+            if (!Faults.Ok(Faults.Query.VolumeRoot, GetVolumePathName(PathSpelling.Extended(plain), b, (uint)buffer.Length), plain))
             {
                 throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "volume root");
             }

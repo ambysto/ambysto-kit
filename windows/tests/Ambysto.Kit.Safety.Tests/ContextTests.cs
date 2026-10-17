@@ -15,11 +15,15 @@ public sealed class ContextTests
     private static string Roaming => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     private static string Local => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
+    /// <summary>A context resolved inside the test (not the one cached for the test process): under mutation testing
+    /// a cached context was resolved before the mutant was active, so a mutated resolution was never seen (G28).</summary>
+    private static SafetyContext Fresh => SafetyContext.ForCurrentUser([]);
+
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void TheProfileFoldersAreResolved()
     {
-        var context = Gates.Context;
+        var context = Fresh;
         Assert.AreEqual(Win32.FinalPath(Profile), context.ProfileFolder);
         Assert.AreEqual(Path.GetDirectoryName(Win32.FinalPath(Profile)), context.ProfilesFolder);
     }
@@ -28,7 +32,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void NeverTouchHoldsTheProfileRows()
     {
-        var list = Gates.Context.NeverTouchFolders;
+        var list = Fresh.NeverTouchFolders;
         foreach (var relative in new[] { @".claude\projects", ".ssh", ".gnupg", @"Apple\MobileSync\Backup" })
         {
             Expect.ContainsPath(list, Path.Combine(Profile, relative), relative);
@@ -40,7 +44,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void NeverTouchHoldsTheCredentialMailStoreAndBackupRows()
     {
-        var list = Gates.Context.NeverTouchFolders;
+        var list = Fresh.NeverTouchFolders;
         foreach (var relative in new[] { @"Microsoft\Protect", @"Microsoft\Credentials", @"Microsoft\Crypto", @"Microsoft\SystemCertificates", @"Apple Computer\MobileSync\Backup" })
         {
             Expect.ContainsPath(list, Path.Combine(Roaming, relative), "%APPDATA%\\" + relative);
@@ -58,7 +62,7 @@ public sealed class ContextTests
     public void FileHistoryUnderLocalAppDataIsProtected()
     {
         var fileHistory = Path.Combine(Local, @"Microsoft\Windows\FileHistory");
-        Expect.ContainsPath(Gates.Context.NeverTouchFolders, fileHistory, "File History configuration folder");
+        Expect.ContainsPath(Fresh.NeverTouchFolders, fileHistory, "File History configuration folder");
         if (Directory.Exists(fileHistory))
         {
             Expect.Refused(Gates.Check(fileHistory), RefusalReason.Protected);
@@ -71,7 +75,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void NeverTouchCoversBrowserProfilesAndThunderbird()
     {
-        var list = Gates.Context.NeverTouchFolders;
+        var list = Fresh.NeverTouchFolders;
         Expect.Covers(list, Path.Combine(Local, @"Google\Chrome\User Data"), "Chrome");
         Expect.Covers(list, Path.Combine(Local, @"Microsoft\Edge\User Data"), "Edge");
         Expect.Covers(list, Path.Combine(Local, @"BraveSoftware\Brave-Browser\User Data"), "Brave");
@@ -83,7 +87,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void SystemLocationsHoldTheSpecsRows()
     {
-        var list = Gates.Context.SystemLocations;
+        var list = Fresh.SystemLocations;
         Expect.ContainsPath(list, Environment.GetEnvironmentVariable("SystemRoot")!, "%SystemRoot%");
         Expect.ContainsPath(list, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Program Files");
         Expect.ContainsPath(list, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Program Files (x86)");
@@ -96,7 +100,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void SystemLocationsHoldThePerVolumeRowsOfTheSystemVolume()
     {
-        var list = Gates.Context.SystemLocations;
+        var list = Fresh.SystemLocations;
         Expect.ContainsPath(list, Path.Combine(Volumes.System, "$Recycle.Bin"), "$Recycle.Bin on C:");
         Expect.ContainsPath(list, Path.Combine(Volumes.System, "System Volume Information"), "System Volume Information on C:");
         Expect.ContainsPath(list, Path.Combine(Volumes.System, "pagefile.sys"), "pagefile.sys on C:");
@@ -117,7 +121,7 @@ public sealed class ContextTests
     [TestCategory(Cat.Session0)]
     public void EveryEntryIsACanonicalPlainPath()
     {
-        var context = Gates.Context;
+        var context = Fresh;
         foreach (var entry in context.NeverTouchFolders.Concat(context.SystemLocations).Concat(context.SyncRoots).Append(context.ProfileFolder).Append(context.ProfilesFolder))
         {
             Assert.IsTrue(Path.IsPathFullyQualified(entry), entry);
