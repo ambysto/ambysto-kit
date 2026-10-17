@@ -30,7 +30,7 @@ internal static class Cloud
             // fills the fixed part (ERROR_MORE_DATA is therefore accepted).
             var buffer = stackalloc byte[4096];
             new Span<byte>(buffer, 4096).Clear(); // explicit: nothing read below may come from an earlier use of the stack
-            var hr = CfGetPlaceholderInfo(probe.Handle, CF_PLACEHOLDER_INFO_STANDARD, buffer, 4096, out var returned);
+            var hr = Faults.Hr(Faults.Query.PlaceholderInfo, CfGetPlaceholderInfo(probe.Handle, CF_PLACEHOLDER_INFO_STANDARD, buffer, 4096, out var returned), file);
             if (hr == HRESULT_MORE_DATA)
             {
                 hr = 0;
@@ -94,18 +94,21 @@ internal static class Cloud
         var canonical = new List<string>();
         foreach (var root in roots)
         {
-            string resolved;
+            List<string> spellings;
             try
             {
-                resolved = Directory.Exists(root) ? Canonical.OfExisting(root) : root.TrimEnd('\\');
+                spellings = Protection.Spellings(root); // a missing root: its spelling and its canonical spelling
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or System.ComponentModel.Win32Exception)
             {
-                resolved = root.TrimEnd('\\'); // still compared by its spelling
+                spellings = [root.TrimEnd('\\')]; // still compared by its spelling
             }
-            if (!canonical.Exists(c => Canonical.SamePath(c, resolved)))
+            foreach (var resolved in spellings)
             {
-                canonical.Add(resolved);
+                if (!canonical.Exists(c => Canonical.SamePath(c, resolved)))
+                {
+                    canonical.Add(resolved);
+                }
             }
         }
         return canonical;
@@ -117,7 +120,7 @@ internal static class Cloud
     internal static unsafe bool UnderSyncRoot(string path)
     {
         var buffer = stackalloc byte[8192];
-        var hr = CfGetSyncRootInfoByPath(PathSpelling.Extended(path), CF_SYNC_ROOT_INFO_BASIC, buffer, 8192, out _);
+        var hr = Faults.Hr(Faults.Query.SyncRoot, CfGetSyncRootInfoByPath(PathSpelling.Extended(path), CF_SYNC_ROOT_INFO_BASIC, buffer, 8192, out _), path);
         if (hr >= 0)
         {
             return true;

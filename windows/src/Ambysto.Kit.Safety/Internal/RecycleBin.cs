@@ -18,7 +18,7 @@ internal static class RecycleBin
     internal static unsafe string VolumeGuid(string volumeRoot)
     {
         var buffer = stackalloc char[64];
-        if (!GetVolumeNameForVolumeMountPoint(volumeRoot, buffer, 64))
+        if (!Faults.Ok(Faults.Query.VolumeName, GetVolumeNameForVolumeMountPoint(volumeRoot, buffer, 64), volumeRoot))
         {
             throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "volume name");
         }
@@ -32,10 +32,44 @@ internal static class RecycleBin
         return name[open..(close + 1)];
     }
 
+    /// <summary>How long the usage query may take (docs/spec/safety.md, failing closed; owner decision 2026-10-17).</summary>
+    internal static readonly TimeSpan QueryLimit = TimeSpan.FromSeconds(10);
+
+    /// <summary>The bin's usage. Measured 2026-10-17: with a damaged Recycle Bin the shell's query never returns, so it
+    /// runs on a thread of its own and an answer later than <see cref="QueryLimit"/> fails closed (the stuck thread is
+    /// left behind, as a background thread; every later call under the same damaged bin leaves one more, so a consumer
+    /// that sees this refusal should not retry in a loop). An exception on the query thread is carried back and rethrown
+    /// here. Called from an STA thread, the wait pumps COM messages for up to the limit.</summary>
     internal static (long Bytes, long Items) Used(string volumeRoot)
     {
         var info = new SHQUERYRBINFO { Size = (uint)System.Runtime.InteropServices.Marshal.SizeOf<SHQUERYRBINFO>() };
-        var hr = SHQueryRecycleBin(volumeRoot, ref info);
+        var hr = 0;
+        Exception? failure = null;
+        var query = new System.Threading.Thread(() =>
+        {
+            try
+            {
+                Faults.Point(Faults.Query.RecycleBinUsage, volumeRoot);
+                hr = Faults.Hr(Faults.Query.RecycleBinUsage, SHQueryRecycleBin(volumeRoot, ref info), volumeRoot);
+            }
+#pragma warning disable CA1031 // carried to the caller's thread and rethrown there (an unhandled exception here would end the process)
+            catch (Exception e)
+            {
+                failure = e;
+            }
+#pragma warning restore CA1031
+        })
+        { IsBackground = true, Name = "Recycle Bin usage" };
+        query.SetApartmentState(System.Threading.ApartmentState.MTA);
+        query.Start();
+        if (!query.Join(QueryLimit))
+        {
+            throw new TimeoutException("the Recycle Bin usage query did not answer within " + QueryLimit.TotalSeconds + " s");
+        }
+        if (failure is not null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
         if (hr < 0)
         {
             System.Runtime.InteropServices.Marshal.ThrowExceptionForHR(hr);

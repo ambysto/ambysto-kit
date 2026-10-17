@@ -150,6 +150,18 @@ public sealed class AdminSetupTests
         Assert.AreEqual(0, approved.LogicalBytes, "the linked folder's content was counted");
     }
 
+    /// <summary>G13 on a followable junction: "links are never followed" holds for putting back too: a destination folder
+    /// that is an administrator-made junction is refused as a link (the standard user's own junction is the Session0
+    /// case; this one tells whether the junction's trust changes the answer).</summary>
+    [TestMethod]
+    [TestCategory(Cat.AdminSetup)]
+    public void ADestinationFolderThatIsAFollowableJunctionIsRefusedAsALink()
+    {
+        var junction = Path.Combine(Readable(handoff.FolderWithAdminJunction), "junction");
+        Assert.IsTrue(File.Exists(Path.Combine(junction, "inner.txt")), "precondition: the junction can be followed by this user");
+        Expect.Refused(Gates.Seamed(policy: Allowed).CheckRestoreDestination(Path.Combine(junction, "restored.txt")), RefusalReason.LinkOrSpecialFile);
+    }
+
     /// <summary>Spec, recoverable moves: "recycling a folder that holds a junction ... leaves the target untouched ...
     /// so such a folder is allowed". A junction made by the administrator can be followed (unlike the standard user's
     /// own, which Windows refuses as an untrusted mount point), so this is the case where entering it would count the
@@ -307,6 +319,34 @@ public sealed class AdminSetupTests
         var owner = facts.Owners.Single(o => string.Equals(o.Path, canonicalFolder, StringComparison.OrdinalIgnoreCase));
         Assert.AreEqual(AdministratorsSid, owner.OwnerSid);
         Assert.IsFalse(owner.OwnedByCurrentUser, "a folder made elevated");
+    }
+
+    /// <summary>G06, step 11 "neither the item nor anything in it owned by TrustedInstaller or SYSTEM": an empty sub-folder
+    /// owned by SYSTEM (readable) inside the item refuses it as "Owned by Windows"; folders count, not only files.</summary>
+    [TestMethod]
+    [TestCategory(Cat.AdminSetup)]
+    public void AFolderHoldingASystemOwnedSubFolderIsRefusedAsOwnedByWindows()
+    {
+        var item = Readable(handoff.FolderWithSystemOwnedSubFolder);
+        var sub = Path.Combine(item, "system-owned");
+        var owner = new DirectoryInfo(sub).GetAccessControl(System.Security.AccessControl.AccessControlSections.Owner)
+            .GetOwner(typeof(System.Security.Principal.SecurityIdentifier))!.Value;
+        Assert.AreEqual("S-1-5-18", owner, "precondition: the sub-folder is owned by SYSTEM");
+        Assert.IsEmpty(Directory.EnumerateFileSystemEntries(sub).ToList(), "precondition: the sub-folder is empty");
+        Expect.Refused(Gates.Check(item, policy: Allowed), RefusalReason.SystemOwned);
+    }
+
+    /// <summary>G07, recoverable moves "A folder holding a volume mount point is refused": an administrator-made junction
+    /// whose target is the root of a drive is such a mount; a junction to an ordinary folder is approved (above).</summary>
+    [TestMethod]
+    [TestCategory(Cat.AdminSetup)]
+    public void AFolderHoldingAJunctionToADriveRootIsRefusedAsContaining()
+    {
+        var item = Readable(handoff.FolderWithJunctionToDriveRoot);
+        var junction = Path.Combine(item, "junction");
+        Assert.AreEqual(Win32.AttrReparsePoint, Win32.Attributes(junction) & Win32.AttrReparsePoint, "precondition: a junction");
+        Assert.IsTrue(Directory.Exists(Path.Combine(junction, "$Recycle.Bin")) || Directory.EnumerateFileSystemEntries(junction).Any(), "precondition: the junction can be followed to the drive root");
+        Expect.Refused(Gates.Check(item, policy: Allowed), RefusalReason.ContainsLinkOrSpecialFile);
     }
 
     /// <summary>Intent criterion 6: an elevated (here SYSTEM, other-session) holder makes the item in use.</summary>

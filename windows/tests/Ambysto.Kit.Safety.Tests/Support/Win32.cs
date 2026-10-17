@@ -400,6 +400,24 @@ internal static unsafe partial class Win32
         }
     }
 
+    /// <summary>Placeholder compatibility modes of a process (ntdll): 0 application default, 1 disguise placeholders,
+    /// 2 expose them, 3 disguise fully (the recall attributes hidden too). Process-wide: a test that sets one restores the
+    /// previous mode in finally.</summary>
+    public const sbyte PlaceholderModeDisguise = 1;
+    public const sbyte PlaceholderModeExpose = 2;
+    public const sbyte PlaceholderModeDisguiseFull = 3;
+
+    [LibraryImport("ntdll.dll", EntryPoint = "RtlQueryProcessPlaceholderCompatibilityMode")]
+    private static partial sbyte RtlQueryProcessPlaceholderCompatibilityMode();
+
+    [LibraryImport("ntdll.dll", EntryPoint = "RtlSetProcessPlaceholderCompatibilityMode")]
+    private static partial sbyte RtlSetProcessPlaceholderCompatibilityMode(sbyte mode);
+
+    public static sbyte PlaceholderMode => RtlQueryProcessPlaceholderCompatibilityMode();
+
+    /// <summary>Sets the mode and returns the previous one (a negative return means the system refused the mode).</summary>
+    public static sbyte SetPlaceholderMode(sbyte mode) => RtlSetProcessPlaceholderCompatibilityMode(mode);
+
     /// <summary>Bytes this user's Recycle Bin holds on the volume of <paramref name="root"/>.</summary>
     public static long RecycleBinBytes(string root)
     {

@@ -59,6 +59,21 @@ public sealed class LongPathTests
         Expect.Refused(Gates.Check(item), RefusalReason.PathTooLong);
     }
 
+    /// <summary>G40: a canonical path far beyond 260 characters (here more than 1100) is refused as too long, and within
+    /// a timeout: the gate must not grow its path buffers the wrong way.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    [Timeout(120000)]
+    public void AVeryLongCanonicalPathIsRefusedPromptly()
+    {
+        var file = LongPaths.CreateFile(root, 1100);
+        Assert.IsTrue(file.Length > 1023);
+        Expect.Refused(Gates.Check(file), RefusalReason.PathTooLong);
+        var item = folder.Dir("short");
+        LongPaths.CreateFile(Win32.FinalPath(item), 1100);
+        Expect.Refused(Gates.Check(item), RefusalReason.PathTooLong);
+    }
+
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void AShortFolderHoldingA259CharacterDescendantIsApproved()

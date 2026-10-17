@@ -57,7 +57,8 @@ internal static class Protection
     /// <summary>True when the system's file protection covers <paramref name="file"/>; throws when it cannot tell.</summary>
     internal static bool SystemProtected(string file)
     {
-        if (SfcMethods.SfcIsFileProtected(IntPtr.Zero, file))
+        var covered = SfcMethods.SfcIsFileProtected(IntPtr.Zero, file);
+        if (Faults.Ok(Faults.Query.ResourceProtection, Faults.Yes(Faults.Query.ResourceProtection, covered, file), file))
         {
             return true;
         }
@@ -76,7 +77,9 @@ internal static class Protection
     internal static bool OwnedByWindows(string sid) =>
         string.Equals(sid, Owners.SystemSid, StringComparison.Ordinal) || string.Equals(sid, Owners.TrustedInstallerSid, StringComparison.Ordinal);
 
-    /// <summary>Resolves a list of entries: existing ones to their canonical path, missing ones by their spelling.</summary>
+    /// <summary>Resolves a list of entries: existing ones to their canonical path; missing ones by their spelling and also
+    /// by the canonical path of their deepest existing folder (so an entry given through a subst letter or a mapped drive
+    /// still matches by path once it is created; it has no identity until then).</summary>
     internal static List<string> Resolve(IEnumerable<string> paths)
     {
         var resolved = new List<string>();
@@ -86,21 +89,40 @@ internal static class Protection
             {
                 continue;
             }
-            string entry;
-            try
+            foreach (var entry in Spellings(path))
             {
-                entry = Path.Exists(path) ? Canonical.OfExisting(path) : Path.GetFullPath(path).TrimEnd('\\');
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or System.ComponentModel.Win32Exception)
-            {
-                entry = Path.GetFullPath(path).TrimEnd('\\');
-            }
-            if (!resolved.Exists(r => Canonical.SamePath(r, entry)))
-            {
-                resolved.Add(entry);
+                if (!resolved.Exists(r => Canonical.SamePath(r, entry)))
+                {
+                    resolved.Add(entry);
+                }
             }
         }
         return resolved;
+    }
+
+    /// <summary>The spellings an entry is compared by: the canonical path when it exists; otherwise the given spelling and
+    /// the canonical spelling of its existing part, when that differs.</summary>
+    internal static List<string> Spellings(string path)
+    {
+        var spellings = new List<string>(2);
+        try
+        {
+            if (Path.Exists(path))
+            {
+                spellings.Add(Canonical.OfExisting(path));
+                return spellings;
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or System.ComponentModel.Win32Exception)
+        {
+            // an existing entry that cannot be resolved is still compared by the spellings below
+        }
+        spellings.Add(Path.GetFullPath(path).TrimEnd('\\'));
+        if (Canonical.OfMaybeMissing(path) is { } canonical && !Canonical.SamePath(canonical, spellings[0]))
+        {
+            spellings.Add(canonical);
+        }
+        return spellings;
     }
 
     /// <summary>Identities of the entries that exist and can be opened (others are compared by path only).</summary>

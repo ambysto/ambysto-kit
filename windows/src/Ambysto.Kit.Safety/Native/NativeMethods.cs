@@ -17,10 +17,13 @@ internal static partial class NativeMethods
 
     internal const uint FILE_ATTRIBUTE_DIRECTORY = 0x10;
     internal const uint FILE_ATTRIBUTE_REPARSE_POINT = 0x400;
+    internal const uint FILE_ATTRIBUTE_SPARSE_FILE = 0x200;
+    internal const uint FILE_ATTRIBUTE_COMPRESSED = 0x800;
     internal const uint FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x40000;
     internal const uint FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x400000;
 
     internal const int ERROR_FILE_NOT_FOUND = 2;
+    internal const int ERROR_UNTRUSTED_MOUNT_POINT = 448;
     internal const int ERROR_PATH_NOT_FOUND = 3;
     internal const int ERROR_INVALID_NAME = 123;
     internal const int ERROR_BAD_NETPATH = 53;

@@ -18,6 +18,31 @@ public sealed class VolumeTests
     [TestCleanup]
     public void Delete() => profileFolder.Dispose();
 
+    /// <summary>G01, step 5: "removable and network volumes are refused" holds for a removable volume that is NTFS too
+    /// (the drive-type rule, not the file-system rule). The volume is provisioned by the owner and named by
+    /// %AMBYSTO_REMOVABLE_NTFS% (a drive root); without it the test is inconclusive, never a pass.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AFileAndAFolderOnARemovableNtfsVolumeAreRefused()
+    {
+        var root = Environment.GetEnvironmentVariable("AMBYSTO_REMOVABLE_NTFS");
+        if (string.IsNullOrEmpty(root))
+        {
+            Assert.Inconclusive("AMBYSTO_REMOVABLE_NTFS is not set: no removable NTFS volume on this test machine");
+        }
+        var drive = new DriveInfo(root!);
+        Assert.IsTrue(drive.IsReady, root + " is not ready");
+        Assert.AreEqual(DriveType.Removable, drive.DriveType, "precondition: a removable volume");
+        Assert.AreEqual("NTFS", drive.DriveFormat, "precondition: NTFS");
+        using var removable = TempFolder.OnDrive(root!, "vol");
+        var file = removable.File("on-removable-ntfs.bin", 100);
+        var dir = removable.Dir("sub");
+        Expect.Refused(Gates.Check(file), RefusalReason.UnsupportedVolume);
+        Expect.Refused(Gates.Check(dir), RefusalReason.UnsupportedVolume);
+        var control = profileFolder.File("on-c.bin", 100);
+        Expect.Approved(Gates.Check(control), Win32.FinalPath(control));
+    }
+
     /// <summary>The stamp is junk on purpose: the volume is refused at step 5, before the stamp is compared.</summary>
     [TestMethod]
     [TestCategory(Cat.Session0)]

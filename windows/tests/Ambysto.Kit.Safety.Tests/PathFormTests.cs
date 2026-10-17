@@ -18,6 +18,26 @@ public sealed class PathFormTests
     [TestCleanup]
     public void Delete() => folder.Dispose();
 
+    /// <summary>H21, step 4 "Spelling ... refused on the given path before step 2": a name with a character Windows
+    /// reserves (or a control character) is refused for its form by the gate, by FileFacts and as a put-back
+    /// destination; never "already gone", never approved.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    [DataRow('<')]
+    [DataRow('>')]
+    [DataRow('"')]
+    [DataRow('|')]
+    [DataRow('?')]
+    [DataRow('*')]
+    [DataRow('\u0001')]
+    public void ANameWithAReservedCharacterIsRefusedForItsForm(char reserved)
+    {
+        var path = folder.Combine("bad" + reserved + "name.txt");
+        Expect.Refused(Gates.CheckWith(path, Gates.AnyStamp), RefusalReason.UnsupportedPathForm);
+        Assert.AreEqual(RefusalReason.UnsupportedPathForm, FileFacts.Read(path).FailureReason);
+        Expect.Refused(Gates.Seamed().CheckRestoreDestination(path), RefusalReason.UnsupportedPathForm);
+    }
+
     [TestMethod]
     [TestCategory(Cat.Session0)]
     public void AUncPathToAnExistingFileIsRefused()
@@ -42,6 +62,22 @@ public sealed class PathFormTests
     {
         var file = folder.File("plain.txt");
         Expect.Refused(Gates.CheckWith(@"\\.\" + file, Gates.AnyStamp), RefusalReason.UnsupportedPathForm);
+    }
+
+    /// <summary>G39, step 4 "Spelling ... refused on the given path before step 2" and the API ("a drive-letter path"):
+    /// a relative path, a drive-relative path, a bare drive and a spelling that is no drive are refused for their form,
+    /// not reported as gone. Names with `&lt; &gt; " | ? *` or control characters are left for the owner to decide.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void OtherSpellingsAreRefusedForTheirForm()
+    {
+        folder.File("plain.txt");
+        foreach (var spelling in new[] { @"a\b.txt", "plain.txt", "C:plain.txt", "C:", @"1:\x.txt" })
+        {
+            var result = Gates.CheckWith(spelling, Gates.AnyStamp);
+            Assert.AreEqual(RefusalReason.UnsupportedPathForm, result.Reason, spelling);
+            Assert.AreEqual(RefusalReason.UnsupportedPathForm, FileFacts.Read(spelling).FailureReason, "FileFacts " + spelling);
+        }
     }
 
     [TestMethod]

@@ -174,6 +174,48 @@ public sealed class FailClosedTests
         Expect.Approved(Gates.Seamed().CheckRestoreDestination(Path.Combine(control, "restored.txt")));
     }
 
+    /// <summary>H10, step 2 "opened for attributes only" and the gate's order ("the first failure refusing the item"):
+    /// an item whose permissions cannot be read (READ_CONTROL denied to the user and to OWNER RIGHTS) keeps every
+    /// earlier reason: a differing stamp is "changed" (step 6), inside a listed sync root it is a cloud-sync folder
+    /// (step 9), a put-back into such a folder inside a listed sync root is a cloud-sync folder, FileFacts still reads
+    /// it, and such an app folder given through a subst letter is listed by its canonical path. Only its own owner
+    /// (the facts note) is "could not verify".</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AnItemWhosePermissionsCannotBeReadKeepsItsEarlierReason()
+    {
+        var file = folder.File("sealed.txt", 10);
+        var stamp = Gates.StampOf(file);
+        Acl.DenyOwnerRights(file, FileSystemRights.ReadPermissions);
+        AssertCannotReadOwner(file);
+        var facts = FileFacts.Read(file);
+        Assert.IsTrue(facts.Succeeded, $"FileFacts: {facts.FailureReason} {facts.Detail}");
+        Assert.AreEqual(stamp, facts.Stamp);
+        Expect.Refused(Gates.CheckWith(file, stamp with { Length = stamp.Length + 1 }), RefusalReason.ChangedSinceScan);
+        Expect.CouldNotVerify(Gates.CheckWith(file, stamp));
+        var sealedDestination = folder.Dir("sealed-dest");
+        Acl.DenyOwnerRights(sealedDestination, FileSystemRights.ReadPermissions);
+        AssertCannotReadOwner(sealedDestination);
+        var previous = Environment.GetEnvironmentVariable("OneDriveCommercial");
+        try
+        {
+            Environment.SetEnvironmentVariable("OneDriveCommercial", folder.Path);
+            var context = SafetyContext.ForCurrentUser([]);
+            Expect.Refused(Gates.CheckWith(file, stamp, context: context), RefusalReason.CloudSyncFolder);
+            Expect.Refused(Gates.Seamed(context: context).CheckRestoreDestination(Path.Combine(sealedDestination, "restored.txt")), RefusalReason.CloudSyncFolder);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("OneDriveCommercial", previous);
+        }
+        var sealedApp = folder.Dir("sealed-app");
+        Acl.DenyOwnerRights(sealedApp, FileSystemRights.ReadPermissions);
+        AssertCannotReadOwner(sealedApp);
+        using var subst = new SubstDrive(folder.Path);
+        var appContext = SafetyContext.ForCurrentUser([subst.Combine("sealed-app")]);
+        Expect.ContainsPath(appContext.NeverTouchFolders, Win32.FinalPath(sealedApp), "a sealed app folder given through a subst letter");
+    }
+
     // The facts note's other half, an unreadable owner of a folder *above* the item reported as unknown and not
     // refused, is tested in AdminSetupTests on the real case (fixtures under Public): a standard user that denies
     // READ_CONTROL to itself on one of its own folders can no longer delete that folder's children (measured), so the

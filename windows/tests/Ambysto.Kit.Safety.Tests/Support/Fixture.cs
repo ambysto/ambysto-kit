@@ -20,6 +20,9 @@ internal static class Cat
     public const string RealEnvironmentAdmin = "RealEnvironmentAdmin";
     /// <summary>Needs windows/tests/admin/setup.ps1 (run as administrator before, teardown.ps1 after).</summary>
     public const string AdminSetup = "AdminSetup";
+    /// <summary>Needs windows/tests/admin/setup-size-policy.ps1: the "maximum Recycle Bin size" machine policy is set for
+    /// the whole suite, which turns every approval on the system drive into "Could not verify" (its own suite for that).</summary>
+    public const string AdminSizePolicy = "AdminSizePolicy";
 }
 
 /// <summary>A fresh folder under the profile (or under <c>%AMBYSTO_TESTDATA%</c>, excluded from Defender, for in-use

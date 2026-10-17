@@ -173,4 +173,114 @@ public sealed class InUseTests
         }
         Assert.IsFalse(Check(file).IsInUse);
     }
+
+    /// <summary>G17: the per-file process query alone names a holder. The path reaches the holder through stdin, so its
+    /// command line, image and current directory do not name the item: only the handle (or the read-only mapping, which
+    /// the Restart Manager misses) can.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AHolderThatNamesTheItemNowhereButInItsHandleIsFound()
+    {
+        var opened = folder.File("handle-only.bin", 4096);
+        using (var holder = HolderProcess.Start(HoldKind.OpenNoDeleteSharing, opened, viaStdin: true))
+        {
+            HolderNamed(Check(opened), holder.ProcessId);
+        }
+        var mapped = folder.File("mapping-only.bin", 65536);
+        using (var holder = HolderProcess.Start(HoldKind.MappedView, mapped, viaStdin: true))
+        {
+            HolderNamed(Check(mapped), holder.ProcessId);
+        }
+    }
+
+    /// <summary>G18: "for every file and folder in its tree": an open directory handle (not a current directory, the
+    /// path nowhere on the command line) on the item folder itself, and on a sub-folder, makes the item in use.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void AnOpenDirectoryHandleOnTheItemOrASubFolderMakesItInUse()
+    {
+        var item = folder.Dir("tree");
+        var sub = folder.Dir(@"tree\sub");
+        using (var holder = HolderProcess.Start(HoldKind.DirectoryHandle, item, viaStdin: true))
+        {
+            HolderNamed(Check(item), holder.ProcessId);
+        }
+        using (var holder = HolderProcess.Start(HoldKind.DirectoryHandle, sub, viaStdin: true))
+        {
+            HolderNamed(Check(item), holder.ProcessId);
+        }
+        Assert.IsFalse(Check(item).IsInUse, "the handles were released");
+    }
+
+    /// <summary>G19: "a command-line argument inside it" in the extended spelling (`\\?\C:\...`), without opening it.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ACommandLineNamingTheItemInExtendedFormMakesItInUse()
+    {
+        var file = folder.File("extended-argument.txt", 16);
+        using var holder = HolderProcess.Start(HoldKind.CommandLineOnly, @"\\?\" + file);
+        HolderNamed(Check(file), holder.ProcessId);
+    }
+
+    /// <summary>Owner decision 2026-10-17 (In use, Windows note): "The process that asks is never a holder: the app answers
+    /// for its own handles, and holds none of the item's files when it asks." The asking process's own open handle is
+    /// not reported, while another process holding the same file is.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void TheAskingProcessIsNeverAHolder()
+    {
+        var file = folder.File("own-handle.bin", 4096);
+        using var own = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var alone = Check(file);
+        Assert.IsFalse(alone.IsInUse, "the asking process's own handle was reported: " + string.Join(", ", alone.Holders.Select(h => $"{h.ProcessId} ({h.Method})")));
+        Assert.IsFalse(alone.Holders.Any(h => h.ProcessId == Environment.ProcessId));
+        using var other = HolderProcess.Start(HoldKind.OpenNoDeleteSharing, file);
+        var shared = Check(file);
+        HolderNamed(shared, other.ProcessId);
+        Assert.IsFalse(shared.Holders.Any(h => h.ProcessId == Environment.ProcessId), "the asking process was listed next to the real holder");
+    }
+
+    /// <summary>H02, "In use": "a command-line argument inside it (relative arguments resolved against that process's
+    /// working directory)". The holder opens nothing: its working directory is the folder holding the item and its
+    /// command line names the item by a relative path, for a file item and for a folder item. Control: with its
+    /// working directory elsewhere (the temp folder), the same bare name is not the item.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ARelativeCommandLineArgumentIsResolvedAgainstTheHoldersWorkingDirectory()
+    {
+        var file = folder.File("argument.txt", 16);
+        using (var holder = HolderProcess.Start(HoldKind.CommandLineOnly, "argument.txt", workingDirectory: folder.Path))
+        {
+            var named = HolderNamed(Check(file), holder.ProcessId);
+            Console.WriteLine("file item, bare name: named by " + named.Method);
+        }
+        var item = folder.Dir("item");
+        var inside = folder.File(@"item\argument.txt", 16);
+        using (var holder = HolderProcess.Start(HoldKind.CommandLineOnly, @"item\argument.txt", workingDirectory: folder.Path))
+        {
+            HolderNamed(Check(item), holder.ProcessId);
+            HolderNamed(Check(inside), holder.ProcessId);
+        }
+        using (var elsewhere = HolderProcess.Start(HoldKind.CommandLineOnly, "argument.txt"))
+        {
+            var result = Check(file);
+            Assert.IsFalse(result.Holders.Any(h => h.ProcessId == elsewhere.ProcessId), "a bare name relative to another working directory named the holder");
+            Assert.IsFalse(result.IsInUse, string.Join(", ", result.Holders.Select(h => $"{h.ProcessId} {h.ImageName} ({h.Method})")));
+        }
+    }
+
+    /// <summary>G49: "Every holder any method named": two processes holding different files of the item are both listed.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void TwoHoldersOfDifferentFilesAreBothListed()
+    {
+        var item = folder.Dir("two");
+        var first = folder.File(@"two\first.bin", 4096);
+        var second = folder.File(@"two\deep\second.bin", 4096);
+        using var holderA = HolderProcess.Start(HoldKind.OpenNoDeleteSharing, first, viaStdin: true);
+        using var holderB = HolderProcess.Start(HoldKind.OpenWithDeleteSharing, second, viaStdin: true);
+        var result = Check(item);
+        HolderNamed(result, holderA.ProcessId);
+        HolderNamed(result, holderB.ProcessId);
+    }
 }

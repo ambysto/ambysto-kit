@@ -32,6 +32,13 @@
       "filter": "TestCategory=AdminSetup",
       "setup": "windows/tests/admin/setup.ps1",
       "teardown": "windows/tests/admin/teardown.ps1"
+    },
+    {
+      "name": "safety-admin-size-policy",
+      "context": "session0",
+      "filter": "TestCategory=AdminSizePolicy",
+      "setup": "windows/tests/admin/setup-size-policy.ps1",
+      "teardown": "windows/tests/admin/teardown-size-policy.ps1"
     }
   ],
   "host_checks": [

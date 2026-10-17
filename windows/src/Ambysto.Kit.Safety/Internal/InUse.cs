@@ -13,7 +13,13 @@ internal static class InUse
 {
     internal static InUseResult Check(ApprovedItem item)
     {
-        var tree = TreeWalk.Measure(item.CanonicalPath, FileProbe.Attributes(item.CanonicalPath).Attributes);
+        // An unread attribute set would make a folder look like a file and hide every holder inside it: fail closed.
+        var (attributes, error) = FileProbe.Attributes(item.CanonicalPath);
+        if (error != 0)
+        {
+            throw new System.ComponentModel.Win32Exception(error, "attributes of " + item.CanonicalPath);
+        }
+        var tree = TreeWalk.Measure(item.CanonicalPath, attributes);
         var holders = new List<InUseHolder>();
         var names = new Dictionary<int, string?>();
         void Add(int pid, string method)
@@ -94,7 +100,7 @@ internal static class InUse
                 int status;
                 fixed (byte* b = buffer)
                 {
-                    status = NtQueryInformationFile(probe.Handle, out _, b, size, FileProcessIdsUsingFileInformation);
+                    status = Faults.Status(Faults.Query.ProcessesUsingFile, NtQueryInformationFile(probe.Handle, out _, b, size, FileProcessIdsUsingFileInformation), path);
                     if (status == STATUS_INFO_LENGTH_MISMATCH && size < 1 << 20)
                     {
                         size *= 4;
@@ -124,7 +130,7 @@ internal static class InUse
             return holders;
         }
         var key = stackalloc char[33];
-        var rc = RmStartSession(out var session, 0, key);
+        var rc = Faults.Code(Faults.Query.RestartManagerStart, RmStartSession(out var session, 0, key));
         if (rc != 0)
         {
             throw new System.ComponentModel.Win32Exception(rc, "Restart Manager session");
@@ -134,14 +140,14 @@ internal static class InUse
             for (var i = 0; i < files.Count; i += 100)
             {
                 var batch = files.GetRange(i, Math.Min(100, files.Count - i)).ConvertAll(f => f.Length < 260 ? f : PathSpelling.Extended(f)).ToArray();
-                rc = RmRegisterResources(session, (uint)batch.Length, batch, 0, IntPtr.Zero, 0, IntPtr.Zero);
+                rc = Faults.Code(Faults.Query.RestartManagerRegister, RmRegisterResources(session, (uint)batch.Length, batch, 0, IntPtr.Zero, 0, IntPtr.Zero));
                 if (rc != 0)
                 {
                     throw new System.ComponentModel.Win32Exception(rc, "Restart Manager register");
                 }
             }
             uint count = 0;
-            rc = RmGetList(session, out var needed, ref count, null, out _);
+            rc = Faults.Code(Faults.Query.RestartManagerList, RmGetList(session, out var needed, ref count, null, out _));
             while (rc == ERROR_MORE_DATA)
             {
                 count = needed;

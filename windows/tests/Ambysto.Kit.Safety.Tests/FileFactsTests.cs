@@ -144,6 +144,40 @@ public sealed class FileFactsTests
         }
     }
 
+    /// <summary>G46, plan FileFacts "it returns cloud, not opened ... decides nothing": a gone path and an unsupported
+    /// spelling are not "cloud, not opened"; a file whose attributes this user cannot read (read attributes denied on
+    /// it, listing denied on its folder) is "could not verify", not gone.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void FileFactsReportsGoneUnsupportedAndUnreadableApart()
+    {
+        var gone = FileFacts.Read(folder.Combine("missing.txt"));
+        Assert.AreEqual(RefusalReason.AlreadyGone, gone.FailureReason);
+        Assert.IsFalse(gone.IsCloudNotOpened);
+        var unsupported = FileFacts.Read(MappedDrive.Share + @"\x.txt");
+        Assert.AreEqual(RefusalReason.UnsupportedPathForm, unsupported.FailureReason);
+        Assert.IsFalse(unsupported.IsCloudNotOpened);
+
+        var sealedParent = folder.Dir("sealed-parent");
+        var sealedFile = folder.File(@"sealed-parent\sealed.txt", 10);
+        Acl.DenyOwnerRights(sealedFile, System.Security.AccessControl.FileSystemRights.ReadAttributes | System.Security.AccessControl.FileSystemRights.ReadData | System.Security.AccessControl.FileSystemRights.ReadExtendedAttributes);
+        Acl.DenyOwnerRights(sealedParent, System.Security.AccessControl.FileSystemRights.ListDirectory);
+        try
+        {
+            Assert.ThrowsExactly<System.ComponentModel.Win32Exception>(() => Win32.OpenForAttributes(sealedFile).Dispose(), "precondition: the file still opens");
+            var unreadable = FileFacts.Read(sealedFile);
+            Assert.IsFalse(unreadable.Succeeded);
+            Assert.AreEqual(RefusalReason.CouldNotVerify, unreadable.FailureReason);
+            Assert.AreEqual("exists", unreadable.Detail, "H09: the attribute read by name is what fails on this fixture, not the open");
+            Assert.IsFalse(unreadable.IsCloudNotOpened);
+        }
+        finally
+        {
+            Acl.Reset(sealedParent);
+            Acl.Reset(sealedFile);
+        }
+    }
+
     /// <summary>The share's local folder, when the server's share list is readable; otherwise null.</summary>
     private static string? ShareLocalPath()
     {

@@ -21,7 +21,7 @@ internal static class KnownFolders
     /// <summary>The folder's current path; throws when the shell cannot give it (fails closed).</summary>
     internal static string Get(Guid id)
     {
-        var hr = SHGetKnownFolderPath(in id, 0, IntPtr.Zero, out var p);
+        var hr = Faults.Hr(Faults.Query.KnownFolder, SHGetKnownFolderPath(in id, 0, IntPtr.Zero, out var p), id.ToString());
         try
         {
             if (hr < 0)

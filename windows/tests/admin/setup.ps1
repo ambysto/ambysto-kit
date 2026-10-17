@@ -22,6 +22,24 @@ $usersSid = '*S-1-5-32-545'
 $systemSid = '*S-1-5-18'
 $administratorsSid = '*S-1-5-32-544'
 
+# Grants Users read to a folder and everything in it, item by item; a reparse point is neither granted nor entered.
+function Grant-UsersReadTree([string]$Path) {
+    $pending = New-Object System.Collections.Generic.Stack[System.IO.FileSystemInfo]
+    $pending.Push((New-Object System.IO.DirectoryInfo ('\\?\' + $Path)))
+    while ($pending.Count -gt 0) {
+        $item = $pending.Pop()
+        # A reparse point is skipped, not granted: icacls without /L writes on the link's target (a junction to E:\
+        # would get the ACE on E:\ itself). Links inherit the folder's (OI)(CI) grant when they are made.
+        if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { continue }
+        $plain = $item.FullName.Substring(4)
+        $inherit = if ($item -is [System.IO.DirectoryInfo]) { '(OI)(CI)' } else { '' }
+        & { $ErrorActionPreference = 'Continue'; icacls $plain /grant "${usersSid}:${inherit}RX" /C 2>&1 | Out-Null }
+        if ($item -is [System.IO.DirectoryInfo]) {
+            foreach ($child in $item.GetFileSystemInfos()) { $pending.Push($child) }
+        }
+    }
+}
+
 function Invoke-Native([string]$What, [scriptblock]$Body) {
     & $Body | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "$What failed with exit code $LASTEXITCODE" }
@@ -72,6 +90,10 @@ try {
     New-Item -ItemType Directory -Path $withJunction | Out-Null
     New-Item -ItemType Junction -Path (Join-Path $withJunction 'junction') -Target $targetDir | Out-Null
     if (-not (Test-Path -LiteralPath (Join-Path $withJunction 'junction\inner.txt'))) { throw 'the administrator-made junction cannot be followed' }
+    # 2c. A junction to the root of a fixed drive (E:), alone in a folder: a mounted volume to the Recycle Bin (G07).
+    $withJunctionToRoot = Join-Path $dir 'with-admin-junction-to-root'
+    New-Item -ItemType Directory -Path $withJunctionToRoot | Out-Null
+    New-Item -ItemType Junction -Path (Join-Path $withJunctionToRoot 'junction') -Target 'E:\' | Out-Null
 
     # 3. Mount points.
     $withMount = Join-Path $dir 'with-mount-point'
@@ -112,6 +134,11 @@ try {
     $systemOwned = Join-Path $withSystemOwned 'system-owned.txt'
     Set-Content -Path $systemOwned -Value 'owned by SYSTEM' -Encoding ASCII
     Invoke-Native 'icacls setowner SYSTEM' { icacls $systemOwned /setowner $systemSid }
+    # An empty sub-folder owned by SYSTEM inside a readable folder: owners of folders in the tree count too (G06).
+    $withSystemOwnedFolder = Join-Path $dir 'with-system-owned-folder'
+    $systemOwnedFolder = Join-Path $withSystemOwnedFolder 'system-owned'
+    New-Item -ItemType Directory -Path $systemOwnedFolder -Force | Out-Null
+    Invoke-Native 'icacls setowner SYSTEM (folder)' { icacls $systemOwnedFolder /setowner $systemSid }
     $administratorsOwned = Join-Path $dir 'administrators-owned'
     New-Item -ItemType Directory -Path $administratorsOwned | Out-Null
     $administratorsFile = Join-Path $administratorsOwned 'plain.txt'
@@ -190,11 +217,12 @@ while ($true) { Start-Sleep -Seconds 3600 }
     if (-not (Get-Process -Id $holderPid -ErrorAction SilentlyContinue)) { throw "the holder process $holderPid is not running" }
 
     # 5b. Readable owners (spec step 11 and the facts note: the item's own owner and its contents' must be readable by
-    # the standard user). Every fixture and its contents get an explicit Users read grant (RX includes READ_CONTROL).
-    # The unreachable long-path entries make icacls print errors and exit nonzero; neither may stop setup (under
-    # $ErrorActionPreference Stop a redirected native stderr line would), so the call runs with Continue, unredirected;
-    # those entries inherit the grant from their folder.
-    & { $ErrorActionPreference = 'Continue'; icacls $dir /grant "${usersSid}:(OI)(CI)RX" /T /C | Out-Null }
+    # the standard user). Every fixture and its contents get an explicit Users read grant (RX includes READ_CONTROL),
+    # one item at a time and never through a link or mount point: icacls /T follows them, and with the junction to E:\
+    # it granted (and teardown's takeown /R and icacls /T then reset) the whole of E:, which left its Recycle Bin
+    # unusable. The unreachable long-path entries make icacls exit nonzero; they inherit the grant from their folder, so
+    # the calls run with Continue, unchecked.
+    Grant-UsersReadTree $dir
     Invoke-Native 'icacls grant Users (File History file)' { icacls $fileHistoryFile /grant "${usersSid}:RX" }
 
     # 5c. The denies of 4c, for the standard user only (RC = READ_CONTROL, RD = list the folder, F = everything).
@@ -211,6 +239,8 @@ while ($true) { Start-Sleep -Seconds 3600 }
         folderWithFileSymlink = $withFileLink
         folderWithDirectorySymlink = $withDirLink
         folderWithAdminJunction = $withJunction
+        folderWithJunctionToDriveRoot = $withJunctionToRoot
+        folderWithSystemOwnedSubFolder = $withSystemOwnedFolder
         mountPoint = $mount
         folderWithMountPoint = $withMount
         folderWithoutMountPoint = $withoutMount

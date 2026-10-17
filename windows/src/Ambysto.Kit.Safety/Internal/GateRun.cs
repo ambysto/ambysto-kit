@@ -137,6 +137,7 @@ internal static class GateRun
             }
 
             // 11. Protection: by path, name and identity of the item and every folder above it; then owners in the tree.
+            Faults.Point(Faults.Query.BeforeProtectionIdentity, canonical);
             var ancestors = Refusal.Verify("owner", () => Ancestors(canonical, volumeRoot));
             if (ancestors[0].Identity != stamp.Identity)
             {
@@ -258,7 +259,8 @@ internal static class GateRun
             }
             var name = Path.GetFileName(ancestor.Owner.Path);
             var isItem = string.Equals(ancestor.Owner.Path, canonical, StringComparison.OrdinalIgnoreCase);
-            if (name.Length > 0 && Protection.ProtectedName(name, isDirectory: !isItem || itemIsDirectory))
+            // The item itself: both name rules, whatever its kind (owner decision 2026-10-17); folders above it: the folder rule.
+            if (name.Length > 0 && (Protection.ProtectedName(name, isDirectory: true) || (isItem && Protection.ProtectedName(name, isDirectory: false))))
             {
                 throw new Refusal(RefusalReason.Protected);
             }
@@ -311,6 +313,12 @@ internal static class GateRun
         if (error == 0)
         {
             throw new Refusal(RefusalReason.RestoreDestinationExists);
+        }
+        if (error == ERROR_UNTRUSTED_MOUNT_POINT)
+        {
+            // Windows refuses to follow a link in the destination's path for anyone (a standard user's junction): links are
+            // never followed, putting back included.
+            throw new Refusal(RefusalReason.LinkOrSpecialFile);
         }
         if (!FileProbe.IsNotFound(error))
         {
@@ -386,7 +394,10 @@ internal static class GateRun
         var ancestors = Refusal.Verify("owner", () => Ancestors(parent, volumeRoot));
         if (Protection.Hits(destination, context.NeverTouchFolders.Concat(context.SystemLocations).ToList(), alsoContains: false)
             || Protection.IsVolumeRootName(destination, volumeRoot)
-            || Protection.ProtectedName(Path.GetFileName(destination), isDirectory: false))
+            // The destination is given as a path only: both name rules apply, so a folder put back under a protected
+            // folder name is refused like a file under a protected file name (owner decision 2026-10-17).
+            || Protection.ProtectedName(Path.GetFileName(destination), isDirectory: false)
+            || Protection.ProtectedName(Path.GetFileName(destination), isDirectory: true))
         {
             throw new Refusal(RefusalReason.Protected);
         }
