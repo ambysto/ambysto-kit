@@ -452,13 +452,15 @@ public sealed class ProtectionTests
     [TestCategory(Cat.Session0)]
     public void ThisUsersRecycleBinFolderIsProtected()
     {
-        // The fixture must land in the bin whatever it holds: a quota that leaves room, asserted before the move.
+        // The fixture must land in the bin whatever it holds, and the bin folder itself (whose size is everything in the bin)
+        // must fit the room left, or step 8 refuses it as RecycleBinFull before step 11 is reached (2026-10-19: the test bed's
+        // bin had grown past the old fixed 64 MB of room). So the quota leaves room for the whole bin again, asserted first.
         using var settings = new RecycleBinVolumeSettings(Volumes.System);
         var used = Win32.RecycleBinBytes(Volumes.System);
-        var capacityMegabytes = (int)(used / (1 << 20)) + 64;
+        var capacityMegabytes = (int)(2 * used / (1 << 20)) + 64;
         settings.SetMaxCapacityMegabytes(capacityMegabytes);
         settings.SetNukeOnDelete(false);
-        Assert.IsTrue((long)capacityMegabytes * 1_000_000 - used > 1 << 20, "the Recycle Bin on C: has no room for a 100-byte fixture");
+        Assert.IsTrue((long)capacityMegabytes * 1_000_000 - used > used + (1 << 20), "the Recycle Bin on C: has no room for its own folder and a 100-byte fixture");
         using var recycled = RecycledFixture.Recycle(folder.File("to-bin.txt", 100));
         var bin = RecycledFixture.BinFolderFor(Volumes.System);
         Assert.IsTrue(Directory.Exists(bin), bin);
