@@ -54,6 +54,31 @@ public sealed class RestoreTests
         Expect.Approved(Gates.Seamed().CheckRestoreDestination(Path.Combine(parent, "restored.txt")));
     }
 
+    /// <summary>H12, "Putting back" Windows note (owner decision 2026-10-17): "a folder on FAT32, exFAT, a removable or
+    /// a network volume is refused as an unsupported volume". The drive-type rule on its own: a removable NTFS folder
+    /// passes the file-system rule, so only it reaches the drive-type refusal (Stryker #669). The volume is provisioned
+    /// by the owner and named by %AMBYSTO_REMOVABLE_NTFS% (a drive root); without it the test is inconclusive, never a
+    /// pass. A destination on the fixed system drive is the control. Nothing is created at the destination.</summary>
+    [TestMethod]
+    [TestCategory(Cat.Session0)]
+    public void ADestinationOnARemovableNtfsVolumeIsRefusedAsAnUnsupportedVolume()
+    {
+        var root = Environment.GetEnvironmentVariable("AMBYSTO_REMOVABLE_NTFS");
+        if (string.IsNullOrEmpty(root))
+        {
+            Assert.Inconclusive("AMBYSTO_REMOVABLE_NTFS is not set: no removable NTFS volume on this test machine");
+        }
+        var drive = new DriveInfo(root!);
+        Assert.IsTrue(drive.IsReady, root + " is not ready");
+        Assert.AreEqual(DriveType.Removable, drive.DriveType, "precondition: a removable volume");
+        Assert.AreEqual("NTFS", drive.DriveFormat, "precondition: NTFS");
+        using var removable = TempFolder.OnDrive(root!, "restore");
+        var destination = removable.Combine("restored.txt");
+        Expect.Refused(Gates.Seamed().CheckRestoreDestination(destination), RefusalReason.UnsupportedVolume);
+        Assert.IsFalse(File.Exists(destination), "the gate writes nothing");
+        Expect.Approved(Gates.Seamed().CheckRestoreDestination(Path.Combine(parent, "restored.txt")));
+    }
+
     /// <summary>G03 (c): a per-volume system name that does not exist on the second NTFS drive (`pagefile.sys`,
     /// `hiberfil.sys` are "on every volume") refuses a put-back by path alone; a plain name at the same root passes.</summary>
     [TestMethod]
