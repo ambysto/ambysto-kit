@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ambysto Technologies: measure first, change safely, always reversible</title>
-<meta name="description" content="Seven native Mac utilities that show you the numbers before they change anything, and keep the way back. One key unlocks the suite.">
+<title>Ambysto Pro Suite: the jet-pack for every developer</title>
+<meta name="description" content="Seven native utilities for developers and vibe coders, on Mac and Windows. They show what your machine is doing, change only what you approve, and keep the way back. One key unlocks the suite.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0b0b0c">
 <link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -112,7 +112,11 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 .hero { padding-top: clamp(40px, 7vw, 88px); padding-bottom: clamp(56px, 8vw, 104px); }
 .what { max-width: 52ch; margin-bottom: clamp(24px, 4vw, 44px); font-size: clamp(1.125rem, 1.7vw, 1.375rem); line-height: 1.45; text-wrap: pretty; }
 .lg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); border-top: 1px solid var(--rule); }
-.lg h1 { display: contents; font: inherit; }
+.lg .said { display: contents; }
+.eyebrow { margin-bottom: 18px; font-family: var(--mono); font-size: 0.8125rem; letter-spacing: 0.02em; color: var(--mute); }
+.jet { max-width: 18ch; margin-bottom: 20px; font-family: var(--mono); font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; font-size: clamp(2.25rem, 6vw, 4.5rem); text-wrap: balance; }
+.use { margin-top: 14px; max-width: 62ch; font-family: var(--mono); font-size: 0.875rem; line-height: 1.5; }
+.use::before { content: "> "; color: var(--tone, var(--mute)); }
 .say, .out { padding-block: clamp(14px, 2.2vw, 28px); border-bottom: 1px solid var(--rule); }
 .say {
   grid-column: 1; display: flex; align-items: flex-end; gap: 20px;
@@ -262,25 +266,27 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     </nav>
   </div>
   <nav class="wrap suitebar" aria-label="The seven apps">
-    <a class="cell t-optimer" href="#optimer"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Optimer</span></a>
-    <a class="cell t-steady" href="#steady"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Steady</span></a>
-    <a class="cell t-lean" href="#lean"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Lean</span></a>
     <a class="cell t-devbox" href="#devbox"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">DevBox</span></a>
+    <a class="cell t-optimer" href="#optimer"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Optimer</span></a>
+    <a class="cell t-lean" href="#lean"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Lean</span></a>
     <a class="cell t-power" href="#power"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Power</span></a>
     <a class="cell t-tune" href="#tune"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Tune</span></a>
+    <a class="cell t-steady" href="#steady"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Steady</span></a>
     <a class="cell t-gate" href="#gate"><span class="cellbar" aria-hidden="true"></span><span class="celllabel">Gate</span></a>
   </nav>
 </header>
 
 <main id="top">
-  <section class="wrap hero" aria-label="Sample receipt">
-    <p class="what">Seven native Mac utilities that show you the numbers first, change only what you approve, and keep the way back. One key unlocks the suite.</p>
+  <section class="wrap hero" aria-label="Introduction">
+    <p class="eyebrow">For developers and vibe coders · Mac &amp; Windows</p>
+    <h1 class="jet">The jet-pack for every developer.</h1>
+    <p class="what">Seven native utilities that show what your machine is doing while you build, change only what you approve, and keep the way back. One key unlocks the suite.</p>
     <div class="lg">
-      <h1 aria-label="Measure first. Change safely. Always reversible.">
+      <p class="said" aria-label="Measure first. Change safely. Always reversible.">
         <span class="say r1">$ measure first</span>
         <span class="say r2">$ change safely</span>
         <span class="say r3">$ always reversible</span>
-      </h1>
+      </p>
       <p class="out r1" id="out1"><span class="quiet">waiting</span></p>
       <p class="out r2" id="out2"><span class="quiet">not yet</span></p>
       <p class="out r3" id="out3"><span class="quiet">not yet</span></p>
@@ -288,86 +294,33 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     <div class="actions">
       <button class="btn primary" type="button" id="run">Run sample</button>
       <a class="btn ghost" href="#get">Get the Suite</a>
-      <p class="note">Sample numbers and behavior. Nothing on your Mac is touched.</p>
+      <p class="note">Sample numbers and behavior. Nothing on your machine is touched.</p>
     </div>
     <p class="sr-only" role="status" aria-live="polite" id="say">Sample cleanup ready.</p>
   </section>
 
   <section id="suite" class="wrap block" aria-labelledby="suite-title">
     <h2 id="suite-title">One bar for the whole machine.</h2>
-    <p class="lede">Install two or more apps and their menu bar items merge into one. Each app keeps its own tone, so you always know which one is speaking.</p>
+    <p class="lede">Install two or more apps and their menu bar or tray icons merge into one. Each app keeps its own tone, so you always know which one is speaking.</p>
     <div class="bar" role="group" aria-label="The merged bar, with sample readouts">
-      <div class="seg t-optimer"><span class="segname">Optimer</span><span class="segread">RAM 62%</span><span class="segmeter" aria-hidden="true" data-fill="15"></span></div>
-      <div class="seg t-steady"><span class="segname">Steady</span><span class="segread">18 ms, 0% loss</span></div>
-      <div class="seg t-lean"><span class="segname">Lean</span><span class="segread">412 GB free</span></div>
       <div class="seg t-devbox"><span class="segname">DevBox</span><span class="segread">5 listening</span></div>
+      <div class="seg t-optimer"><span class="segname">Optimer</span><span class="segread">RAM 62%</span><span class="segmeter" aria-hidden="true" data-fill="15"></span></div>
+      <div class="seg t-lean"><span class="segname">Lean</span><span class="segread">412 GB free</span></div>
       <div class="seg t-power"><span class="segname">Power</span><span class="segread">87%, cool</span><span class="segmeter" aria-hidden="true" data-fill="21"></span></div>
       <div class="seg t-tune"><span class="segname">Tune</span><span class="segread">3 active</span></div>
+      <div class="seg t-steady"><span class="segname">Steady</span><span class="segread">18 ms, 0% loss</span></div>
       <div class="seg t-gate"><span class="segname">Gate</span><span class="segread">2 blocked</span></div>
     </div>
     <p class="note">Sample readouts. Each app sells on its own; the price is set at checkout.</p>
-  </section>
-
-  <section id="optimer" class="wrap block t-optimer" aria-labelledby="optimer-title">
-    <div class="split">
-      <div class="copy">
-        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Optimer</span></span></p>
-        <h2 id="optimer-title">Which app. Which number.</h2>
-        <p class="lede">One row per app for memory, CPU and disk. Pressure, swap and heat sit above them. Cleanup measures first, removes caches that grow back, and asks before anything personal.</p>
-        <ul class="ticks">
-          <li>Live memory, CPU and disk, per app.</li>
-          <li>A floating bar that stays on screen.</li>
-          <li>Measure, then clean only caches that rebuild.</li>
-          <li>Personal files stay unticked until you tick them.</li>
-          <li>It never force-quits a process.</li>
-        </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
-      </div>
-      <figure class="shot">
-        <img src="img/optimer-dark.jpg" width="1600" height="1261" loading="lazy" alt="The Optimer dashboard with live memory, CPU, disk and the list of apps">
-      </figure>
-    </div>
-  </section>
-
-  <section id="steady" class="wrap block t-steady" aria-labelledby="steady-title">
-    <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Steady</span></span></p>
-    <h2 id="steady-title">The connection, in three steps.</h2>
-    <p class="lede">Steady watches the connection and explains what it sees. Numbers, not promises.</p>
-    <ul class="rows">
-      <li><span class="no">Monitor</span><span class="leader" aria-hidden="true"></span><span class="why">Watches the connection while you work.</span></li>
-      <li><span class="no">Diagnose</span><span class="leader" aria-hidden="true"></span><span class="why">Tells you what is wrong with it.</span></li>
-      <li><span class="no">Recover</span><span class="leader" aria-hidden="true"></span><span class="why">Brings the connection back.</span></li>
-    </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-steady" role="status"></p></div>
-  </section>
-
-  <section id="lean" class="wrap block t-lean" aria-labelledby="lean-title">
-    <div class="split flip">
-      <figure class="shot">
-        <img src="img/map-dark.webp" width="1800" height="1174" loading="lazy" alt="Ambysto Lean disk map: folders drawn as blocks sized by how much space they use">
-      </figure>
-      <div class="copy">
-        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Lean</span></span></p>
-        <h2 id="lean-title">Where the disk went.</h2>
-        <p class="lede">The map, the large files, the old files, the byte-identical copies, and the leftovers of an app you removed. Only the rows you tick move to the Trash.</p>
-        <ul class="ticks">
-          <li>A map of the whole disk.</li>
-          <li>Large files, old files, and exact duplicates.</li>
-          <li>Uninstall an app, then the files it left behind.</li>
-          <li>Every move is checked, then written down.</li>
-          <li>Put it back from the journal.</li>
-        </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-lean" role="status"></p></div>
-      </div>
-    </div>
   </section>
 
   <section id="devbox" class="wrap block t-devbox" aria-labelledby="devbox-title">
     <div class="split">
       <div class="copy">
         <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">DevBox</span></span></p>
-        <h2 id="devbox-title">What this Mac is running.</h2>
+        <h2 id="devbox-title">What this machine is running.</h2>
         <p class="lede">The port, the process, and the project it belongs to. The disk your containers keep. The coding agents that are busy. Stopping asks you first.</p>
+        <p class="use">The dev server still on its port, the container holding the disk, the agent that never stopped.</p>
         <ul class="ticks">
           <li>Every listener: port, process, project, and how far it is reachable.</li>
           <li>Containers, and the disk the runtime is holding.</li>
@@ -383,24 +336,69 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     </div>
   </section>
 
+  <section id="optimer" class="wrap block t-optimer" aria-labelledby="optimer-title">
+    <div class="split flip">
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Optimer</span></span></p>
+        <h2 id="optimer-title">Which app. Which number.</h2>
+        <p class="lede">One row per app for memory, CPU and disk. Pressure, swap and heat sit above them. Cleanup measures first, removes caches that grow back, and asks before anything personal.</p>
+        <p class="use">When the build crawls, see which app is holding the memory.</p>
+        <ul class="ticks">
+          <li>Live memory, CPU and disk, per app.</li>
+          <li>A floating bar that stays on screen.</li>
+          <li>Measure, then clean only caches that rebuild.</li>
+          <li>Personal files stay unticked until you tick them.</li>
+          <li>It never force-quits a process.</li>
+        </ul>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
+      </div>
+      <figure class="shot">
+        <img src="img/optimer-dark.jpg" width="1600" height="1261" loading="lazy" alt="The Optimer dashboard with live memory, CPU, disk and the list of apps">
+      </figure>
+    </div>
+  </section>
+
+  <section id="lean" class="wrap block t-lean" aria-labelledby="lean-title">
+    <div class="split">
+      <div class="copy">
+        <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Lean</span></span></p>
+        <h2 id="lean-title">Where the disk went.</h2>
+        <p class="lede">The map, the large files, the old files, the byte-identical copies, and the leftovers of an app you removed. Only the rows you tick move to the Trash or the Recycle Bin.</p>
+        <p class="use">Find the old builds, the copies and the leftovers that filled the disk.</p>
+        <ul class="ticks">
+          <li>A map of the whole disk.</li>
+          <li>Large files, old files, and exact duplicates.</li>
+          <li>Uninstall an app, then the files it left behind.</li>
+          <li>Every move is checked, then written down.</li>
+          <li>Put it back from the journal.</li>
+        </ul>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-lean" role="status"></p></div>
+      </div>
+      <figure class="shot">
+        <img src="img/map-dark.webp" width="1800" height="1174" loading="lazy" alt="Ambysto Lean disk map: folders drawn as blocks sized by how much space they use">
+      </figure>
+    </div>
+  </section>
+
   <section id="power" class="wrap block t-power" aria-labelledby="power-title">
     <div class="split flip">
-      <figure class="shot">
-        <img src="img/power-dark.jpg" width="1600" height="1142" loading="lazy" alt="Ambysto Power: charge, watts, time left, battery health, cycles and a charge chart">
-      </figure>
       <div class="copy">
         <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Power</span></span></p>
         <h2 id="power-title">The battery, and what spends it.</h2>
-        <p class="lede">Charge, draw, time left, health and cycles. Which apps use the power. How hot the Mac is. Who is keeping it awake. It measures. It does not force a mode.</p>
+        <p class="lede">Charge, draw, time left, health and cycles. Which apps use the power. How hot the machine is. Who is keeping it awake. It measures. It does not force a mode.</p>
+        <p class="use">Keep the machine awake through a long build, and stop it when you choose.</p>
         <ul class="ticks">
           <li>Charge, watts, time remaining, health and cycle count.</li>
           <li>Power by app.</li>
-          <li>Thermal state, on the same Mac.</li>
-          <li>The list of what is keeping the Mac awake.</li>
+          <li>Thermal state, on the same machine.</li>
+          <li>The list of what is keeping the machine awake.</li>
           <li>Keep-awake you start yourself, with the screen on, and a way to stop it.</li>
         </ul>
       <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="power">Buy Power</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-power" role="status"></p></div>
       </div>
+      <figure class="shot">
+        <img src="img/power-dark.jpg" width="1600" height="1142" loading="lazy" alt="Ambysto Power: charge, watts, time left, battery health, cycles and a charge chart">
+      </figure>
     </div>
   </section>
 
@@ -409,13 +407,14 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <div class="copy">
         <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Tune</span></span></p>
         <h2 id="tune-title">A switch. And the way back.</h2>
-        <p class="lede">Finder, Dock, keyboard, login items, privacy and Spotlight. Each switch stores the value it replaced. One click puts that value back. Restore all puts the Mac back.</p>
+        <p class="lede">The file browser, the Dock or taskbar, keyboard, startup items, privacy and search. Each switch stores the value it replaced. One click puts that value back. Restore all puts the machine back.</p>
+        <p class="use">Set up a new machine the way you work, and keep the way back.</p>
         <ul class="ticks">
           <li>Every tweak is a switch, with the effect written under it.</li>
           <li>The previous value is saved before anything changes.</li>
           <li>Restore one tweak, or every tweak.</li>
-          <li>Login items and background items, in the same window.</li>
-          <li>A journal of what changed on this Mac.</li>
+          <li>Startup items and background items, in the same window.</li>
+          <li>A journal of what changed on this machine.</li>
         </ul>
       <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="tune">Buy Tune</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-tune" role="status"></p></div>
       </div>
@@ -425,10 +424,24 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     </div>
   </section>
 
+  <section id="steady" class="wrap block t-steady" aria-labelledby="steady-title">
+    <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Steady</span></span></p>
+    <h2 id="steady-title">The connection, in three steps.</h2>
+    <p class="lede">Steady watches the connection and explains what it sees. Numbers, not promises.</p>
+    <p class="use">When a push, a pull or an install stalls, see whether the connection is the reason.</p>
+    <ul class="rows">
+      <li><span class="no">Monitor</span><span class="leader" aria-hidden="true"></span><span class="why">Watches the connection while you work.</span></li>
+      <li><span class="no">Diagnose</span><span class="leader" aria-hidden="true"></span><span class="why">Tells you what is wrong with it.</span></li>
+      <li><span class="no">Recover</span><span class="leader" aria-hidden="true"></span><span class="why">Brings the connection back.</span></li>
+    </ul>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-steady" role="status"></p></div>
+  </section>
+
   <section id="gate" class="wrap block t-gate" aria-labelledby="gate-title">
     <p class="appid"><span><span class="co">Ambysto</span> <span class="nm">Gate</span></span></p>
     <h2 id="gate-title">Which app. Which address.</h2>
     <p class="lede">Per-app network control. You see the app and where it is going. You allow it or you block it, for that app, and you can undo it.</p>
+    <p class="use">See which tool on your machine connects where.</p>
     <ul class="rows">
       <li><span class="no">See</span><span class="leader" aria-hidden="true"></span><span class="why">Every app that uses the network, and where it connects.</span></li>
       <li><span class="no">Decide</span><span class="leader" aria-hidden="true"></span><span class="why">Allow or block, one app at a time. Nothing is blocked until you say so.</span></li>
@@ -441,7 +454,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     <h2 id="refuse-title">What we won’t do.</h2>
     <p class="lede">The suite is defined as much by what it refuses as by what it does.</p>
     <ul class="rows">
-      <li><span class="no">Phone home</span><span class="leader" aria-hidden="true"></span><span class="why">Your key is checked on your Mac, offline. There is no telemetry.</span></li>
+      <li><span class="no">Phone home</span><span class="leader" aria-hidden="true"></span><span class="why">Your key is checked on your machine, offline. There is no telemetry.</span></li>
       <li><span class="no">Run as root</span><span class="leader" aria-hidden="true"></span><span class="why">Not unless it is unavoidable, and then the app says so and asks first.</span></li>
       <li><span class="no">Scan for malware</span><span class="leader" aria-hidden="true"></span><span class="why">That is not what we do. Nor do we update your drivers or your apps.</span></li>
       <li><span class="no">Act before measuring</span><span class="leader" aria-hidden="true"></span><span class="why">Every app shows you the numbers before it changes anything.</span></li>
@@ -454,24 +467,24 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 
   <section id="get" class="wrap block" aria-labelledby="get-title">
     <h2 id="get-title">One key. Seven apps.</h2>
-    <p class="lede">One license key unlocks Pro in every app it lists. Each app also sells on its own. macOS first, Windows follows.</p>
+    <p class="lede">One license key unlocks Pro in every app it lists. Each app also sells on its own. On Mac and on Windows.</p>
     <div class="receipt single">
       <p class="rhead">Ambysto Pro Suite</p>
       <ul>
-        <li class="t-optimer"><span class="nm">Ambysto Optimer</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
-        <li class="t-steady"><span class="nm">Ambysto Steady</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
-        <li class="t-lean"><span class="nm">Ambysto Lean</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-devbox"><span class="nm">Ambysto DevBox</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
+        <li class="t-optimer"><span class="nm">Ambysto Optimer</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
+        <li class="t-lean"><span class="nm">Ambysto Lean</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-power"><span class="nm">Ambysto Power</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-tune"><span class="nm">Ambysto Tune</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
+        <li class="t-steady"><span class="nm">Ambysto Steady</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-gate"><span class="nm">Ambysto Gate</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="total"><span class="nm">Total</span><span class="leader" aria-hidden="true"></span><span class="inc">price set at checkout</span></li>
       </ul>
       <div class="buy"><button class="btn primary" type="button" data-buy="suite">Get the Suite</button><p class="notice" id="notice-suite" role="status"></p></div>
     </div>
     <ul class="rows">
-      <li><span class="no">Free</span><span class="leader" aria-hidden="true"></span><span class="why">The job of every app, for good: the measuring, the cleanup, the Trash, the stop, the tweak, and the restore.</span></li>
-      <li><span class="no">Pro</span><span class="leader" aria-hidden="true"></span><span class="why">Conveniences on top: a longer history, export, alerts, presets. One key, paid once, checked on your Mac.</span></li>
+      <li><span class="no">Free</span><span class="leader" aria-hidden="true"></span><span class="why">The job of every app, for good: the measuring, the cleanup, the Trash or Recycle Bin, the stop, the tweak, and the restore.</span></li>
+      <li><span class="no">Pro</span><span class="leader" aria-hidden="true"></span><span class="why">Conveniences on top: a longer history, export, alerts, presets. One key, paid once, checked on your machine.</span></li>
     </ul>
     <p class="note after">Safety is never behind the key. A free app still changes only what you approve, and still restores.</p>
   </section>
@@ -481,7 +494,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
     <div class="faq">
       <details>
         <summary>Does it need the internet to work?</summary>
-        <p>No. Your license is a signed key file that is checked on your Mac.</p>
+        <p>No. Your license is a signed key file that is checked on your machine.</p>
       </details>
       <details>
         <summary>Does it need admin rights?</summary>
@@ -501,14 +514,14 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       </details>
       <details>
         <summary>Is there a Windows version?</summary>
-        <p>macOS comes first for every app. Windows follows.</p>
+        <p>Yes. Every app is native on Mac and on Windows, built from the same written spec.</p>
       </details>
     </div>
   </section>
 </main>
 
 <footer class="wrap foot">
-  <p>© 2026 Ambysto Technologies. Not affiliated with Apple.</p>
+  <p>© 2026 Ambysto Technologies. Not affiliated with Apple or Microsoft.</p>
   <p>Numbers in the demos are samples.</p>
 </footer>
 
