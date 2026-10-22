@@ -219,6 +219,12 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-block: 40px 56px; border-top: 1px solid var(--rule); }
 .foot p { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
 .foot em { font-style: italic; }
+.foot p a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--dim); }
+.foot p a:hover { text-decoration-color: var(--ink); }
+.foot nav { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
+.foot nav a:hover { color: var(--ink); }
+.note a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--dim); }
+.note a:hover { text-decoration-color: var(--ink); }
 /* sample run (hero) */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .out .quiet { color: var(--mute); }
@@ -311,7 +317,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <div class="seg t-steady"><span class="segname">Steady</span><span class="segread">18 ms, 0% loss</span></div>
       <div class="seg t-gate"><span class="segname">Gate</span><span class="segread">2 blocked</span></div>
     </div>
-    <p class="note">Sample readouts. Each app sells on its own; the price is set at checkout.</p>
+    <p class="note">Sample readouts. Each app sells on its own ($19.99); the suite is $39 for all seven.</p>
   </section>
 
   <section id="devbox" class="wrap block t-devbox" aria-labelledby="devbox-title">
@@ -328,7 +334,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>A runaway session is flagged in the list.</li>
           <li>Stop, only after you confirm.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="devbox">Buy DevBox</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-devbox" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="devbox">Buy DevBox</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-devbox" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/devbox-dark.jpg" width="1600" height="1109" loading="lazy" alt="Ambysto DevBox agents: coding sessions with CPU, memory, project and a stop button">
@@ -350,7 +356,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Personal files stay unticked until you tick them.</li>
           <li>It never force-quits a process.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/optimer-dark.jpg" width="1600" height="1261" loading="lazy" alt="The Optimer dashboard with live memory, CPU, disk and the list of apps">
@@ -372,7 +378,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Every move is checked, then written down.</li>
           <li>Put it back from the journal.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-lean" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-lean" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/map-dark.webp" width="1800" height="1174" loading="lazy" alt="Ambysto Lean disk map: folders drawn as blocks sized by how much space they use">
@@ -394,7 +400,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>The list of what is keeping the machine awake.</li>
           <li>Keep-awake you start yourself, with the screen on, and a way to stop it.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="power">Buy Power</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-power" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="power">Buy Power</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-power" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/power-dark.jpg" width="1600" height="1142" loading="lazy" alt="Ambysto Power: charge, watts, time left, battery health, cycles and a charge chart">
@@ -416,7 +422,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Startup items and background items, in the same window.</li>
           <li>A journal of what changed on this machine.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="tune">Buy Tune</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-tune" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="tune">Buy Tune</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-tune" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/tune-dark.jpg" width="1600" height="1030" loading="lazy" alt="Ambysto Tune Dock settings: each tweak is a switch with a short explanation">
@@ -434,7 +440,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Diagnose</span><span class="leader" aria-hidden="true"></span><span class="why">Tells you what is wrong with it.</span></li>
       <li><span class="no">Recover</span><span class="leader" aria-hidden="true"></span><span class="why">Brings the connection back.</span></li>
     </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-steady" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-steady" role="status"></p></div>
   </section>
 
   <section id="gate" class="wrap block t-gate" aria-labelledby="gate-title">
@@ -447,7 +453,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Decide</span><span class="leader" aria-hidden="true"></span><span class="why">Allow or block, one app at a time. Nothing is blocked until you say so.</span></li>
       <li><span class="no">Undo</span><span class="leader" aria-hidden="true"></span><span class="why">Every choice is reversible, and the app keeps the way back.</span></li>
     </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="gate">Buy Gate</button><span class="price">price set at checkout</span></div><p class="notice" id="notice-gate" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="gate">Buy Gate</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-gate" role="status"></p></div>
   </section>
 
   <section id="refuse" class="wrap block" aria-labelledby="refuse-title">
@@ -461,13 +467,14 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Make a change you cannot undo</span><span class="leader" aria-hidden="true"></span><span class="why">Changes are reversible, and the app keeps the way back.</span></li>
       <li><span class="no">Sell a “boost”</span><span class="leader" aria-hidden="true"></span><span class="why">No “Free RAM” button, no health score, no force-quit.</span></li>
       <li><span class="no">Rush you</span><span class="leader" aria-hidden="true"></span><span class="why">No countdown, no fake discount, no subscription that renews by itself.</span></li>
+      <li><span class="no">Hold features hostage</span><span class="leader" aria-hidden="true"></span><span class="why">We only charge when you are happy to pay. Essential cleanup and recovery are free forever.</span></li>
       <li><span class="no">Sell you an ad</span><span class="leader" aria-hidden="true"></span><span class="why">A suggestion appears only when it solves something the app just measured. It is never an ad.</span></li>
     </ul>
   </section>
 
   <section id="get" class="wrap block" aria-labelledby="get-title">
-    <h2 id="get-title">One key. Seven apps.</h2>
-    <p class="lede">One license key unlocks Pro in every app it lists. Each app also sells on its own. On Mac and on Windows.</p>
+    <h2 id="get-title">We only charge when you are happy to pay.</h2>
+    <p class="lede">Every core job is free forever. One license key unlocks Pro in every app it lists. Paid once, no auto-renew. On Mac and on Windows.</p>
     <div class="receipt single">
       <p class="rhead">Ambysto Pro Suite</p>
       <ul>
@@ -478,7 +485,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
         <li class="t-tune"><span class="nm">Ambysto Tune</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-steady"><span class="nm">Ambysto Steady</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="t-gate"><span class="nm">Ambysto Gate</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
-        <li class="total"><span class="nm">Total</span><span class="leader" aria-hidden="true"></span><span class="inc">price set at checkout</span></li>
+        <li class="total"><span class="nm">Total</span><span class="leader" aria-hidden="true"></span><span class="inc">$39 launch · $59 regular</span></li>
       </ul>
       <div class="buy"><button class="btn primary" type="button" data-buy="suite">Get the Suite</button><p class="notice" id="notice-suite" role="status"></p></div>
     </div>
@@ -486,7 +493,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Free</span><span class="leader" aria-hidden="true"></span><span class="why">The job of every app, for good: the measuring, the cleanup, the Trash or Recycle Bin, the stop, the tweak, and the restore.</span></li>
       <li><span class="no">Pro</span><span class="leader" aria-hidden="true"></span><span class="why">Conveniences on top: a longer history, export, alerts, presets. One key, paid once, checked on your machine.</span></li>
     </ul>
-    <p class="note after">Safety is never behind the key. A free app still changes only what you approve, and still restores.</p>
+    <p class="note after">Safety is never behind the key. A free app still changes only what you approve, and still restores. <a href="/refund-policy">Full refund within 14 days of purchase.</a></p>
   </section>
 
   <section id="faq" class="wrap block" aria-labelledby="faq-title">
@@ -521,8 +528,17 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 </main>
 
 <footer class="wrap foot">
-  <p>© 2026 Ambysto Technologies. Not affiliated with Apple or Microsoft.</p>
-  <p>Numbers in the demos are samples.</p>
+  <div>
+    <p>© 2026 Ambysto Technologies LLC · <a href="mailto:contact@ambysto.com">contact@ambysto.com</a></p>
+    <p>Not affiliated with Apple or Microsoft.</p>
+    <p>Numbers in the demos are samples.</p>
+  </div>
+  <nav aria-label="Legal">
+    <a href="/terms">Terms of Service</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="https://ambysto.com">ambysto.com</a>
+  </nav>
 </footer>
 
 <script>
@@ -552,7 +568,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
   document.querySelectorAll("[data-buy]").forEach((b) => {
     b.addEventListener("click", () => {
       const n = document.getElementById("notice-" + b.dataset.buy);
-      n.textContent = "Checkout is not connected yet. Nothing was charged.";
+      n.textContent = "Checkout is opening soon. Early users get Pro access free.";
       b.setAttribute("aria-describedby", n.id);
     });
   });
