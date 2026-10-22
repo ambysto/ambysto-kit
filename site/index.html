@@ -219,6 +219,12 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-block: 40px 56px; border-top: 1px solid var(--rule); }
 .foot p { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
 .foot em { font-style: italic; }
+.foot p a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--dim); }
+.foot p a:hover { text-decoration-color: var(--ink); }
+.foot nav { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--mono); font-size: 0.75rem; color: var(--mute); }
+.foot nav a:hover { color: var(--ink); }
+.note a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--dim); }
+.note a:hover { text-decoration-color: var(--ink); }
 /* sample run (hero) */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .out .quiet { color: var(--mute); }
@@ -487,7 +493,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Free</span><span class="leader" aria-hidden="true"></span><span class="why">The job of every app, for good: the measuring, the cleanup, the Trash or Recycle Bin, the stop, the tweak, and the restore.</span></li>
       <li><span class="no">Pro</span><span class="leader" aria-hidden="true"></span><span class="why">Conveniences on top: a longer history, export, alerts, presets. One key, paid once, checked on your machine.</span></li>
     </ul>
-    <p class="note after">Safety is never behind the key. A free app still changes only what you approve, and still restores.</p>
+    <p class="note after">Safety is never behind the key. A free app still changes only what you approve, and still restores. <a href="/refund-policy">Full refund within 14 days of purchase.</a></p>
   </section>
 
   <section id="faq" class="wrap block" aria-labelledby="faq-title">
@@ -522,8 +528,17 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 </main>
 
 <footer class="wrap foot">
-  <p>© 2026 Ambysto Technologies. Not affiliated with Apple or Microsoft.</p>
-  <p>Numbers in the demos are samples.</p>
+  <div>
+    <p>© 2026 Ambysto Technologies LLC · <a href="mailto:contact@ambysto.com">contact@ambysto.com</a></p>
+    <p>Not affiliated with Apple or Microsoft.</p>
+    <p>Numbers in the demos are samples.</p>
+  </div>
+  <nav aria-label="Legal">
+    <a href="/terms">Terms of Service</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="https://ambysto.com">ambysto.com</a>
+  </nav>
 </footer>
 
 <script>
