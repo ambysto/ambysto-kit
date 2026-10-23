@@ -83,3 +83,7 @@ dotnet test -c Release Ambysto.Kit.slnx
 ```
 
 Both Swift and .NET production key sets must stay equal: `python3 -I scripts/check-key-sets.py`. The other proof scripts are listed under "Verify" in `CLAUDE.md`.
+
+## Licence
+
+Apache-2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
