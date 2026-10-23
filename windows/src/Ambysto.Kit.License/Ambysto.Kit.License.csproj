@@ -10,6 +10,7 @@
     <Version>0.0.0-dev</Version>
     <PackageId>Ambysto.Kit.License</PackageId>
     <Authors>Ambysto</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>Offline verification of Ambysto license keys (format 1): AMB- key texts and .ambystokey files, ECDSA P-256, no network.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/ambysto/ambysto-kit</RepositoryUrl>
