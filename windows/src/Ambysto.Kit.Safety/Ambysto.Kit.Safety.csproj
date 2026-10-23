@@ -12,6 +12,7 @@
     <Version>0.0.0-dev</Version>
     <PackageId>Ambysto.Kit.Safety</PackageId>
     <Authors>Ambysto</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>The file-safety gate for Ambysto apps on Windows: decides whether an item may be moved to the Recycle Bin (recoverable moves only, never-touch list, identity, cloud files, in-use check). It never changes anything.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/ambysto/ambysto-kit</RepositoryUrl>
