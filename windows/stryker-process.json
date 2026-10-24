@@ -1,0 +1,12 @@
+{
+  "stryker-config": {
+    "project": "Ambysto.Kit.Process.csproj",
+    "test-projects": [ "Ambysto.Kit.Process.Tests.csproj" ],
+    "concurrency": 1,
+    "mutation-level": "Standard",
+    "coverage-analysis": "perTest",
+    "reporters": [ "json", "html", "cleartext" ],
+    "thresholds": { "high": 90, "low": 75, "break": 0 },
+    "additional-timeout": 20000
+  }
+}
