@@ -1,6 +1,6 @@
 # Plan: Ambysto Kit for Windows 0.3 — process reading (APS-39)
 
-Intent: [2026-10-24-kit-windows-process.md](2026-10-24-kit-windows-process.md) (approved 2026-10-24). Branch `aps-39-kit-windows-process`. Contract: the intent and `docs/spec/process.md` (with the Windows notes group 1 adds). Never the Swift code.
+Intent: [2026-10-24-kit-windows-process.md](2026-10-24-kit-windows-process.md) (approved 2026-10-24). Plan accepted by the owner 2026-10-24. Branch `aps-39-kit-windows-process`. Contract: the intent and `docs/spec/process.md` (with the Windows notes group 1 adds). Never the Swift code.
 
 This plan is self-contained with the intent and the spec. HARD throughout: the main session writes the spec and the library; **a separate agent writes the acceptance tests from the spec, the intent and the public API stubs before the library exists** (group 3), so the tests are not shaped by the code; `hard-reviewer` reviews this plan, the acceptance tests and the code.
 
