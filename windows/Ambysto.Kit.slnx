@@ -2,10 +2,12 @@
   <Folder Name="/src/">
     <Project Path="src/Ambysto.Kit.License/Ambysto.Kit.License.csproj" />
     <Project Path="src/Ambysto.Kit.Safety/Ambysto.Kit.Safety.csproj" />
+    <Project Path="src/Ambysto.Kit.Process/Ambysto.Kit.Process.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj" />
     <Project Path="tests/Ambysto.Kit.Safety.Tests/Ambysto.Kit.Safety.Tests.csproj" />
     <Project Path="tests/Ambysto.Kit.Safety.CloudFixture/Ambysto.Kit.Safety.CloudFixture.csproj" />
+    <Project Path="tests/Ambysto.Kit.Process.Tests/Ambysto.Kit.Process.Tests.csproj" />
   </Folder>
 </Solution>

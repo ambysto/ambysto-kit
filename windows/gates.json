@@ -7,6 +7,11 @@
       "filter": "FullyQualifiedName~Ambysto.Kit.Licensing"
     },
     {
+      "name": "process",
+      "context": "session0",
+      "filter": "FullyQualifiedName~Ambysto.Kit.Processes"
+    },
+    {
       "name": "safety",
       "context": "session0",
       "filter": "TestCategory=Session0"

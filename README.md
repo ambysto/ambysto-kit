@@ -7,7 +7,7 @@
 
 The shared foundation of the **Ambysto Pro Suite**, a set of native utilities that **measure first, change safely and are always reversible**. Each app needs the same hard parts: checking a license key, reading processes, deciding what is safe to touch, and showing one menu bar item across apps. The Kit holds them once, so every app gets them the same way.
 
-- **Libraries:** a Swift package with license verification, brand tokens, the floating mini bar framework, suite discovery and the merged mini bar; and, for Windows, the .NET library `Ambysto.Kit.License`.
+- **Libraries:** a Swift package with license verification, process reading, the file-safety gate, brand tokens, the floating mini bar framework, suite discovery and the merged mini bar; and, for Windows, the .NET libraries `Ambysto.Kit.License`, `Ambysto.Kit.Safety` and `Ambysto.Kit.Process`.
 - **Suite apps:** the seven apps of the suite (table below). Steady does not use the Kit yet.
 - **Suite-level docs:** strategy intents (`intent/`), the platform-neutral license spec, customer policies and market research.
 
@@ -32,7 +32,7 @@ Yes, if you build an Ambysto suite app and want the shared license check, proces
 ## Status
 
 - Swift package: five libraries are built (license, process, safety, suite, UI) plus the owner-only `ambysto-license` tool. No tag exists yet; the first tag is planned as `v0.2.0`. Until it exists, apps pin a `main` commit (DevBox and Optimer pin revision `9e8c470`); after it, apps depend by semver tag (`from:`).
-- Windows: `Ambysto.Kit.License` 0.1.2 is on GitHub Packages (tag `windows-v0.1.2`), and `Ambysto.Kit.Safety` (the Windows file-safety gate) is in `windows/src`. Until the production key exists, the verifier trusts no key and no Windows app ships on it.
+- Windows: `Ambysto.Kit.License` 0.2.0 and `Ambysto.Kit.Safety` 0.2.0 are on GitHub Packages (tag `windows-v0.2.0`), and `Ambysto.Kit.Process` (process reading, listening sockets and CPU/memory/I/O sampling) is in `windows/src` for `windows-v0.3.0`. Until the production key exists, the verifier trusts no key (Free ships first).
 - Open: the production license key (`TrustedKeys.production` and `Revocations` are empty), the first tag, and some owner-run proofs. `CLAUDE.md` lists them under "Open".
 
 ## What is in the repo
@@ -41,7 +41,7 @@ Yes, if you build an Ambysto suite app and want the shared license check, proces
 |---|---|
 | `Package.swift`, `Sources/` | The Swift package. Libraries: `AmbystoLicense` (offline license keys, P-256 signatures), `AmbystoProcess` (process reading over libproc and sysctl; it never sends a signal), `AmbystoSafety` (the file-safety gate; it never deletes or moves anything), `AmbystoSuite` (the suite bar's cross-app contract), `AmbystoUI` (Terminal theme, floating panel, global hot key, `SuiteParticipant`). Also the `ambysto-license` tool (`LicenseTool`, owner only, with the C target `KeychainACL`) and proof helpers (`ProcessProbe`, `SuiteBarDemo`). |
 | `Tests/` | Swift tests for the five libraries. |
-| `windows/` | The .NET 10 library `Ambysto.Kit.License` (namespace `Ambysto.Kit.Licensing`): the same license verifier, built from `docs/spec/license.md` and its vectors alone, never from the Swift code. A NuGet package on GitHub Packages from `windows-v*` tags. Also `Ambysto.Kit.Safety` (APS-24), built from `docs/spec/safety.md`. |
+| `windows/` | The .NET 10 libraries `Ambysto.Kit.License` (namespace `Ambysto.Kit.Licensing`, built from `docs/spec/license.md` and its vectors alone), `Ambysto.Kit.Safety` (APS-24, built from `docs/spec/safety.md`), and `Ambysto.Kit.Process` (APS-39, namespace `Ambysto.Kit.Processes`, built from `docs/spec/process.md`), never from the Swift code. NuGet packages on GitHub Packages from `windows-v*` tags. |
 | `docs/spec/` | Platform-neutral specs and test vectors: `license.md`, `safety.md`, `process.md`, `suite-bar.md`, `intents.md`. |
 | `docs/research/` | Market research. |
 | `intent/` | Strategy intents and plans (intent → plan → build → verify). Start with `2026-10-09-ambysto-pro-suite.md`. |
