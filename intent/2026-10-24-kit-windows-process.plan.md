@@ -111,3 +111,49 @@ The intent's `status` moves to `planned` when this plan is accepted, `building` 
   2. MINOR: specify how `ProcessReader.Read(ProcessIdentity)` validates `ParentProcessId` via `source.ReadEntry(entry.InheritedFromProcessId)`.
   3. MINOR: specify tie-breaking (greatest `SnapshotStartTimeTicks`) if a synthetic seam test returns duplicate surviving `ProcessId` entries.
   4–5. NIT: `Ambysto.Kit.slnx` already covers building in `.github/workflows/windows-release.yml` for group 2; include "Accept this plan" under Owner steps.
+- **Acceptance tests review — Groups 1–3 (`8f87de0..433e554`, hard-reviewer, PASS, 2026-10-24):** 0 BLOCKER, 0 MAJOR, 2 MINOR, 1 NIT. Verified that the 32 acceptance test methods in `windows/tests/Ambysto.Kit.Process.Tests/` (`433e554`) were written by a separate agent before the implementation, built with `0 Warning(s)` / `0 Error(s)` in the Windows 11 VM, and failed 32/32 with `System.NotImplementedException` against the Group 2 stubs (`0a92167`).
+- **Final code review — Groups 1–7 (`547790d..9741f91`, hard-reviewer, PASS, 2026-10-24):** 0 BLOCKER, 0 MAJOR, 0 MINOR, 1 NIT (record proof and Stryker results). Verified zero changes to the 5 Group 3 acceptance test files across `433e554..9741f91`.
+
+## Proof record (2026-10-24)
+
+- **Machine gates runner (`windows/gates.json` on the Windows 11 test machine at `9741f91`):**
+  - `build`: `PASS` (`0 Warning(s)`, `0 Error(s)`)
+  - `suite:license`: `PASS` (`45/45`)
+  - `suite:process`: `PASS` (`36/36` — 32 acceptance tests in `ProcessIdentityTests`, `ProcessReaderSeamTests`, `ProcessReaderRealProcessTests`, `ListeningSocketsTests`, `ProcessSamplerTests` + 4 native-layout/guard/boundary unit tests in `NativeLayoutAndGuardUnitTests`)
+  - `suite:safety`: `PASS` (`297/297`)
+  - `suite:safety-console`: `PASS` (`4/4`)
+  - `suite:safety-real-ssh`: `PASS` (`3/3`)
+  - `suite:safety-real-admin`: `PASS` (`3/3`)
+  - `suite:safety-admin-setup`: `PASS` (`28/28`)
+  - `suite:safety-admin-size-policy`: `PASS` (`1/1`)
+  - `host:windows-choke-points.sh`: `PASS` (0 forbidden uses across `windows/src/Ambysto.Kit.Safety` and `windows/src/Ambysto.Kit.Process`)
+  - `host:windows-choke-points-fixtures.sh`: `PASS` (pass fixture passes; 43 of 43 fail fixtures `F01`–`F43` fail; both libraries pass)
+- **Criterion 9 & 10:**
+  - `dotnet list src/Ambysto.Kit.Process/Ambysto.Kit.Process.csproj package`: `No packages were found for this framework.`
+  - `docs/spec/process.md`: no Swift or C# type names outside the macOS and Windows notes.
+  - `git diff main -- Sources Tests Package.swift windows/src/Ambysto.Kit.License windows/src/Ambysto.Kit.Safety`: empty.
+- **Criterion 11 rehearsal:**
+  - Packed `Ambysto.Kit.Process` (`0.3.0-rehearsal`) to a temporary local feed in the Windows 11 VM and ran a scratch app outside the repository: `REHEARSAL_OK assembly=Ambysto.Kit.Process version=0.3.0.0 selfPid=3024 readable=True totalProcs=139 unreadable=98 sockets=27 sampled=41`.
+- **Hand mutation checks `(a)`–`(g)`:**
+  - `(a)` Skip `TokenIsElevated` check (`!handle.IsElevated` → `true` in `ProcessReader.cs`): **KILLED** by `ReadSnapshotCurrentUserElevatedProcessIsUnreadableAndCounted`, `ReadMissingExitedReusedOrUnreadableProcessReturnsNull` and `SampleUnreadableProcessesOmittedFromSampledProcessesButIncludedInAllProcessesAndCount`.
+  - `(b)` Accept parent without comparing `StartTimeTicks` (`parentStartTicks <= entry.SnapshotStartTimeTicks` → `true` in `ProcessReader.cs`): **KILLED** by `ReadSnapshotParentProcessIdValidationEnforcesLivenessAndCreationTimeOrdering` and `ReadSnapshotDuplicateSurvivingProcessIdUsesGreatestStartTimeTicksForParentValidation`.
+  - `(c)` Decode `dwLocalPort` from all 32 bits instead of the low 16 bits in `ListeningSockets.cs`: **KILLED** by `SeamAddressClassificationFormattingAndDirtyPortUpperBitsAreDecodedAccurately`.
+  - `(d)` Call `CommandLineToArgvW` on `""` in `ProcessNativeMethods.cs`: **KILLED** by `ReadSnapshotEmptyWhitespaceOrNullCommandLineDoesNotLeakCallerExecutableIntoArguments`.
+  - `(e)` Drop post-metadata `ExitTime` / `StartTimeAfterTicks` check in `ProcessReader.cs`: **KILLED** by `ReadSnapshotPidZeroZeroThreadsExitedOrMismatchedStartTimesAreSkippedWithoutCountingUnreadable` and `ReadMissingExitedReusedOrUnreadableProcessReturnsNull`.
+  - `(f)` Allow remaining deltas when one counter decreases in `ProcessSampler.cs`: **KILLED** by `SampleDecreasingAnySingleCounterSuppressesAllDeltasAndRatesForThatSample`.
+  - `(g)` Add `PROCESS_VM_WRITE` and `TerminateProcess` to `ProcessNativeMethods.cs`: **KILLED** by `scripts/windows-choke-points.sh` (`FAIL: 2 forbidden use(s)`).
+- **Stryker.NET mutation report (`windows/stryker-process.json`):**
+  - Core domain logic (`ProcessIdentity.cs`, `ProcessReader.cs`, `ListeningSockets.cs`, `ProcessSampler.cs`): **96.70 %** (`264 killed / 273 tested`, `0 NoCoverage`, `9 survived`):
+    - `ProcessIdentity.cs`: **100.00 %** (`2 killed`, `0 survived`).
+    - `ProcessReader.cs`: **97.33 %** (`146 killed`, `4 survived`):
+      1. Line 165 (`""` in `ArgumentException` message): exception message string literal.
+      2. Line 263 (`entry.SnapshotStartTimeTicks >= existingStart`): equivalent tie-break when two entries have identical `ProcessId` and identical `SnapshotStartTimeTicks`.
+      3. Line 356 (`rawParent < 0` in `ValidateParentFromSnapshot`): equivalent because `maxStartByPid` only contains surviving processes (`ProcessId > 0`), so `rawParent == 0` is never found in `maxStartByPid`.
+      4. Line 373 (`rawParent < 0` in `ValidateParentSingleLookup`): equivalent because `IsSurvivingEntry` rejects `ProcessId <= 0`.
+    - `ProcessSampler.cs`: **96.10 %** (`74 killed`, `3 survived`):
+      1 & 3. Lines 101 & 226 (`!process.IsReadable && process.Usage is null`): equivalent because `ProcessRecord.Readable` and `ProcessRecord.Unreadable` enforce the invariant `IsReadable == (Usage is not null)`.
+      2. Line 103 (`""` in `ArgumentException` message): exception message string literal.
+    - `ListeningSockets.cs`: **95.45 %** (`42 killed`, `2 survived`):
+      1. Line 138 (`record.Identity.StartTimeTicks >= existing.Identity.StartTimeTicks`): equivalent tie-break when two records have identical `ProcessId` and identical `StartTimeTicks`.
+      2. Line 187 (`(low16 & 0xFF00u) >>> 8`): equivalent unsigned shift on `uint`.
+  - Win32 / P/Invoke adapters (`Native/ProcessNativeMethods.cs`, `Internal/SystemProcessSnapshotSource.cs`, `Internal/SystemTcpTableSource.cs`, `Internal/SystemMonotonicClock.cs`, exercised by real-process integration tests): `137 killed / timout` (`131 killed`, `6 timed out`); remaining survivors are defensive Win32 error/retry branches (`ERROR_INSUFFICIENT_BUFFER` / `STATUS_INFO_LENGTH_MISMATCH` growth factors, 32 KB path fallback when a path exceeds 1024 chars, `CloseHandle`/`FreeHGlobal`/`LocalFree` cleanup statements, `checked` overflow on `QueryUnbiasedInterruptTime`, and defensive `Math.Max(0L, …)` clamps on non-negative kernel counters).
