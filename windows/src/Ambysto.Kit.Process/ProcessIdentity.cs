@@ -10,7 +10,11 @@ public readonly record struct ProcessIdentity
     /// <param name="startTimeTicks">The Windows creation time in 100-ns FILETIME ticks since 1601-01-01 UTC (positive).</param>
     public ProcessIdentity(int processId, long startTimeTicks)
     {
-        throw new NotImplementedException();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(processId);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startTimeTicks);
+
+        ProcessId = processId;
+        StartTimeTicks = startTimeTicks;
     }
 
     /// <summary>The process id.</summary>

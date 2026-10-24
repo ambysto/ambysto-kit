@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Ambysto.Kit.Processes.Internal;
+using Ambysto.Kit.Processes.Native;
 
 namespace Ambysto.Kit.Processes;
 
@@ -23,7 +25,32 @@ public sealed class ProcessCounters
         long? interruptWakeups = null,
         long? energyNanojoules = null)
     {
-        throw new NotImplementedException();
+        ArgumentOutOfRangeException.ThrowIfNegative(memoryBytes);
+        ArgumentOutOfRangeException.ThrowIfNegative(cpuTimeNanoseconds);
+        ArgumentOutOfRangeException.ThrowIfNegative(bytesRead);
+        ArgumentOutOfRangeException.ThrowIfNegative(bytesWritten);
+        if (idleWakeups is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(idleWakeups));
+        }
+
+        if (interruptWakeups is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(interruptWakeups));
+        }
+
+        if (energyNanojoules is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(energyNanojoules));
+        }
+
+        MemoryBytes = memoryBytes;
+        CpuTimeNanoseconds = cpuTimeNanoseconds;
+        BytesRead = bytesRead;
+        BytesWritten = bytesWritten;
+        IdleWakeups = idleWakeups;
+        InterruptWakeups = interruptWakeups;
+        EnergyNanojoules = energyNanojoules;
     }
 
     /// <summary>Physical memory footprint (private working set on Windows) in bytes.</summary>
@@ -51,9 +78,30 @@ public sealed class ProcessCounters
 /// <summary>One process in a snapshot (docs/spec/process.md, "A process record").</summary>
 public sealed class ProcessRecord
 {
-    private ProcessRecord()
+    private ProcessRecord(
+        ProcessIdentity identity,
+        int? parentProcessId,
+        string name,
+        int sessionId,
+        bool isReadable,
+        string? ownerSid,
+        string? executablePath,
+        string? workingDirectory,
+        string? commandLine,
+        IReadOnlyList<string>? arguments,
+        ProcessCounters? usage)
     {
-        Name = string.Empty;
+        Identity = identity;
+        ParentProcessId = parentProcessId;
+        Name = name;
+        SessionId = sessionId;
+        IsReadable = isReadable;
+        OwnerSid = ownerSid;
+        ExecutablePath = executablePath;
+        WorkingDirectory = workingDirectory;
+        CommandLine = commandLine;
+        Arguments = arguments;
+        Usage = usage;
     }
 
     /// <summary>The process identity (process id + creation time).</summary>
@@ -90,17 +138,6 @@ public sealed class ProcessRecord
     public ProcessCounters? Usage { get; }
 
     /// <summary>Creates a readable process record.</summary>
-    /// <param name="identity">The process identity.</param>
-    /// <param name="parentProcessId">Validated parent process id, or null.</param>
-    /// <param name="name">Short image name.</param>
-    /// <param name="sessionId">Windows session id (non-negative).</param>
-    /// <param name="ownerSid">Owner SID string (non-empty).</param>
-    /// <param name="executablePath">Full DOS executable path, or null.</param>
-    /// <param name="workingDirectory">Normalized working directory, or null.</param>
-    /// <param name="commandLine">Raw command line, or null.</param>
-    /// <param name="arguments">Parsed arguments (non-null when <paramref name="commandLine"/> is non-null; null when <paramref name="commandLine"/> is null).</param>
-    /// <param name="usage">Usage counters.</param>
-    /// <returns>The readable record.</returns>
     public static ProcessRecord Readable(
         ProcessIdentity identity,
         int? parentProcessId,
@@ -113,22 +150,57 @@ public sealed class ProcessRecord
         IReadOnlyList<string>? arguments,
         ProcessCounters usage)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentOutOfRangeException.ThrowIfNegative(sessionId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(ownerSid);
+        ArgumentNullException.ThrowIfNull(usage);
+
+        if (commandLine is not null && arguments is null)
+        {
+            throw new ArgumentNullException(nameof(arguments));
+        }
+
+        if (commandLine is null && arguments is not null)
+        {
+            throw new ArgumentException("Arguments must be null when CommandLine is null.", nameof(arguments));
+        }
+
+        return new ProcessRecord(
+            identity: identity,
+            parentProcessId: parentProcessId,
+            name: name,
+            sessionId: sessionId,
+            isReadable: true,
+            ownerSid: ownerSid,
+            executablePath: executablePath,
+            workingDirectory: workingDirectory,
+            commandLine: commandLine,
+            arguments: arguments,
+            usage: usage);
     }
 
     /// <summary>Creates an unreadable process record (elevated process of the current user, or process of another user/SYSTEM).</summary>
-    /// <param name="identity">The process identity from the snapshot.</param>
-    /// <param name="parentProcessId">Validated parent process id, or null.</param>
-    /// <param name="name">Short image name from the snapshot.</param>
-    /// <param name="sessionId">Windows session id (non-negative).</param>
-    /// <returns>The unreadable record.</returns>
     public static ProcessRecord Unreadable(
         ProcessIdentity identity,
         int? parentProcessId,
         string name,
         int sessionId)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentOutOfRangeException.ThrowIfNegative(sessionId);
+
+        return new ProcessRecord(
+            identity: identity,
+            parentProcessId: parentProcessId,
+            name: name,
+            sessionId: sessionId,
+            isReadable: false,
+            ownerSid: null,
+            executablePath: null,
+            workingDirectory: null,
+            commandLine: null,
+            arguments: null,
+            usage: null);
     }
 }
 
@@ -140,11 +212,15 @@ public sealed class ProcessSnapshot
     /// <param name="unreadableProcessCount">The count of unreadable processes in the snapshot (non-negative).</param>
     public ProcessSnapshot(IReadOnlyList<ProcessRecord> processes, int unreadableProcessCount)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(processes);
+        ArgumentOutOfRangeException.ThrowIfNegative(unreadableProcessCount);
+
+        Processes = processes;
+        UnreadableProcessCount = unreadableProcessCount;
     }
 
     /// <summary>All surviving processes (readable and unreadable).</summary>
-    public IReadOnlyList<ProcessRecord> Processes { get; } = Array.Empty<ProcessRecord>();
+    public IReadOnlyList<ProcessRecord> Processes { get; }
 
     /// <summary>How many processes could not be read (elevated, SYSTEM, services or other users).</summary>
     public int UnreadableProcessCount { get; }
@@ -153,22 +229,61 @@ public sealed class ProcessSnapshot
 /// <summary>Reads the process table and re-checks single processes by identity (docs/spec/process.md).</summary>
 public sealed class ProcessReader
 {
+    private readonly IProcessSnapshotSource _source;
+
     /// <summary>Creates a reader over the live Windows process table.</summary>
     public ProcessReader()
+        : this(new SystemProcessSnapshotSource())
     {
-        throw new NotImplementedException();
     }
 
     internal ProcessReader(IProcessSnapshotSource source)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(source);
+        _source = source;
     }
 
     /// <summary>Reads a snapshot of all live processes.</summary>
     /// <returns>The snapshot.</returns>
     public ProcessSnapshot ReadSnapshot()
     {
-        throw new NotImplementedException();
+        IReadOnlyList<RawProcessEntry> rawEntries = _source.ReadEntries();
+        var surviving = new List<RawProcessEntry>(rawEntries.Count);
+        var maxStartByPid = new Dictionary<int, long>(rawEntries.Count);
+
+        // Pass 1: filter surviving entries and record the greatest StartTimeTicks per PID for parent validation.
+        foreach (RawProcessEntry entry in rawEntries)
+        {
+            if (!IsSurvivingEntry(entry))
+            {
+                continue;
+            }
+
+            surviving.Add(entry);
+            _ = maxStartByPid.TryGetValue(entry.ProcessId, out long existingStart);
+            if (entry.SnapshotStartTimeTicks > existingStart)
+            {
+                maxStartByPid[entry.ProcessId] = entry.SnapshotStartTimeTicks;
+            }
+        }
+
+        // Pass 2: validate parent PIDs and build readable / unreadable ProcessRecord instances.
+        var records = new List<ProcessRecord>(surviving.Count);
+        int unreadableCount = 0;
+
+        foreach (RawProcessEntry entry in surviving)
+        {
+            int? parentPid = ValidateParentFromSnapshot(entry, maxStartByPid);
+            ProcessRecord record = BuildProcessRecord(entry, parentPid);
+            if (!record.IsReadable)
+            {
+                unreadableCount++;
+            }
+
+            records.Add(record);
+        }
+
+        return new ProcessSnapshot(records, unreadableCount);
     }
 
     /// <summary>Re-checks a single process by its identity: returns the readable record when the process is still alive with the same creation time, belongs to the current user and is not elevated; otherwise null.</summary>
@@ -176,14 +291,159 @@ public sealed class ProcessReader
     /// <returns>The current readable record, or null if exited, reused or unreadable.</returns>
     public ProcessRecord? Read(ProcessIdentity identity)
     {
-        throw new NotImplementedException();
+        RawProcessEntry? entry = _source.ReadEntry(identity.ProcessId);
+        if (entry is null ||
+            entry.ProcessId != identity.ProcessId ||
+            entry.SnapshotStartTimeTicks != identity.StartTimeTicks ||
+            !IsSurvivingEntry(entry) ||
+            !IsReadableEntry(entry))
+        {
+            return null;
+        }
+
+        int? parentPid = ValidateParentSingleLookup(entry);
+        return BuildReadableRecord(entry, parentPid);
     }
 
     /// <summary>Re-checks a process's executable path immediately before acting on it (docs/spec/process.md, "Identity").</summary>
     /// <param name="identity">The process identity to check.</param>
     /// <returns>The current executable path, or null if exited, reused, unreadable or unavailable.</returns>
-    public string? ExecutablePath(ProcessIdentity identity)
+    public string? ExecutablePath(ProcessIdentity identity) =>
+        Read(identity)?.ExecutablePath;
+
+    private static bool IsSurvivingEntry(RawProcessEntry entry)
     {
-        throw new NotImplementedException();
+        if (entry.ProcessId <= 0 ||
+            entry.SnapshotStartTimeTicks <= 0 ||
+            entry.NumberOfThreads == 0)
+        {
+            return false;
+        }
+
+        RawProcessHandleResult handle = entry.HandleResult;
+        if (handle.ExitedOrMissing)
+        {
+            return false;
+        }
+
+        if (!handle.AccessDenied)
+        {
+            if (handle.HandleExitTimeBeforeTicks != 0 ||
+                handle.HandleStartTimeBeforeTicks != entry.SnapshotStartTimeTicks ||
+                handle.HandleExitTimeAfterTicks != 0 ||
+                handle.HandleStartTimeAfterTicks != entry.SnapshotStartTimeTicks)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsReadableEntry(RawProcessEntry entry)
+    {
+        RawProcessHandleResult handle = entry.HandleResult;
+        return !handle.AccessDenied &&
+               !handle.IsElevated &&
+               !string.IsNullOrEmpty(handle.OwnerSid) &&
+               string.Equals(handle.OwnerSid, _source.CurrentUserSid, StringComparison.Ordinal);
+    }
+
+    private static int? ValidateParentFromSnapshot(
+        RawProcessEntry entry,
+        Dictionary<int, long> maxStartByPid)
+    {
+        int rawParent = entry.InheritedFromProcessId;
+        if (rawParent <= 0 || rawParent == entry.ProcessId)
+        {
+            return null;
+        }
+
+        if (maxStartByPid.TryGetValue(rawParent, out long parentStartTicks) &&
+            parentStartTicks <= entry.SnapshotStartTimeTicks)
+        {
+            return rawParent;
+        }
+
+        return null;
+    }
+
+    private int? ValidateParentSingleLookup(RawProcessEntry entry)
+    {
+        int rawParent = entry.InheritedFromProcessId;
+        if (rawParent <= 0 || rawParent == entry.ProcessId)
+        {
+            return null;
+        }
+
+        RawProcessEntry? parentEntry = _source.ReadEntry(rawParent);
+        if (parentEntry is not null &&
+            parentEntry.ProcessId == rawParent &&
+            IsSurvivingEntry(parentEntry) &&
+            parentEntry.SnapshotStartTimeTicks <= entry.SnapshotStartTimeTicks)
+        {
+            return rawParent;
+        }
+
+        return null;
+    }
+
+    private ProcessRecord BuildProcessRecord(RawProcessEntry entry, int? parentPid)
+    {
+        if (!IsReadableEntry(entry))
+        {
+            return ProcessRecord.Unreadable(
+                identity: new ProcessIdentity(entry.ProcessId, entry.SnapshotStartTimeTicks),
+                parentProcessId: parentPid,
+                name: entry.Name,
+                sessionId: Math.Max(0, entry.SessionId));
+        }
+
+        return BuildReadableRecord(entry, parentPid);
+    }
+
+    private static ProcessRecord BuildReadableRecord(RawProcessEntry entry, int? parentPid)
+    {
+        RawProcessHandleResult handle = entry.HandleResult;
+        string? normalizedCwd = handle.IsWow64 ? null : NormalizeWorkingDirectory(handle.WorkingDirectory);
+        string? commandLine = handle.CommandLine;
+        IReadOnlyList<string>? arguments = commandLine is null
+            ? null
+            : ProcessNativeMethods.ParseCommandLineArguments(commandLine);
+
+        return ProcessRecord.Readable(
+            identity: new ProcessIdentity(entry.ProcessId, entry.SnapshotStartTimeTicks),
+            parentProcessId: parentPid,
+            name: entry.Name,
+            sessionId: Math.Max(0, entry.SessionId),
+            ownerSid: handle.OwnerSid!,
+            executablePath: string.IsNullOrEmpty(handle.ExecutablePath) ? null : handle.ExecutablePath,
+            workingDirectory: normalizedCwd,
+            commandLine: commandLine,
+            arguments: arguments,
+            usage: entry.Counters);
+    }
+
+    internal static string? NormalizeWorkingDirectory(string? rawWorkingDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(rawWorkingDirectory))
+        {
+            return null;
+        }
+
+        string path = rawWorkingDirectory.StartsWith(@"\\?\", StringComparison.Ordinal)
+            ? rawWorkingDirectory.Substring(4)
+            : rawWorkingDirectory;
+
+        if (path.Length == 3 &&
+            char.IsAsciiLetter(path[0]) &&
+            path[1] == ':' &&
+            path[2] == '\\')
+        {
+            return path;
+        }
+
+        string trimmed = path.TrimEnd('\\');
+        return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 }
