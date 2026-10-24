@@ -7,7 +7,7 @@ status: approved   # approved by owner on 2026-10-18; building follows
 Ticket: APS-22 (Plane). Related: APS-3 (market research on competitor auto-renewal complaints), APS-21 (toolbox features), AO-12 (suite landing).
 
 Owner directive 2026-10-18:
-> *"Nhấn mạnh thông điệp: chúng tôi chỉ tính phí khi bạn cảm thấy đủ vui vẻ để trả phí. Nó xuất hiện ở website và trong app."*
+> *"Stress the message: we only charge when you feel happy enough to pay. It appears on the website and in the app."* (translated from the owner's Vietnamese)
 
 ## Problem
 
