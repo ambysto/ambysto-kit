@@ -40,11 +40,11 @@ Unchanged, on purpose:
 
 ## Decision (owner, 2026-10-15)
 
-**Display names only** ("chỉ đổi tên hiển thị"); ids unchanged. The change is small enough that this intent is its own plan: the files are `SuiteCatalog.swift` (two names, two doc comments), the catalog test (a new test for criteria 1 and 2), the spec's catalog table with a note on renames, the Kit README and CLAUDE.md.
+**Display names only** ("only rename the display names"); ids unchanged. The change is small enough that this intent is its own plan: the files are `SuiteCatalog.swift` (two names, two doc comments), the catalog test (a new test for criteria 1 and 2), the spec's catalog table with a note on renames, the Kit README and CLAUDE.md.
 
 ## Decision 2 (owner, 2026-10-15, after the review)
 
-The license's display names follow too ("Đổi luôn"): `Product.displayName` becomes a fixed table (Lean, Gate, and DevBox spelled right); `license.md`'s App column and a note that ids and bits never follow a rename. Verifier, parser, bits, format and vectors are untouched.
+The license's display names follow too ("Rename them too"): `Product.displayName` becomes a fixed table (Lean, Gate, and DevBox spelled right); `license.md`'s App column and a note that ids and bits never follow a rename. Verifier, parser, bits, format and vectors are untouched.
 
 ## Proof
 

@@ -117,7 +117,7 @@ The "Free RAM" button is not a row here: Smart RAM's job is covered by Optimer's
 
 ## Decisions (owner, 2026-10-16)
 
-The owner approved the intent as written ("đồng ý với intent PR #52"), which takes each recommendation above:
+The owner approved the intent as written ("I agree with intent PR #52"), which takes each recommendation above:
 
 1. **Suite hub: allowed** as a launcher plus the apps' glances, read only; every change happens in the owner app. It gets its own intent, and B8 (system information) lives there. The mock is ambysto-assets#1.
 2. **Tune on Windows:** entries that need an administrator are listed read-only in Tune's first Windows version.
