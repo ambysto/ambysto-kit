@@ -249,6 +249,8 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
 .buy { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .buyrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .price { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); font-weight: 400; }
+.price a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.price a:hover { color: var(--ink); }
 .notice { max-width: 40ch; font-family: var(--mono); font-size: 0.75rem; line-height: 1.45; color: var(--mute); }
 .notice:empty { display: none; }
 .receipt.single { max-width: 640px; margin-top: 40px; }
@@ -334,7 +336,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>A runaway session is flagged in the list.</li>
           <li>Stop, only after you confirm.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="devbox">Buy DevBox</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-devbox" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://devbox.ambysto.com/download">Download for Mac</a><span class="price">Mac 0.1.1 · <a href="https://devbox.ambysto.com">devbox.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="devbox">Buy DevBox</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-devbox" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/devbox-dark.jpg" width="1600" height="1109" loading="lazy" alt="Ambysto DevBox agents: coding sessions with CPU, memory, project and a stop button">
@@ -356,7 +358,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Personal files stay unticked until you tick them.</li>
           <li>It never force-quits a process.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://optimer.ambysto.com/download">Download for Mac</a><span class="price">Mac 0.1.1 · <a href="https://optimer.ambysto.com">optimer.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="optimer">Buy Optimer</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-optimer" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/optimer-dark.jpg" width="1600" height="1261" loading="lazy" alt="The Optimer dashboard with live memory, CPU, disk and the list of apps">
@@ -378,7 +380,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Every move is checked, then written down.</li>
           <li>Put it back from the journal.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-lean" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://lean.ambysto.com/download">Download for Mac</a><span class="price">Mac 0.1.1 · <a href="https://lean.ambysto.com">lean.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="lean">Buy Lean</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-lean" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/map-dark.webp" width="1800" height="1174" loading="lazy" alt="Ambysto Lean disk map: folders drawn as blocks sized by how much space they use">
@@ -400,7 +402,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>The list of what is keeping the machine awake.</li>
           <li>Keep-awake you start yourself, with the screen on, and a way to stop it.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="power">Buy Power</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-power" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://power.ambysto.com/download">Download for Mac</a><span class="price">Mac 0.1.1 · <a href="https://power.ambysto.com">power.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="power">Buy Power</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-power" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/power-dark.jpg" width="1600" height="1142" loading="lazy" alt="Ambysto Power: charge, watts, time left, battery health, cycles and a charge chart">
@@ -422,7 +424,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
           <li>Startup items and background items, in the same window.</li>
           <li>A journal of what changed on this machine.</li>
         </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="tune">Buy Tune</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-tune" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://tune.ambysto.com/download">Download for Mac</a><span class="price">Mac 0.1.1 · <a href="https://tune.ambysto.com">tune.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="tune">Buy Tune</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-tune" role="status"></p></div>
       </div>
       <figure class="shot">
         <img src="img/tune-dark.jpg" width="1600" height="1030" loading="lazy" alt="Ambysto Tune Dock settings: each tweak is a switch with a short explanation">
@@ -440,7 +442,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Diagnose</span><span class="leader" aria-hidden="true"></span><span class="why">Tells you what is wrong with it.</span></li>
       <li><span class="no">Recover</span><span class="leader" aria-hidden="true"></span><span class="why">Brings the connection back.</span></li>
     </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-steady" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><a class="btn primary small" href="https://github.com/ambysto/steady/releases/download/v1.0.10/AmbystoSteady-0.8.2-macOS.dmg">Download for Mac</a><a class="btn primary small" href="https://github.com/ambysto/steady/releases/download/v1.0.10/AmbystoSteady-1.0.10-win64.zip">Download for Windows</a><span class="price">Mac 0.8.2, Windows 1.0.10 · <a href="https://steady.ambysto.com">steady.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="steady">Buy Steady</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-steady" role="status"></p></div>
   </section>
 
   <section id="gate" class="wrap block t-gate" aria-labelledby="gate-title">
@@ -453,7 +455,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
       <li><span class="no">Decide</span><span class="leader" aria-hidden="true"></span><span class="why">Allow or block, one app at a time. Nothing is blocked until you say so.</span></li>
       <li><span class="no">Undo</span><span class="leader" aria-hidden="true"></span><span class="why">Every choice is reversible, and the app keeps the way back.</span></li>
     </ul>
-      <div class="buy appbuy"><div class="buyrow"><button class="btn ghost small" type="button" data-buy="gate">Buy Gate</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-gate" role="status"></p></div>
+      <div class="buy appbuy"><div class="buyrow"><span class="price"><a href="https://gate.ambysto.com">gate.ambysto.com</a></span></div><div class="buyrow"><button class="btn ghost small" type="button" data-buy="gate">Buy Gate</button><span class="price">$19.99 one-time</span></div><p class="notice" id="notice-gate" role="status"></p></div>
   </section>
 
   <section id="refuse" class="wrap block" aria-labelledby="refuse-title">
