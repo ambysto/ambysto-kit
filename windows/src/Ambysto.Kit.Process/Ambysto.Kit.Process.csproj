@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Process reading for Windows: docs/spec/process.md. It reads; it never terminates, signals, suspends or spawns anything. No package references. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>Ambysto.Kit.Process</AssemblyName>
+    <RootNamespace>Ambysto.Kit.Processes</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- The real version comes only from a windows-vX.Y.Z tag (-p:Version in .github/workflows/windows-release.yml). -->
+    <Version>0.0.0-dev</Version>
+    <PackageId>Ambysto.Kit.Process</PackageId>
+    <Authors>Ambysto</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Description>Process reading for Ambysto apps on Windows: process snapshot, identity by (pid, creation time), parent validation, readable vs unreadable rule, listening TCP sockets and CPU/memory/I/O sampling. It never terminates or signals a process.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ambysto/ambysto-kit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- GitHub's NuGet registry takes no .snupkg symbol packages: the symbols travel inside the one .nupkg. -->
+    <DebugType>embedded</DebugType>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ambysto.Kit.Process.Tests" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>
