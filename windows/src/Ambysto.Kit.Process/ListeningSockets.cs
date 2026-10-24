@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
+using Ambysto.Kit.Processes.Internal;
 
 namespace Ambysto.Kit.Processes;
 
@@ -50,7 +52,18 @@ public sealed class ListeningSocket
         SocketAddressClass addressClass,
         ulong? socketId = null)
     {
-        throw new NotImplementedException();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(processId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(address);
+
+        ProcessId = processId;
+        ProcessIdentity = processIdentity;
+        ProcessName = processName;
+        IsOwnerReadable = isOwnerReadable;
+        Port = port;
+        Family = family;
+        Address = address;
+        AddressClass = addressClass;
+        SocketId = socketId;
     }
 
     /// <summary>Owning process id.</summary>
@@ -72,7 +85,7 @@ public sealed class ListeningSocket
     public SocketAddressFamily Family { get; }
 
     /// <summary>Printable local address.</summary>
-    public string Address { get; } = string.Empty;
+    public string Address { get; }
 
     /// <summary>Address class (Any, Loopback or Specific).</summary>
     public SocketAddressClass AddressClass { get; }
@@ -84,15 +97,18 @@ public sealed class ListeningSocket
 /// <summary>Reads listening TCP sockets from <c>GetExtendedTcpTable</c> (docs/spec/process.md, "Listening sockets").</summary>
 public sealed class ListeningSockets
 {
+    private readonly ITcpTableSource _source;
+
     /// <summary>Creates a reader over the live Windows TCP listener tables.</summary>
     public ListeningSockets()
+        : this(new SystemTcpTableSource())
     {
-        throw new NotImplementedException();
     }
 
     internal ListeningSockets(ITcpTableSource source)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(source);
+        _source = source;
     }
 
     /// <summary>Returns all listening TCP sockets owned by readable processes in <paramref name="snapshot"/>.</summary>
@@ -100,7 +116,8 @@ public sealed class ListeningSockets
     /// <returns>Listening sockets of readable processes.</returns>
     public IReadOnlyList<ListeningSocket> ReadForReadableProcesses(ProcessSnapshot snapshot)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(snapshot);
+        return ReadCore(snapshot, readableOnly: true);
     }
 
     /// <summary>Returns all listening TCP sockets on the machine (with owner identity and short name populated when the owner is in <paramref name="snapshot"/>).</summary>
@@ -108,6 +125,112 @@ public sealed class ListeningSockets
     /// <returns>All listening TCP sockets with positive owner process ids.</returns>
     public IReadOnlyList<ListeningSocket> ReadAll(ProcessSnapshot snapshot)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(snapshot);
+        return ReadCore(snapshot, readableOnly: false);
+    }
+
+    private List<ListeningSocket> ReadCore(ProcessSnapshot snapshot, bool readableOnly)
+    {
+        var ownersByPid = new Dictionary<int, ProcessRecord>(snapshot.Processes.Count);
+        foreach (ProcessRecord record in snapshot.Processes)
+        {
+            if (!ownersByPid.TryGetValue(record.Identity.ProcessId, out ProcessRecord? existing) ||
+                record.Identity.StartTimeTicks > existing.Identity.StartTimeTicks)
+            {
+                ownersByPid[record.Identity.ProcessId] = record;
+            }
+        }
+
+        IReadOnlyList<RawTcpListenerRow> rows = _source.ReadListeners();
+        var results = new List<ListeningSocket>(rows.Count);
+
+        foreach (RawTcpListenerRow row in rows)
+        {
+            if (row.OwningProcessId <= 0)
+            {
+                continue;
+            }
+
+            bool hasOwner = ownersByPid.TryGetValue(row.OwningProcessId, out ProcessRecord? owner);
+            bool isOwnerReadable = hasOwner && owner!.IsReadable;
+
+            if (readableOnly && !isOwnerReadable)
+            {
+                continue;
+            }
+
+            ushort port = DecodePort(row.RawPortDword);
+            (string address, SocketAddressClass addressClass) = FormatAndClassifyAddress(
+                row.Family,
+                row.LocalAddressBytes,
+                row.ScopeId);
+
+            results.Add(new ListeningSocket(
+                processId: row.OwningProcessId,
+                processIdentity: hasOwner ? owner!.Identity : null,
+                processName: hasOwner ? owner!.Name : null,
+                isOwnerReadable: isOwnerReadable,
+                port: port,
+                family: row.Family,
+                address: address,
+                addressClass: addressClass,
+                socketId: null));
+        }
+
+        return results;
+    }
+
+    internal static ushort DecodePort(uint rawPortDword)
+    {
+        // Only the low 16 bits contain the port in network byte order; upper 16 bits are undefined garbage.
+        uint low16 = rawPortDword & 0xFFFFu;
+        return (ushort)(((low16 & 0x00FFu) << 8) | ((low16 & 0xFF00u) >> 8));
+    }
+
+    private static (string Address, SocketAddressClass AddressClass) FormatAndClassifyAddress(
+        SocketAddressFamily family,
+        byte[] addressBytes,
+        uint scopeId)
+    {
+        if (family == SocketAddressFamily.IPv4)
+        {
+            var ip = new IPAddress(addressBytes);
+            SocketAddressClass cls;
+            if (IPAddress.Any.Equals(ip))
+            {
+                cls = SocketAddressClass.Any;
+            }
+            else if (IPAddress.IsLoopback(ip))
+            {
+                cls = SocketAddressClass.Loopback;
+            }
+            else
+            {
+                cls = SocketAddressClass.Specific;
+            }
+
+            return (ip.ToString(), cls);
+        }
+        else
+        {
+            var ip = new IPAddress(addressBytes, scopeId);
+
+            SocketAddressClass cls;
+            if (scopeId == 0 && IPAddress.IPv6Any.Equals(ip))
+            {
+                cls = SocketAddressClass.Any;
+            }
+            else if (IPAddress.IsLoopback(ip) ||
+                     (ip.IsIPv4MappedToIPv6 && IPAddress.IsLoopback(ip.MapToIPv4())))
+            {
+                cls = SocketAddressClass.Loopback;
+            }
+            else
+            {
+                cls = SocketAddressClass.Specific;
+            }
+
+            return (ip.ToString(), cls);
+        }
     }
 }

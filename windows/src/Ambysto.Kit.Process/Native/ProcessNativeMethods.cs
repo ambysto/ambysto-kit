@@ -24,6 +24,36 @@ internal static partial class ProcessNativeMethods
     internal const int PebProcessParametersOffset = 0x20;
     internal const int ProcessParametersCurrentDirectoryDosPathOffset = 0x38;
 
+    internal const uint AfInet = 2;
+    internal const uint AfInet6 = 23;
+    internal const int TcpTableOwnerPidListener = 3;
+    internal const uint MibTcpStateListen = 2;
+    internal const uint ErrorInsufficientBuffer = 122;
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MibTcpRowOwnerPid
+    {
+        public uint State;          // offset 0
+        public uint LocalAddr;      // offset 4
+        public uint LocalPort;      // offset 8
+        public uint RemoteAddr;     // offset 12
+        public uint RemotePort;     // offset 16
+        public uint OwningPid;      // offset 20
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe struct MibTcp6RowOwnerPid
+    {
+        public fixed byte LocalAddr[16];    // offset 0
+        public uint LocalScopeId;           // offset 16
+        public uint LocalPort;              // offset 20
+        public fixed byte RemoteAddr[16];   // offset 24
+        public uint RemoteScopeId;          // offset 40
+        public uint RemotePort;             // offset 44
+        public uint State;                  // offset 48
+        public uint OwningPid;              // offset 52
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct UnicodeString
     {
@@ -190,6 +220,15 @@ internal static partial class ProcessNativeMethods
     internal static partial nint CommandLineToArgvW(
         string cmdLine,
         out int numArgs);
+
+    [LibraryImport("iphlpapi.dll")]
+    internal static partial uint GetExtendedTcpTable(
+        nint pTcpTable,
+        ref uint pdwSize,
+        [MarshalAs(UnmanagedType.Bool)] bool bOrder,
+        uint ulAf,
+        int tableClass,
+        uint reserved);
 
     internal static IReadOnlyList<string> ParseCommandLineArguments(string commandLine)
     {
