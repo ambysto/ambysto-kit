@@ -97,8 +97,8 @@ struct LicenseBehaviourTests {
     }
 
     @Test func productionHoldsExactlyTheReleasedKeys() {
-        // 0.1.0 before release: none. Update this list in the same commit that adds a production key.
-        #expect(TrustedKeys.production.ids == [])
+        // Update this list in the same commit that adds a production key.
+        #expect(TrustedKeys.production.ids == [1])
     }
 
     @Test func productionDoesNotTrustTheTestKey() {

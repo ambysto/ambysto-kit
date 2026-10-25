@@ -18,8 +18,10 @@ public struct TrustedKeys: Sendable {
 
     public var ids: [Int] { keys.keys.map(Int.init).sorted() }
 
-    /// The keys release builds trust. Id 1 is added at release, after the owner creates it (plan, group 6).
-    public static let production = TrustedKeys(rawHex: [:])
+    /// The keys release builds trust. Id 1 is the owner's first key, created at release (plan, group 6).
+    public static let production = TrustedKeys(rawHex: [
+        1: "1615f5a65066946643e3035da1df4f7cbe170c79c86a48f494e7af53f68a72df177e00ead8a33ce1afb3a47121045cd880a4a53380a748170ee5bb5a7acadd5c",
+    ])
 
     /// The published test key (id 0). Never trusted by release builds of apps; `package` access only.
     package static let test = TrustedKeys(rawHex: [0: TestKey.publicHex])
