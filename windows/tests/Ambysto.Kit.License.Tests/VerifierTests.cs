@@ -91,10 +91,10 @@ public sealed class VerifierTests
     }
 
     [TestMethod]
-    public void TheProductionSetIsPinnedToNoIds()
+    public void TheProductionSetIsPinnedToTheReleasedIds()
     {
         // Changes only with the owner's key PR, together with the Swift pin (scripts/check-key-sets.py).
-        Assert.IsEmpty(TrustedKeys.Production.Ids);
+        CollectionAssert.AreEqual(new[] { 1 }, TrustedKeys.Production.Ids.ToArray());
         Assert.IsEmpty(Revocations.All);
     }
 

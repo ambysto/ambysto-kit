@@ -17,6 +17,7 @@ internal sealed class TrustedKeys
     // scripts/check-key-sets.py fails when the two differ. One entry per line: [id] = "hex",
     private static readonly Dictionary<byte, string> ProductionHex = new()
     {
+        [1] = "1615f5a65066946643e3035da1df4f7cbe170c79c86a48f494e7af53f68a72df177e00ead8a33ce1afb3a47121045cd880a4a53380a748170ee5bb5a7acadd5c",
     };
 
     private readonly FrozenDictionary<byte, ECParameters> keys;
@@ -59,7 +60,7 @@ internal sealed class TrustedKeys
         this.keys = keys.ToFrozenDictionary();
     }
 
-    /// <summary>The keys release builds trust. Empty until the owner's key PR.</summary>
+    /// <summary>The keys release builds trust. Id 1 is the owner's first key (plan, group 6).</summary>
     internal static TrustedKeys Production { get; } = new(ProductionHex);
 
     /// <summary>The trusted ids, ascending.</summary>
