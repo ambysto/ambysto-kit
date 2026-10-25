@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">
+  <rect width="1000" height="1000" fill="#0B0B0C"/>
+  <rect x="389" y="237" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="465" y="237" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="541" y="237" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="313" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="617" y="313" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="389" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="617" y="389" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="465" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="389" y="465" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="465" y="465" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="541" y="465" width="70" height="70" fill="#3A3A3C"/>
+  <rect x="617" y="465" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="541" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="617" y="541" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="617" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="617" y="617" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="313" y="693" width="70" height="70" fill="#E8E8E6"/>
+  <rect x="617" y="693" width="70" height="70" fill="#E8E8E6"/>
+</svg>
