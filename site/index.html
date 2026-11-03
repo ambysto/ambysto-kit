@@ -489,7 +489,7 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
         <li class="t-gate"><span class="nm">Ambysto Gate</span><span class="leader" aria-hidden="true"></span><span class="inc">included</span></li>
         <li class="total"><span class="nm">Total</span><span class="leader" aria-hidden="true"></span><span class="inc">$39 launch · $59 regular</span></li>
       </ul>
-      <div class="buy"><button class="btn primary" type="button" data-buy="suite">Get the Suite</button><p class="notice" id="notice-suite" role="status"></p></div>
+      <div class="buy"><a class="btn primary" href="https://buy.stripe.com/fZu6oH9Hc27Cgd5bSG04807" rel="noopener">Get the Suite</a></div>
     </div>
     <ul class="rows">
       <li><span class="no">Free</span><span class="leader" aria-hidden="true"></span><span class="why">The job of every app, for good: the measuring, the cleanup, the Trash or Recycle Bin, the stop, the tweak, and the restore.</span></li>
@@ -564,15 +564,6 @@ h2 { font-family: var(--mono); font-weight: 700; letter-spacing: -0.025em; line-
   document.querySelectorAll(".segmeter").forEach((m) => {
     const n = Number(m.dataset.fill);
     for (let i = 0; i < 24; i++) { const c = document.createElement("i"); if (i < n) c.className = "lit"; m.append(c); }
-  });
-
-  // Buy actions: no checkout is connected; say so, charge nothing.
-  document.querySelectorAll("[data-buy]").forEach((b) => {
-    b.addEventListener("click", () => {
-      const n = document.getElementById("notice-" + b.dataset.buy);
-      n.textContent = "Checkout is opening soon. Early users get Pro access free.";
-      b.setAttribute("aria-describedby", n.id);
-    });
   });
 
   // Sample run: measure, change, undo. Sample numbers only.
