@@ -54,7 +54,7 @@ Ambysto's choice: **separate native apps that share one license and one kit**, l
 2. **Plane is split by project:** **APS** (Ambysto Pro Suite: strategy, Kit, research, policies, payment), **ASP** (Ambysto Space), **AO** (Ambysto Optimer). A Steady project will be added when its work is tracked here.
 3. **Steady has no license yet**, so it is not migrated now; it adopts the shared key format when its Pro tier is defined.
 4. **macOS first for every utility**, then Windows. This applies to Space and to all future apps.
-5. Next: run the `bto-researchmarket` playbook on suite and bundle vendors (CleanMyMac, MacPaw, IObit, Parallels Toolbox first), including a **value × functionality** positioning chart.
+5. Next: run the `byfa-researchmarket` playbook on suite and bundle vendors (CleanMyMac, MacPaw, IObit, Parallels Toolbox first), including a **value × functionality** positioning chart.
 6. **Suite lineup and order** (owner, after the APS-3 research): **Space → DevBox → Power → Tune → Guard**, joining Optimer and Steady.
    - Guard waits for Developer ID (AO-6), because it needs Network Extension.
    - **Dropped:** malware scanning and app/driver updaters. They fall outside the suite's DNA, and updaters are what Defender flags and users distrust.

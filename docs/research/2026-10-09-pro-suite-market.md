@@ -1,6 +1,6 @@
 # Ambysto Pro Suite: market research on utility-suite vendors, bundle pricing and sales model
 
-**Ticket:** APS-3 (`ambysto/ambysto-kit#2`). **Read on:** 2026-10-09. **Method:** the `bto-researchmarket` playbook, with five research agents:
+**Ticket:** APS-3 (`ambysto/ambysto-kit#2`). **Read on:** 2026-10-09. **Method:** the `byfa-researchmarket` playbook, with five research agents:
 - Mac vendors;
 - Windows vendors;
 - paying-user complaints;
