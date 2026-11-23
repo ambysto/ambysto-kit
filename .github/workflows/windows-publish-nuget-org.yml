@@ -31,13 +31,21 @@ jobs:
       TAG: ${{ inputs.tag }}
       PACKAGE: ${{ inputs.package }}
     steps:
-      - name: The tag has the release form
+      # Only versions that were released to GitHub Packages (windows-release.yml): a tag with the release form that was never
+      # released (windows-v0.1.0) must not reach nuget.org, where a version cannot be deleted. Extend the list when another
+      # released version is backfilled.
+      - name: The tag and package are a released pair
         shell: bash
         run: |
           if [[ ! "$TAG" =~ ^windows-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Tag $TAG is not windows-vX.Y.Z"
             exit 1
           fi
+          case "$PACKAGE $TAG" in
+            "License windows-v0.1.2" | "License windows-v0.2.0" | "License windows-v0.3.0" \
+            | "Safety windows-v0.2.0" | "Safety windows-v0.3.0" | "Process windows-v0.3.0") ;;
+            *) echo "$PACKAGE at $TAG is not a released version"; exit 1 ;;
+          esac
           echo "VERSION=${TAG#windows-v}" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,19 +62,24 @@ jobs:
         with:
           global-json-file: windows/global.json
 
+      # The version goes into every build: the DLL inside the package carries it (assembly and file version), as in the released
+      # packages. Pack therefore rebuilds with it too (no --no-build), as windows-release.yml does.
       - name: Build
+        shell: bash
         working-directory: windows
-        run: dotnet build -c Release src/Ambysto.Kit.${{ env.PACKAGE }}/Ambysto.Kit.${{ env.PACKAGE }}.csproj
+        run: dotnet build -c Release "-p:Version=$VERSION" "src/Ambysto.Kit.${PACKAGE}/Ambysto.Kit.${PACKAGE}.csproj"
 
       # The safety and process tests need the Windows test machine and ran there before the tag; only the license tests run here.
       - name: Test (license)
         if: ${{ env.PACKAGE == 'License' }}
+        shell: bash
         working-directory: windows
-        run: dotnet test -c Release tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj
+        run: dotnet test -c Release "-p:Version=$VERSION" tests/Ambysto.Kit.License.Tests/Ambysto.Kit.License.Tests.csproj
 
       - name: Pack
+        shell: bash
         working-directory: windows
-        run: dotnet pack src/Ambysto.Kit.${{ env.PACKAGE }}/Ambysto.Kit.${{ env.PACKAGE }}.csproj -c Release --no-build -p:Version=${{ env.VERSION }} -o ../artifacts
+        run: dotnet pack "src/Ambysto.Kit.${PACKAGE}/Ambysto.Kit.${PACKAGE}.csproj" -c Release "-p:Version=$VERSION" -o ../artifacts
 
       - name: What is published
         shell: bash
@@ -75,7 +88,7 @@ jobs:
           sha512sum "artifacts/Ambysto.Kit.$PACKAGE.$VERSION.nupkg" | cut -c1-32
 
       # The nuget.org user name that owns the packages (the profile name, not the e-mail address).
-      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         id: login
         with:
           user: Ambysto
@@ -84,4 +97,4 @@ jobs:
         shell: bash
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
-        run: dotnet nuget push "artifacts/Ambysto.Kit.$PACKAGE.$VERSION.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --no-symbols --skip-duplicate
+        run: dotnet nuget push "artifacts/Ambysto.Kit.$PACKAGE.$VERSION.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --no-symbols
