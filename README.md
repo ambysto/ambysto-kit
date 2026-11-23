@@ -53,7 +53,7 @@ Yes, if you build an Ambysto suite app and want the shared license check, proces
 
 Swift apps add the package and import the libraries they need (`AmbystoLicense`, `AmbystoProcess`, `AmbystoSafety`, `AmbystoSuite`, `AmbystoUI`). Until the first tag exists, pin a `main` commit and move it on purpose.
 
-Windows apps reference `Ambysto.Kit.License` 0.1.2 or later from GitHub Packages. Installing needs a `read:packages` token on the machine. The library has no package reference of its own.
+Windows apps reference `Ambysto.Kit.License` and `Ambysto.Kit.Safety` from nuget.org (License 0.1.2 and Safety 0.2.0 are published there, which needs no account or token); the same packages stay on GitHub Packages, where installing needs a `read:packages` token. The library has no package reference of its own.
 
 Apps cannot mint license keys. They test entitlement through their own verifier seam, never with a real key.
 
